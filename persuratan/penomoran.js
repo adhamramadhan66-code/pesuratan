@@ -5,8 +5,7 @@
     const API = 'api/surat.php';
 
     const el = {
-        tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'), untuk: $('f_untuk'),
-        pejabat: $('f_pejabat'), pembuat: $('f_pembuat'), pemberi: $('f_pemberi'),
+        tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'),
     };
     const radio = (name) => (document.querySelector('input[name="' + name + '"]:checked') || {}).value || '';
     const setRadio = (name, v) => document.querySelectorAll('input[name="' + name + '"]').forEach((r) => { r.checked = r.value === v; });
@@ -68,11 +67,10 @@
         $('btnSimpanTeks').textContent = 'Simpan & ambil nomor';
         $('formTitle').textContent = 'Data surat baru';
         kunci(false);
-        el.perihal.value = ''; el.untuk.value = '';
+        el.perihal.value = '';
         if (kosongkanSemua) {
             el.tanggal.value = hariIni(); el.jenis.value = ''; el.unit.value = '';
-            el.pejabat.value = ''; el.pembuat.value = ''; el.pemberi.value = '';
-            setRadio('tujuan', 'A'); setRadio('ttd', 'basah');
+            setRadio('tujuan', 'A');
         }
         bersihkanGalat();
         muatUrut(); pratinjau();
@@ -89,9 +87,7 @@
         $('formTitle').textContent = 'Ubah data surat';
         el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
         el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
-        el.perihal.value = r.perihal; el.untuk.value = r.untuk;
-        el.pejabat.value = r.pejabat_ttd; el.pembuat.value = r.pembuat_surat; el.pemberi.value = r.pemberi_nomor;
-        setRadio('ttd', r.jenis_ttd);
+        el.perihal.value = r.perihal;
         kunci(false); bersihkanGalat(); urut = editAsal.nomor_urut; pratinjau();
         $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -99,16 +95,14 @@
     $('suratForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         bersihkanGalat();
-        const wajib = [['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal'],
-                       ['untuk', 'kolom Untuk'], ['pejabat', 'pejabat TTD'], ['pembuat', 'pembuat surat']];
+        const wajib = [['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal']];
         for (const [k, nama] of wajib) {
             if (!el[k].value.trim()) { el[k].classList.add('bad'); el[k].focus(); toast('Isi ' + nama + ' terlebih dahulu.', true); return; }
         }
         const data = {
             aksi: editId ? 'ubah' : 'tambah', id: editId,
             tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
-            perihal: el.perihal.value, untuk: el.untuk.value, jenis_ttd: radio('ttd'),
-            pejabat_ttd: el.pejabat.value, pembuat_surat: el.pembuat.value, pemberi_nomor: el.pemberi.value,
+            perihal: el.perihal.value,
         };
         const btn = $('btnSimpan'); btn.disabled = true;
         try {

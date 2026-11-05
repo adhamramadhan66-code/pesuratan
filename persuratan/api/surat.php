@@ -46,18 +46,25 @@ function format_nomor(int $urut, string $tujuan, string $jenis, string $unit, in
 /** Validasi isian form; mengembalikan [data, pesan_error]. */
 function baca_form(PDO $pdo, array $in, bool $baru): array
 {
-    $d = [
-        'perihal'       => teks($in['perihal'] ?? ''),
-        'untuk'         => teks($in['untuk'] ?? ''),
-        'jenis_ttd'     => ($in['jenis_ttd'] ?? '') === 'scan' ? 'scan' : 'basah',
-        'pejabat_ttd'   => teks($in['pejabat_ttd'] ?? '', 100),
-        'pembuat_surat' => teks($in['pembuat_surat'] ?? '', 100),
-        'pemberi_nomor' => teks($in['pemberi_nomor'] ?? '', 100),
-    ];
-    if ($d['perihal'] === '')       return [null, 'Perihal wajib diisi.'];
-    if ($d['untuk'] === '')         return [null, 'Kolom "Untuk" wajib diisi.'];
-    if ($d['pejabat_ttd'] === '')   return [null, 'Pejabat penandatangan wajib diisi.'];
-    if ($d['pembuat_surat'] === '') return [null, 'Pembuat surat wajib diisi.'];
+    $d = ['perihal' => teks($in['perihal'] ?? '')];
+    if ($d['perihal'] === '') return [null, 'Perihal wajib diisi.'];
+
+    // Kolom opsional: hanya diproses bila dikirim oleh form (form Penomoran tidak lagi mengirimnya).
+    // Bila tidak dikirim, INSERT memakai default database dan UPDATE membiarkan nilai lama.
+    if (array_key_exists('untuk', $in)) {
+        $d['untuk'] = teks($in['untuk']);
+        if ($d['untuk'] === '') return [null, 'Kolom "Untuk" wajib diisi.'];
+    }
+    if (array_key_exists('jenis_ttd', $in))   $d['jenis_ttd'] = $in['jenis_ttd'] === 'scan' ? 'scan' : 'basah';
+    if (array_key_exists('pejabat_ttd', $in)) {
+        $d['pejabat_ttd'] = teks($in['pejabat_ttd'], 100);
+        if ($d['pejabat_ttd'] === '') return [null, 'Pejabat penandatangan wajib diisi.'];
+    }
+    if (array_key_exists('pembuat_surat', $in)) {
+        $d['pembuat_surat'] = teks($in['pembuat_surat'], 100);
+        if ($d['pembuat_surat'] === '') return [null, 'Pembuat surat wajib diisi.'];
+    }
+    if (array_key_exists('pemberi_nomor', $in)) $d['pemberi_nomor'] = teks($in['pemberi_nomor'], 100);
 
     if ($baru) {
         $d['tanggal_surat'] = tanggal_valid($in['tanggal_surat'] ?? '');
@@ -173,8 +180,8 @@ try {
                             tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                         ->execute([$tahun, $bulan, $urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $nomor,
-                            $d['tanggal_surat'], $d['perihal'], $d['untuk'], $d['jenis_ttd'], $d['pejabat_ttd'],
-                            $d['pembuat_surat'], $d['pemberi_nomor']]);
+                            $d['tanggal_surat'], $d['perihal'], $d['untuk'] ?? '', $d['jenis_ttd'] ?? 'basah', $d['pejabat_ttd'] ?? '',
+                            $d['pembuat_surat'] ?? '', $d['pemberi_nomor'] ?? '']);
                     keluar(['ok' => true, 'id' => (int) $pdo->lastInsertId(), 'nomor_surat' => $nomor], 201);
                 } catch (PDOException $e) {
                     if ($e->getCode() !== '23000') throw $e;   // selain duplikat nomor -> lempar
@@ -199,11 +206,14 @@ try {
                 $urut = $sama ? (int) $lama['nomor_urut'] : nomor_berikutnya($pdo, $tahun, $bulan);
                 $nomor = format_nomor($urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $bulan, $tahun);
                 try {
-                    $pdo->prepare('UPDATE surat SET tahun = ?, bulan = ?, nomor_urut = ?, kode_tujuan = ?, jenis_kode = ?, unit_kode = ?, nomor_surat = ?,
-                            tanggal_surat = ?, perihal = ?, untuk = ?, jenis_ttd = ?, pejabat_ttd = ?, pembuat_surat = ?, pemberi_nomor = ? WHERE id = ?')
-                        ->execute([$tahun, $bulan, $urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $nomor,
-                            $d['tanggal_surat'], $d['perihal'], $d['untuk'], $d['jenis_ttd'], $d['pejabat_ttd'],
-                            $d['pembuat_surat'], $d['pemberi_nomor'], $id]);
+                    $set = ['tahun = ?', 'bulan = ?', 'nomor_urut = ?', 'kode_tujuan = ?', 'jenis_kode = ?', 'unit_kode = ?', 'nomor_surat = ?',
+                            'tanggal_surat = ?', 'perihal = ?'];
+                    $par = [$tahun, $bulan, $urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $nomor, $d['tanggal_surat'], $d['perihal']];
+                    foreach (['untuk', 'jenis_ttd', 'pejabat_ttd', 'pembuat_surat', 'pemberi_nomor'] as $kol) {
+                        if (array_key_exists($kol, $d)) { $set[] = "$kol = ?"; $par[] = $d[$kol]; }
+                    }
+                    $par[] = $id;
+                    $pdo->prepare('UPDATE surat SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($par);
                     keluar(['ok' => true, 'nomor_surat' => $nomor]);
                 } catch (PDOException $e) {
                     if ($e->getCode() !== '23000' || $sama) throw $e;
