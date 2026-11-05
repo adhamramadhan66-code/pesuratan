@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman demo: hanya dibuka jika sesi login tersedia.
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+            } catch (error) {
+                window.location.replace('index.html');
+            }
+        })();
+    </script>
+    <title>Surat Keluar | Persuratan TSU</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=9">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="penomoran.html" class="nav-item">
+                    <i data-lucide="file-plus" class="icon"></i>
+                    <span>Penomoran</span>
+                </a>
+                <a href="disposisi.html" class="nav-item">
+                    <i data-lucide="clipboard-check" class="icon"></i>
+                    <span>Disposisi</span>
+                </a>
+                <a href="surat_masuk.html" class="nav-item">
+                    <i data-lucide="inbox" class="icon"></i>
+                    <span>Surat Masuk</span>
+                </a>
+                <a href="surat_keluar.html" class="nav-item active">
+                    <i data-lucide="send" class="icon"></i>
+                    <span>Surat Keluar</span>
+                </a>
+                <a href="arsip.html" class="nav-item">
+                    <i data-lucide="archive" class="icon"></i>
+                    <span>Pengarsipan</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Persuratan</p>
+                <h2>Surat Keluar</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="stat-strip">
+            <div class="kpi-card dark">
+                <p class="kpi-title">Total surat keluar</p>
+                <h3 class="kpi-value" id="sTotal">0</h3>
+                <p class="kpi-trend" id="sPersen">&nbsp;</p>
+                <div class="progress"><i id="sBar" style="width:0"></i></div>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Sudah terkirim</p>
+                <h3 class="kpi-value" id="sKirim">0</h3>
+                <p class="kpi-trend positive">Tahap 4 selesai</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Belum diarsipkan</p>
+                <h3 class="kpi-value" id="sBelum" style="color:var(--red)">0</h3>
+                <p class="kpi-trend negative">Perlu diarsipkan</p>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div><h3>Alur surat keluar</h3></div>
+                <div class="toolbar"><a class="btn primary" href="penomoran.html">+ Surat baru (Penomoran)</a></div>
+            </div>
+            <div class="alur-info"><ol class="langkah">
+                <li><b>1</b> Draf &amp; nomor <small>Konsep disusun, nomor diberikan di Penomoran</small></li>
+                <li><b>2</b> Verifikasi &amp; persetujuan <small>Diperiksa dan disetujui atasan (lihat Disposisi)</small></li>
+                <li><b>3</b> Tanda tangan &amp; cap <small>Ditandatangani pejabat, diberi cap atau TTD elektronik</small></li>
+                <li><b>4</b> Pengiriman &amp; pengarsipan <small>Dikirim ke tujuan, salinannya diarsipkan</small></li>
+            </ol></div>
+            <div class="panel-head" style="border-top:1px solid var(--border-color)">
+                <div class="seg" id="segArsip" role="radiogroup" aria-label="Filter status arsip">
+                    <label><input type="radio" name="ar" value="" checked><span>Semua</span></label>
+                    <label><input type="radio" name="ar" value="belum"><span>Belum diarsipkan</span></label>
+                    <label><input type="radio" name="ar" value="diarsipkan"><span>Sudah diarsipkan</span></label>
+                </div>
+                <div class="toolbar">
+                    <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat keluar">
+                    <select id="fTahap" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="bernomor">Bernomor</option><option value="diperiksa">Diperiksa</option><option value="ditandatangani">Ditandatangani</option><option value="terkirim">Terkirim</option></select>
+                    <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
+                    <select id="fBulan" aria-label="Bulan"></select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>No. Surat</th><th>Perihal &amp; penerima</th><th>Penandatangan</th><th>Tahap</th><th>Disposisi</th><th>Arsip</th><th>Aksi</th></tr></thead>
+                    <tbody id="tbody"><tr class="empty-row"><td colspan="7">Memuat…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <!-- Dialog pengiriman -->
+    <dialog class="modal" id="dlgKirim">
+        <form id="kirimForm" novalidate>
+            <div class="modal-head"><h3>Kirim surat</h3><p><b class="mono" id="kNomor"></b><br><span id="kPerihal"></span></p></div>
+            <div class="modal-body">
+                <div class="field"><label for="k_tgl">Tanggal pengiriman</label><input type="date" id="k_tgl"></div>
+                <div class="field"><label for="k_ket">Dikirim ke / keterangan <span class="opt">(opsional)</span></label><input type="text" id="k_ket" maxlength="255" placeholder="Contoh: Diantar langsung ke Dinas Pendidikan"></div>
+            </div>
+            <div class="modal-foot"><button type="button" class="btn" id="kBatal">Batal</button><button type="submit" class="btn primary" id="kSimpan">Tandai terkirim</button></div>
+        </form>
+    </dialog>
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="surat_keluar.js?v=1"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

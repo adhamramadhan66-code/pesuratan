@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman demo: hanya dibuka jika sesi login tersedia.
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+            } catch (error) {
+                window.location.replace('index.html');
+            }
+        })();
+    </script>
+    <title>Pengarsipan | Persuratan TSU</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=9">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="penomoran.html" class="nav-item">
+                    <i data-lucide="file-plus" class="icon"></i>
+                    <span>Penomoran</span>
+                </a>
+                <a href="disposisi.html" class="nav-item">
+                    <i data-lucide="clipboard-check" class="icon"></i>
+                    <span>Disposisi</span>
+                </a>
+                <a href="surat_masuk.html" class="nav-item">
+                    <i data-lucide="inbox" class="icon"></i>
+                    <span>Surat Masuk</span>
+                </a>
+                <a href="surat_keluar.html" class="nav-item">
+                    <i data-lucide="send" class="icon"></i>
+                    <span>Surat Keluar</span>
+                </a>
+                <a href="arsip.html" class="nav-item active">
+                    <i data-lucide="archive" class="icon"></i>
+                    <span>Pengarsipan</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Persuratan</p>
+                <h2>Pengarsipan surat</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="stat-strip">
+            <div class="kpi-card dark">
+                <p class="kpi-title">Total surat</p>
+                <h3 class="kpi-value" id="sTotal">0</h3>
+                <p class="kpi-trend" id="sPersen">&nbsp;</p>
+                <div class="progress"><i id="sBar" style="width:0"></i></div>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Sudah diarsipkan</p>
+                <h3 class="kpi-value" id="sSudah">0</h3>
+                <p class="kpi-trend positive">Lokasi fisik dan/atau file scan tercatat</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Belum diarsipkan</p>
+                <h3 class="kpi-value" id="sBelum">0</h3>
+                <p class="kpi-trend negative">Perlu diarsipkan</p>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div class="seg" id="segStatus" role="radiogroup" aria-label="Filter status arsip">
+                    <label><input type="radio" name="st" value="" checked><span>Semua</span></label>
+                    <label><input type="radio" name="st" value="belum"><span>Belum</span></label>
+                    <label><input type="radio" name="st" value="diarsipkan"><span>Sudah</span></label>
+                </div>
+                <div class="toolbar">
+                    <input type="text" id="q" placeholder="Cari nomor, perihal, pembuat, lokasi…" aria-label="Cari surat">
+                    <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
+                    <select id="fJenis" aria-label="Kategori (jenis surat)"><option value="">Semua kategori</option></select>
+                    <select id="fPembuat" aria-label="Pembuat surat"><option value="">Semua pembuat</option></select>
+                    <select id="fBulan" aria-label="Bulan"></select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>No Surat</th><th>Kategori</th><th>Perihal</th><th>Pembuat</th><th>Status</th><th>Lokasi arsip</th><th>File scan</th><th>Aksi</th></tr></thead>
+                    <tbody id="tbody"><tr class="empty-row"><td colspan="8">Memuat…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <dialog class="modal" id="dlgArsip">
+        <form id="dlgForm" novalidate>
+            <div class="modal-head">
+                <h3 id="dlgJudul">Arsipkan surat</h3>
+                <p><b class="mono" id="dlgNomor"></b><br><span id="dlgPerihal"></span></p>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label for="dlgTanggal">Tanggal diarsipkan</label>
+                    <input type="date" id="dlgTanggal">
+                </div>
+                <div class="field">
+                    <label for="dlgLokasi">Lokasi arsip fisik <span class="opt">(opsional bila ada file scan)</span></label>
+                    <input type="text" id="dlgLokasi" maxlength="150" placeholder="Contoh: Lemari A, Rak 2, Map SK 2026">
+                </div>
+                <div class="field">
+                    <label for="dlgKet">Keterangan <span class="opt">(opsional)</span></label>
+                    <input type="text" id="dlgKet" maxlength="255" placeholder="Catatan tambahan">
+                </div>
+                <div class="field">
+                    <label for="dlgFile">File scan surat <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
+                    <div class="file-now" id="fileNow" style="display:none">
+                        <span>File saat ini: <b id="fileNowNama"></b> <a href="#" id="fileNowLihat" target="_blank" rel="noopener" class="muted">(lihat)</a></span>
+                        <label><input type="checkbox" id="dlgHapusFile"> Hapus file ini</label>
+                    </div>
+                    <input type="file" id="dlgFile" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                    <span class="help">Mengunggah file baru akan menggantikan file lama.</span>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn" id="dlgBatal">Batal</button>
+                <button type="submit" class="btn primary" id="dlgSimpan"><i data-lucide="archive"></i> Simpan arsip</button>
+            </div>
+        </form>
+    </dialog>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="arsip.js?v=2"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>
