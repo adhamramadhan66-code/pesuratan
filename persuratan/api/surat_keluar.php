@@ -220,13 +220,13 @@ jalankan(function () {
                 VALUES (?, ?, ?, 'menunggu_nomor', ?, ?, ?, ?, ?)")
                 ->execute([$perihal, $tujuan, $tgl, $f[0] ?? '', $f[1] ?? '', $u['id'], $u['id'], date('Y-m-d H:i:s')]);
             $id = (int) $pdo->lastInsertId();
-            try {
-                $r = terbitkan_surat($id, $u, $mode, $manual, false);
-            } catch (Throwable $e) {                     // gagal (mis. nomor manual kembar): batalkan surat yang baru dibuat
-                $pdo->prepare('DELETE FROM surat_keluar WHERE id = ?')->execute([$id]);
-                if ($f) hapus_file($f[0]);
-                throw $e;
-            }
+            // json_keluar() mengakhiri skrip saat gagal (mis. nomor manual kembar): hapus surat setengah jadi ini.
+            register_shutdown_function(function () use ($pdo, $id, $f) {
+                $c = $pdo->prepare("DELETE FROM surat_keluar WHERE id = ? AND status = 'menunggu_nomor'");
+                $c->execute([$id]);
+                if ($c->rowCount() && $f) hapus_file($f[0]);
+            });
+            $r = terbitkan_surat($id, $u, $mode, $manual, false);
             json_keluar(['ok' => true, 'surat' => baris_keluar($r)], 201);
         }
 
