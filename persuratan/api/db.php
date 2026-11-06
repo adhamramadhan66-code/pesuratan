@@ -37,6 +37,18 @@ function db(): PDO
 
 function buat_tabel(PDO $pdo): void
 {
+    // Database sisa versi e-Office (login per peran) tidak cocok dengan versi ini: tabelnya dicadangkan
+    // dengan akhiran _eoffice (data tidak dihapus), lalu tabel versi ini dibuat baru.
+    try { $eoffice = (bool) $pdo->query("SHOW COLUMNS FROM `surat_masuk` LIKE 'dibuat_oleh'")->fetch(); } catch (PDOException $e) { $eoffice = false; }
+    if ($eoffice) {
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach (['disposisi', 'surat_masuk', 'surat_keluar', 'pengguna'] as $t) {
+            $baru = $t . '_eoffice';
+            try { $pdo->exec("DROP TABLE IF EXISTS `$baru`"); $pdo->exec("RENAME TABLE `$t` TO `$baru`"); } catch (PDOException $e) { /* tabel tidak ada */ }
+        }
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
+    }
+
     $pdo->exec('CREATE TABLE IF NOT EXISTS jenis_surat (
         kode VARCHAR(10)  NOT NULL PRIMARY KEY,
         nama VARCHAR(80)  NOT NULL
