@@ -27,7 +27,7 @@
     }
 
     function render() {
-        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat masuk. Klik "Catat surat masuk" untuk mulai.</p>'; return; }
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat masuk. Surat internal muncul di sini otomatis setelah di-ACC di menu Disposisi.</p>'; return; }
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const dsp = r.disposisi_id
@@ -66,7 +66,6 @@
         $('fileNowM').style.display = r.ada_file ? '' : 'none';
         if (r.ada_file) { $('fileNowNamaM').textContent = r.file_nama; $('fileNowLihatM').href = API + '?aksi=file&id=' + r.id; }
     }
-    $('btnBaru').addEventListener('click', () => { editId = null; $('dlgJudul').textContent = 'Catat surat masuk'; isiForm(); dlg.showModal(); dlg.scrollTop = 0; });
     $('dlgBatal').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
 
