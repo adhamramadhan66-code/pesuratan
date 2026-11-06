@@ -152,5 +152,6 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { user, peran: user ? user.peran : '', NAMA_PERAN, $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
+    const bisa = (...p) => !!user && (user.peran === 'admin' || p.includes(user.peran));   // admin boleh semua
+    window.App = { bisa, user, peran: user ? user.peran : '', NAMA_PERAN, $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
 })();

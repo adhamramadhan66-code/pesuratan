@@ -132,7 +132,7 @@ jalankan(function () {
         case 'ubah': {
             $u = wajib_peran('staf');
             $r = ambil_keluar((int) ($in['id'] ?? 0));
-            if ((int) $r['pembuat_id'] !== $u['id']) json_keluar(['error' => 'Hanya pembuat draf yang boleh mengubahnya.'], 403);
+            if ($u['peran'] !== 'admin' && (int) $r['pembuat_id'] !== $u['id']) json_keluar(['error' => 'Hanya pembuat draf yang boleh mengubahnya.'], 403);
             if ($r['status'] !== 'menunggu_acc') json_keluar(['error' => 'Draf yang sudah di-ACC tidak bisa diubah.'], 409);
             [$perihal, $tujuan, $tgl] = data_draf($in);
             $f = simpan_unggahan();
@@ -147,7 +147,7 @@ jalankan(function () {
         case 'hapus': {
             $u = wajib_peran('staf');
             $r = ambil_keluar((int) ($in['id'] ?? 0));
-            if ((int) $r['pembuat_id'] !== $u['id']) json_keluar(['error' => 'Hanya pembuat draf yang boleh menghapusnya.'], 403);
+            if ($u['peran'] !== 'admin' && (int) $r['pembuat_id'] !== $u['id']) json_keluar(['error' => 'Hanya pembuat draf yang boleh menghapusnya.'], 403);
             if ($r['status'] !== 'menunggu_acc') json_keluar(['error' => 'Draf yang sudah di-ACC tidak bisa dihapus.'], 409);
             $pdo->prepare('DELETE FROM surat_keluar WHERE id = ? AND status = ?')->execute([$r['id'], 'menunggu_acc']);
             hapus_file($r['file_surat']);

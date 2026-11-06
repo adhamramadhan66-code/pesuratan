@@ -11,10 +11,10 @@
     const INFO = {
         staf: 'Klik <b>Buat draft</b> untuk mengirim draf ke pimpinan. Draf bisa diubah/dihapus selama <span class="chip bad">menunggu ACC</span>.',
         pimpinan: 'Periksa draf (klik kotaknya untuk membuka file), lalu tekan <b>ACC</b>. Draf yang di-ACC otomatis masuk antrean <b>Penomoran</b>.',
-        admin: 'Draf yang sudah di-ACC pimpinan ada di menu <b>Penomoran</b>, tempat Anda memberi nomor dan menerbitkannya. Surat yang <span class="chip ok">terbit</span> tampil di sini.'
+        admin: 'Sebagai admin Anda bisa semuanya: <b>Buat draft</b> → <b>ACC</b> → beri nomor di menu <b>Penomoran</b>. Surat yang <span class="chip ok">terbit</span> tampil di sini.'
     };
     $('alurInfo').innerHTML = INFO[peran] || '';
-    if (peran === 'staf') $('btnDraft').style.display = '';
+    if (App.bisa('staf')) $('btnDraft').style.display = '';
 
     const status = () => document.querySelector('#segStatus input:checked').value;
 
@@ -39,8 +39,8 @@
     function aksi(r) {
         const u = URL_API + '?aksi=file&id=' + r.id;
         let h = r.ada_file ? '<a class="btn sm" href="' + esc(u) + '" target="_blank" rel="noopener">Lihat</a>' : '';
-        if (peran === 'pimpinan' && r.status === 'menunggu_acc') h += '<button type="button" class="btn sm primary" data-a="acc" data-id="' + r.id + '">ACC</button>';
-        if (peran === 'staf' && r.status === 'menunggu_acc' && r.pembuat_id === user.id)
+        if (App.bisa('pimpinan') && r.status === 'menunggu_acc') h += '<button type="button" class="btn sm primary" data-a="acc" data-id="' + r.id + '">ACC</button>';
+        if (App.bisa('staf') && r.status === 'menunggu_acc' && (peran === 'admin' || r.pembuat_id === user.id))
             h += '<button type="button" class="btn sm" data-a="ubah" data-id="' + r.id + '">Ubah</button><button type="button" class="btn sm danger" data-a="hapus" data-id="' + r.id + '">Hapus</button>';
         if (peran === 'admin' && r.status === 'menunggu_nomor') h += '<a class="btn sm primary" href="penomoran.html">Ke Penomoran</a>';
         return h;

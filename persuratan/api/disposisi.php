@@ -19,7 +19,7 @@ jalankan(function () {
 
         if ($aksi === 'staf') {
             wajib_peran('pimpinan');
-            $d = $pdo->query("SELECT id, nama, email FROM pengguna WHERE peran = 'staf' ORDER BY nama")->fetchAll();
+            $d = $pdo->query("SELECT id, nama, email FROM pengguna ORDER BY (peran = 'staf') DESC, nama")->fetchAll();
             json_keluar(['data' => $d]);
         }
 
@@ -68,7 +68,7 @@ jalankan(function () {
             if ($instruksi === '') json_keluar(['error' => 'Isi instruksi disposisi.'], 422);
             $batas = ($in['batas_waktu'] ?? '') === '' ? null : tanggal_atau_null($in['batas_waktu']);
             if (($in['batas_waktu'] ?? '') !== '' && !$batas) json_keluar(['error' => 'Batas waktu tidak valid.'], 422);
-            $c = $pdo->prepare("SELECT COUNT(*) FROM pengguna WHERE id = ? AND peran = 'staf'");
+            $c = $pdo->prepare("SELECT COUNT(*) FROM pengguna WHERE id = ?");
             $c->execute([$stafId]);
             if (!(int) $c->fetchColumn()) json_keluar(['error' => 'Pilih staf tujuan disposisi.'], 422);
 
@@ -98,7 +98,7 @@ jalankan(function () {
             $s->execute([$id]);
             $d = $s->fetch();
             if (!$d) json_keluar(['error' => 'Disposisi tidak ditemukan.'], 404);
-            if ((int) $d['staf_id'] !== $u['id']) json_keluar(['error' => 'Disposisi ini ditujukan kepada staf lain.'], 403);
+            if ($u['peran'] !== 'admin' && (int) $d['staf_id'] !== $u['id']) json_keluar(['error' => 'Disposisi ini ditujukan kepada staf lain.'], 403);
             if ($d['status'] !== 'proses_staf') json_keluar(['error' => 'Disposisi ini sudah selesai.'], 409);
 
             $pdo->beginTransaction();

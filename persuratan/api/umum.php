@@ -72,6 +72,7 @@ function wajib_login(): array
 function wajib_peran(string ...$peran): array
 {
     $u = wajib_login();
+    if ($u['peran'] === 'admin') return $u;                  // admin = superuser: boleh semua aksi
     if (!in_array($u['peran'], $peran, true)) {
         $nama = ['staf' => 'Staf', 'pimpinan' => 'Pimpinan', 'admin' => 'Admin'];
         json_keluar(['error' => 'Aksi ini hanya untuk ' . implode(' / ', array_map(fn($p) => $nama[$p] ?? $p, $peran)) . '.'], 403);

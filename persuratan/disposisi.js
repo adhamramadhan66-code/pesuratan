@@ -6,16 +6,16 @@
     let data = [], mode = '', aktif = null, mulaiMemuat = 0;
 
     // Tab filter per peran. "perlu" = surat masuk yang belum didisposisikan (hanya pimpinan).
-    const TAB = peran === 'pimpinan'
+    const TAB = App.bisa('pimpinan')
         ? [['perlu', 'Perlu disposisi'], ['proses_staf', 'Proses staf'], ['selesai', 'Selesai'], ['', 'Semua disposisi']]
         : [['', 'Semua'], ['proses_staf', 'Proses staf'], ['selesai', 'Selesai']];
     mode = TAB[0][0];
     $('segStatus').innerHTML = TAB.map((t, i) => '<label><input type="radio" name="st" value="' + t[0] + '"' + (i === 0 ? ' checked' : '') + '><span>' + t[1] + '</span></label>').join('');
-    if (peran !== 'pimpinan') { $('sJudul1').textContent = 'Total disposisi'; }
+    if (!App.bisa('pimpinan')) { $('sJudul1').textContent = 'Total disposisi'; }
     $('alurInfo').innerHTML = {
         pimpinan: 'Tab <b>Perlu disposisi</b> berisi surat masuk <span class="chip bad">diterima</span>. Tekan <b>Disposisi</b> untuk meneruskannya ke staf <span class="chip bad">proses staf</span>.',
         staf: 'Disposisi yang ditujukan kepada Anda. Setelah dikerjakan, tekan <b>Selesai</b> <span class="chip ok">selesai</span>.',
-        admin: 'Pantau disposisi surat masuk. Disposisi dibuat oleh pimpinan dan diselesaikan oleh staf.'
+        admin: ''
     }[peran] || '';
 
     async function muat() {
@@ -27,7 +27,7 @@
             if (my !== mulaiMemuat) return;
             data = rows; gambar();
             const s = await api('api/statistik.php');
-            if (peran === 'pimpinan') $('sPerlu').textContent = s.masuk.diterima;
+            if (App.bisa('pimpinan')) $('sPerlu').textContent = s.masuk.diterima;
             else $('sPerlu').textContent = s.masuk.proses_staf + s.masuk.selesai;
             $('sProses').textContent = s.masuk.proses_staf; $('sSelesai').textContent = s.masuk.selesai;
         } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
@@ -52,7 +52,7 @@
                 sub: [esc(s.perihal), 'Untuk: ' + esc(r.staf) + ' · dari ' + esc(r.pimpinan),
                       '“' + esc(r.instruksi) + '”' + (r.batas_waktu ? ' · batas ' + esc(tglIndo(r.batas_waktu)) : '') + (selesai && r.catatan_selesai ? ' · Catatan: ' + esc(r.catatan_selesai) : '')],
                 status: '<span class="badge ' + (selesai ? 'ok' : 'warn') + '">' + (selesai ? 'Selesai ' + esc(tglIndo(r.tanggal_selesai)) : 'Proses staf') + '</span>',
-                aksi: peran === 'staf' && !selesai ? '<button type="button" class="btn sm primary" data-a="selesai" data-id="' + r.id + '">Selesai</button>' : '',
+                aksi: App.bisa('staf') && !selesai ? '<button type="button" class="btn sm primary" data-a="selesai" data-id="' + r.id + '">Selesai</button>' : '',
             });
         }).join('') : '<p class="galeri-kosong">Belum ada disposisi pada filter ini.</p>';
     }
@@ -109,7 +109,7 @@
     (async function awal() {
         await muat();
         const id = +new URLSearchParams(location.search).get('surat');
-        if (id && peran === 'pimpinan') {
+        if (id && App.bisa('pimpinan')) {
             try {
                 const r = (await api(SM + '?aksi=daftar&status=diterima')).data.find((x) => x.id === id);
                 if (r) bukaDisposisi(r); else toast('Surat itu sudah didisposisikan.', true);

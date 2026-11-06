@@ -9,7 +9,7 @@
     let data = [], ubahId = null, mulaiMemuat = 0;
 
     const INFO = {
-        admin: 'Klik <b>Input surat masuk</b> untuk mencatat surat <span class="chip bad">diterima</span>. Pimpinan lalu membuat disposisi ke staf, dan staf menyelesaikannya.',
+        admin: 'Klik <b>Input surat masuk</b>, lalu tekan <b>Disposisi</b> pada surat <span class="chip bad">diterima</span> untuk meneruskannya. Tandai selesai di menu <b>Disposisi</b>.',
         pimpinan: 'Surat <b>diterima</b> menunggu disposisi Anda. Tekan <b>Disposisi</b> untuk meneruskannya ke staf.',
         staf: 'Hanya surat yang didisposisikan kepada Anda yang tampil di sini. Selesaikan tugasnya di menu <b>Disposisi</b>.'
     };
@@ -31,7 +31,7 @@
 
     function aksi(r) {
         let h = r.ada_file ? '<a class="btn sm" href="' + esc(URL_API + '?aksi=file&id=' + r.id) + '" target="_blank" rel="noopener">Lihat</a>' : '';
-        if (peran === 'pimpinan' && r.status === 'diterima') h += '<a class="btn sm primary" href="disposisi.html?surat=' + r.id + '">Disposisi</a>';
+        if (App.bisa('pimpinan') && r.status === 'diterima') h += '<a class="btn sm primary" href="disposisi.html?surat=' + r.id + '">Disposisi</a>';
         if (peran === 'admin' && r.status === 'diterima')
             h += '<button type="button" class="btn sm" data-a="ubah" data-id="' + r.id + '">Ubah</button><button type="button" class="btn sm danger" data-a="hapus" data-id="' + r.id + '">Hapus</button>';
         return h;
