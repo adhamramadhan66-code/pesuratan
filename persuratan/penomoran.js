@@ -28,7 +28,7 @@
                 '<td>' + esc(r.acc_oleh || '-') + '<span class="sub">' + esc(tglIndo(r.tanggal_acc)) + '</span></td>' +
                 '<td><div class="aksi"><button type="button" class="btn sm" data-a="preview" data-id="' + r.id + '">Preview Draft</button>' +
                 '<button type="button" class="btn sm primary" data-a="nomori" data-id="' + r.id + '">Beri Nomor &amp; Terbitkan</button></div></td></tr>'
-            ).join('') : '<tr><td colspan="6" class="galeri-kosong">Tidak ada surat dalam antrean. Surat muncul di sini setelah pimpinan menekan ACC.</td></tr>';
+            ).join('') : '<tr><td colspan="6" class="galeri-kosong">Antrean kosong. Buat draft di <a href="surat_keluar.html">Surat Keluar</a> lalu tekan ACC, maka surat muncul di sini.</td></tr>';
         } catch (e) { toast(e.message, true); $('antreanBody').innerHTML = '<tr><td colspan="6" class="galeri-kosong">' + esc(e.message) + '</td></tr>'; }
     }
 

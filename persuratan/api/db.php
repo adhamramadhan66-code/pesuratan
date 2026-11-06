@@ -161,20 +161,21 @@ CREATE TABLE IF NOT EXISTS surat_keluar (
 SQL);
 }
 
-/** Akun demo (kata sandi semuanya tsu12345), hanya dibuat bila tabel pengguna masih kosong. */
+/**
+ * Untuk sementara hanya ada SATU akun: admin (bisa mengakses semua fitur). Kata sandi: tsu12345.
+ * Akun pimpinan/staf contoh dari versi sebelumnya dihapus bila belum dipakai di data apa pun.
+ */
 function isi_data_awal(PDO $pdo): void
 {
-    if ((int) $pdo->query('SELECT COUNT(*) FROM pengguna')->fetchColumn() > 0) return;
-    $s = $pdo->prepare('INSERT INTO pengguna (nama, email, kata_sandi, peran) VALUES (?, ?, ?, ?)');
-    $hash = password_hash('tsu12345', PASSWORD_DEFAULT);
-    foreach ([
-        ['Admin TSU',       'admin@tsu.ac.id',    'admin'],
-        ['Pimpinan TSU',    'pimpinan@tsu.ac.id', 'pimpinan'],
-        ['Staf TSU',        'staf@tsu.ac.id',     'staf'],
-        ['Staf Akademik',   'staf2@tsu.ac.id',    'staf'],
-    ] as [$nama, $email, $peran]) {
-        $s->execute([$nama, $email, $hash, $peran]);
+    $s = $pdo->prepare('SELECT COUNT(*) FROM pengguna WHERE email = ?');
+    $s->execute(['admin@tsu.ac.id']);
+    if (!(int) $s->fetchColumn()) {
+        $pdo->prepare('INSERT INTO pengguna (nama, email, kata_sandi, peran) VALUES (?, ?, ?, ?)')
+            ->execute(['Admin TSU', 'admin@tsu.ac.id', password_hash('tsu12345', PASSWORD_DEFAULT), 'admin']);
     }
+    $pdo->exec("DELETE FROM pengguna WHERE email IN ('pimpinan@tsu.ac.id', 'staf@tsu.ac.id', 'staf2@tsu.ac.id')
+        AND id NOT IN (SELECT pembuat_id FROM surat_keluar) AND id NOT IN (SELECT dibuat_oleh FROM surat_masuk)
+        AND id NOT IN (SELECT staf_id FROM disposisi) AND id NOT IN (SELECT pimpinan_id FROM disposisi)");
 }
 
 /** Angka bulan -> romawi (1 => I ... 12 => XII). */

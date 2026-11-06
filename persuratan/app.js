@@ -22,7 +22,7 @@
     function cekSesi() { const u = bacaSesi(); if (!u) keLogin(); return u; }
     const user = cekSesi();
     if (user) {
-        if ($('currentUserLabel')) $('currentUserLabel').textContent = user.nama + ' · ' + (NAMA_PERAN[user.peran] || user.peran);
+        if ($('currentUserLabel')) $('currentUserLabel').textContent = user.nama;
         document.querySelectorAll('.nav-menu a.nav-item').forEach((a) => {
             if (user.peran !== 'admin' && MENU_ADMIN_SAJA.includes((a.getAttribute('href') || '').split('?')[0])) a.style.display = 'none';
         });

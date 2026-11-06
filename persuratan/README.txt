@@ -3,11 +3,11 @@ PERSURATAN TSU (Kampusly) - e-Office
 Aplikasi persuratan Universitas Tiga Serangkai dengan login per peran (Staf / Pimpinan / Admin).
 Backend PHP native (PDO + MySQL), frontend JavaScript (fetch). Skema database: database.sql.
 
-AKUN DEMO (kata sandi semuanya: tsu12345)
-  admin@tsu.ac.id      Admin     : input surat masuk, penomoran & penerbitan surat keluar, pengarsipan
-  pimpinan@tsu.ac.id   Pimpinan  : ACC draf surat keluar, membuat disposisi surat masuk
-  staf@tsu.ac.id       Staf      : membuat draf surat keluar, menyelesaikan disposisi
-  staf2@tsu.ac.id      Staf      : akun staf kedua (untuk uji penugasan disposisi)
+AKUN (sementara hanya satu)
+  admin@tsu.ac.id  /  tsu12345   -> Admin, bisa mengakses SEMUA fitur: membuat draft, ACC, penomoran & terbit,
+                                    input surat masuk, disposisi, menyelesaikan disposisi, pengarsipan.
+  Akun pimpinan dan staf akan ditambahkan nanti setelah alur sudah pas. Pembagian peran sudah ada di server
+  (kolom peran di tabel pengguna), jadi tinggal menambah akun.
 
 ALUR SURAT MASUK (pakai Disposisi)
   Admin input surat            -> status "diterima"

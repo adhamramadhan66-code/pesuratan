@@ -99,10 +99,7 @@ CREATE TABLE IF NOT EXISTS surat_keluar (
     CONSTRAINT fk_sk_pembuat FOREIGN KEY (pembuat_id) REFERENCES pengguna (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Akun demo (kata sandi: tsu12345). Hash di bawah dibuat dengan password_hash() PHP; aplikasi juga mengisinya otomatis bila tabel kosong.
+-- Satu akun dulu: admin (bisa mengakses semua fitur), kata sandi: tsu12345. Hash di bawah dibuat dengan password_hash() PHP; aplikasi juga mengisinya otomatis bila tabel kosong.
 -- Jalankan baris berikut dari PHP bila ingin membuat hash sendiri:  php -r "echo password_hash('tsu12345', PASSWORD_DEFAULT);"
 INSERT IGNORE INTO pengguna (nama, email, kata_sandi, peran) VALUES
-  ('Admin TSU',     'admin@tsu.ac.id',    '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'admin'),
-  ('Pimpinan TSU',  'pimpinan@tsu.ac.id', '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'pimpinan'),
-  ('Staf TSU',      'staf@tsu.ac.id',     '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'staf'),
-  ('Staf Akademik', 'staf2@tsu.ac.id',    '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'staf');
+  ('Admin TSU', 'admin@tsu.ac.id', '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'admin');
