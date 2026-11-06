@@ -3,7 +3,7 @@
  * API Data Surat.
  *   GET  api/surat.php?aksi=opsi                      -> daftar jenis surat & unit
  *   GET  api/surat.php?aksi=preview&tanggal=Y-m-d     -> nomor urut berikutnya pada bulan itu
- *   GET  api/surat.php?aksi=daftar&q=&tahun=&bulan=&limit=
+ *   GET  api/surat.php?aksi=daftar&q=&tahun=&bulan=&limit=&acc=1   (acc=1: hanya surat yang disposisinya sudah di-ACC)
  *   GET  api/surat.php?aksi=statistik&dari=Y-m-d&sampai=Y-m-d
  *   POST api/surat.php {aksi: tambah | ubah | hapus, ...}
  */
@@ -124,12 +124,17 @@ try {
                 if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $where[] = 'status_arsip = ?'; $par[] = $_GET['arsip']; }
                 if ((int) ($_GET['tahun'] ?? 0) > 0) { $where[] = 'tahun = ?'; $par[] = (int) $_GET['tahun']; }
                 if ((int) ($_GET['bulan'] ?? 0) > 0) { $where[] = 'bulan = ?'; $par[] = (int) $_GET['bulan']; }
+                // acc=1: hanya surat yang disposisinya sudah di-ACC (dipakai halaman Surat Keluar)
+                $sudahAcc = 'EXISTS (SELECT 1 FROM disposisi dx WHERE dx.surat_id = surat.id AND dx.status = \'disetujui\')';
+                $hanyaAcc = ($_GET['acc'] ?? '') === '1';
+                if ($hanyaAcc) $where[] = $sudahAcc;
                 $limit = max(1, min(500, (int) ($_GET['limit'] ?? 100)));
                 $sql = 'SELECT ' . KOLOM_LIST . ' FROM surat' . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
                      . ' ORDER BY tanggal_surat DESC, id DESC LIMIT ' . $limit;
                 $s = $pdo->prepare($sql);
                 $s->execute($par);
-                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(tahap = \'terkirim\'), 0) AS terkirim, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat')->fetch();
+                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(tahap = \'terkirim\'), 0) AS terkirim, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
+                                 . ($hanyaAcc ? ' WHERE ' . $sudahAcc : ''))->fetch();
                 $thn = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat' => $s->fetchAll(), 'ringkas' => array_map('intval', $r), 'daftar_tahun' => $thn]);
 

@@ -2,7 +2,6 @@
     'use strict';
     const { $, esc, tglIndo, hariIni, api, toast, BULAN } = App;
     const API = 'api/arsip.php';
-    const MAKS = 10 * 1024 * 1024;
 
     let baris = [];
     let status = '';            // '' | belum | diarsipkan
@@ -24,7 +23,7 @@
             isiPilihan($('fJenis'), 'Semua kategori', d.daftar_jenis.map((x) => [x.kode, x.nama]));
             isiPilihan($('fPembuat'), 'Semua pembuat', d.daftar_pembuat.map((x) => [x, x]));
             render();
-        } catch (e) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="8">' + esc(e.message) + '</td></tr>'; }
+        } catch (e) { $('galeri').innerHTML = kartuTambah() + '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
     function isiPilihan(sel, semua, daftar) {
@@ -40,29 +39,35 @@
         sel.value = cur;
     }
 
+    // Kartu pertama: tanda + untuk memilih surat dan mengunggah filenya
+    function kartuTambah() {
+        return '<div class="kartu kartu-tambah"><button type="button" class="kartu-thumb" data-tambah="baru" aria-label="Unggah file surat dan arsipkan" title="Unggah file surat dan arsipkan">' + App.IKON.plus + '</button>' +
+            '<div class="kartu-judul">Unggah surat</div></div>';
+    }
+
+    function kartu(r) {
+        const sudah = r.status_arsip === 'diarsipkan';
+        const url = API + '?aksi=file&id=' + r.id;
+        // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog untuk mengunggah dan mengarsipkan.
+        const thumb = r.ada_file
+            ? '<a class="kartu-thumb" href="' + url + '" target="_blank" rel="noopener" title="Buka file surat">' + App.thumb(url, r.file_nama) + '</a>'
+            : '<button type="button" class="kartu-thumb" data-arsip="' + r.id + '" title="Unggah file dan arsipkan">' + App.thumb('', '') + '</button>';
+        const aksi = sudah
+            ? ['<button class="btn sm" data-arsip="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-batal="' + r.id + '">Batalkan</button>']
+            : ['<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>'];
+        if (r.ada_file) aksi.push('<a class="btn sm" href="' + url + '&unduh=1">Unduh</a>');
+        const lokasi = sudah ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : 'Hanya file digital') + ' · ' + esc(tglIndo(r.tanggal_arsip)) : esc(tglIndo(r.tanggal_surat));
+        return '<div class="kartu ' + (sudah ? 'ok' : 'bad') + '">' + thumb +
+            '<div class="kartu-judul mono" title="' + esc(r.nomor_surat) + '">' + esc(r.nomor_surat) + '</div>' +
+            '<div class="kartu-sub" title="' + esc(r.perihal) + '">' + esc(r.perihal) + '</div>' +
+            '<div class="kartu-sub satu">' + esc(r.jenis_nama) + (r.pembuat_surat ? ' · ' + esc(r.pembuat_surat) : '') + '</div>' +
+            '<div class="kartu-status"><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span><span>' + lokasi + '</span></div>' +
+            '<div class="aksi">' + aksi.join('') + '</div></div>';
+    }
+
     function render() {
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="8">Tidak ada surat yang cocok. Tambahkan surat lewat menu "Penomoran".</td></tr>'; return; }
-        $('tbody').innerHTML = baris.map((r) => {
-            const sudah = r.status_arsip === 'diarsipkan';
-            const lokasi = sudah
-                ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : '<span class="muted">Hanya file digital</span>') +
-                  '<span class="sub">Diarsipkan ' + esc(tglIndo(r.tanggal_arsip)) + (r.keterangan_arsip ? ' · ' + esc(r.keterangan_arsip) : '') + '</span>'
-                : '<span class="muted">-</span>';
-            const file = r.ada_file
-                ? '<a class="btn sm" target="_blank" rel="noopener" href="' + API + '?aksi=file&id=' + r.id + '">Lihat</a> ' +
-                  '<a class="btn sm" href="' + API + '?aksi=file&unduh=1&id=' + r.id + '">Unduh</a>' +
-                  '<span class="sub">' + esc(r.file_nama) + '</span>'
-                : '<span class="muted">-</span>';
-            const aksi = sudah
-                ? '<button class="btn sm" data-arsip="' + r.id + '">Ubah</button><button class="btn sm danger" data-batal="' + r.id + '">Batalkan</button>'
-                : '<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>';
-            return '<tr class="' + (sudah ? 'row-ok' : 'row-bad') + '"><td class="no-surat">' + esc(r.nomor_surat) + '<span class="sub">' + esc(tglIndo(r.tanggal_surat)) + '</span></td>' +
-                '<td><span class="kat">' + esc(r.jenis_nama) + '</span><span class="sub mono">' + esc(r.jenis_kode) + '</span></td>' +
-                '<td>' + esc(r.perihal) + '<span class="sub">Untuk: ' + esc(r.untuk) + ' · TTD ' + (r.jenis_ttd === 'scan' ? 'scan' : 'basah') + '</span></td>' +
-                '<td>' + esc(r.pembuat_surat || '-') + '</td>' +
-                '<td><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span></td>' +
-                '<td>' + lokasi + '</td><td>' + file + '</td><td><div class="aksi">' + aksi + '</div></td></tr>';
-        }).join('');
+        $('galeri').innerHTML = kartuTambah() + baris.map(kartu).join('') +
+            (baris.length ? '' : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat dibuat lewat menu "Penomoran"; klik + untuk mengunggah file surat.</p>');
     }
 
     // ---------- Filter ----------
@@ -75,30 +80,55 @@
 
     // ---------- Dialog arsipkan / ubah ----------
     const dlg = $('dlgArsip');
-    function buka(r) {
+    let belumArsip = [];        // surat yang bisa dipilih lewat kartu + (belum diarsipkan)
+
+    // Isi ulang bagian dialog yang bergantung pada surat terpilih (r) — dipakai oleh Arsipkan/Ubah dan kartu +
+    function isiDialog(r) {
         aktif = r;
-        $('dlgNomor').textContent = r.nomor_surat;
-        $('dlgPerihal').textContent = r.perihal + ' — pembuat: ' + (r.pembuat_surat || '-');
-        $('dlgTanggal').value = r.tanggal_arsip || hariIni();
-        $('dlgLokasi').value = r.lokasi_arsip || '';
-        $('dlgKet').value = r.keterangan_arsip || '';
+        $('dlgInfo').style.display = r ? '' : 'none';
+        if (r) {
+            $('dlgNomor').textContent = r.nomor_surat;
+            $('dlgPerihal').textContent = r.perihal + ' — pembuat: ' + (r.pembuat_surat || '-');
+        }
+        $('dlgTanggal').value = (r && r.tanggal_arsip) || hariIni();
+        $('dlgLokasi').value = (r && r.lokasi_arsip) || '';
+        $('dlgKet').value = (r && r.keterangan_arsip) || '';
         $('dlgFile').value = '';
         $('dlgHapusFile').checked = false;
-        $('fileNow').style.display = r.ada_file ? '' : 'none';
-        if (r.ada_file) {
+        $('fileNow').style.display = r && r.ada_file ? '' : 'none';
+        if (r && r.ada_file) {
             $('fileNowNama').textContent = r.file_nama;
             $('fileNowLihat').href = API + '?aksi=file&id=' + r.id;
         }
+    }
+
+    function buka(r) {
+        $('boxSurat').style.display = 'none';
+        isiDialog(r);
         $('dlgJudul').textContent = r.status_arsip === 'diarsipkan' ? 'Ubah data arsip' : 'Arsipkan surat';
         dlg.showModal();
     }
 
-    $('tbody').addEventListener('click', async (ev) => {
+    // Kartu +: pilih surat bernomor yang belum diarsipkan, lalu unggah filenya
+    async function bukaBaru() {
+        try { belumArsip = (await api(API + '?' + new URLSearchParams({ aksi: 'daftar', status: 'belum' }))).surat; }
+        catch (e) { toast(e.message, true); return; }
+        $('dlgSurat').innerHTML = '<option value="">' + (belumArsip.length ? 'Pilih surat…' : 'Semua surat sudah diarsipkan') + '</option>' +
+            belumArsip.map((r) => '<option value="' + r.id + '">' + esc(r.nomor_surat + ' — ' + r.perihal) + '</option>').join('');
+        $('boxSurat').style.display = '';
+        isiDialog(null);
+        $('dlgJudul').textContent = 'Unggah surat & arsipkan';
+        dlg.showModal();
+    }
+    $('dlgSurat').addEventListener('change', () => isiDialog(belumArsip.find((x) => String(x.id) === $('dlgSurat').value) || null));
+
+    $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
+        if (b.dataset.tambah) { bukaBaru(); return; }
         if (b.dataset.arsip) { const r = baris.find((x) => +x.id === +b.dataset.arsip); if (r) buka(r); }
         if (b.dataset.batal) {
             const r = baris.find((x) => +x.id === +b.dataset.batal); if (!r) return;
-            if (!confirm('Batalkan pengarsipan surat ' + r.nomor_surat + '?' + (r.ada_file ? '\n\nFile scan yang sudah diunggah akan dihapus.' : ''))) return;
+            if (!confirm('Batalkan pengarsipan surat ' + r.nomor_surat + '? Lokasi dan tanggal arsip dihapus; file surat tetap disimpan.')) return;
             const fd = new FormData(); fd.append('aksi', 'batal'); fd.append('id', r.id);
             try { await api(API, fd); toast('Pengarsipan dibatalkan'); muat(); } catch (e) { toast(e.message, true); }
         }
@@ -109,11 +139,10 @@
 
     $('dlgForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
+        if (!aktif) { toast('Pilih surat yang akan diarsipkan.', true); $('dlgSurat').focus(); return; }
         const file = $('dlgFile').files[0];
-        if (file) {
-            if (!/\.(pdf|jpe?g|png)$/i.test(file.name)) { toast('Format file harus PDF, JPG, atau PNG.', true); return; }
-            if (file.size > MAKS) { toast('Ukuran file maksimal 10 MB.', true); return; }
-        }
+        const galatFile = App.cekFile(file);
+        if (galatFile) { toast(galatFile, true); return; }
         const adaFileLama = aktif.ada_file && !$('dlgHapusFile').checked;
         if (!$('dlgLokasi').value.trim() && !file && !adaFileLama) {
             toast('Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).', true); $('dlgLokasi').focus(); return;

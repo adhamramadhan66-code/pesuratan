@@ -33,7 +33,7 @@
             const dsp = r.disposisi_id
                 ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
                   '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<a class="btn sm primary" href="disposisi.html?surat_masuk=' + r.id + '">Buat disposisi</a>';
+                : '<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>';
             const lokasi = sudah ? '<span class="sub" style="color:var(--text-main)">' + (r.lokasi_arsip ? esc(r.lokasi_arsip) : '<span class="muted">Hanya file digital</span>') + '</span>' +
                 '<span class="sub">' + esc(tglIndo(r.tanggal_arsip)) + (r.keterangan_arsip ? ' · ' + esc(r.keterangan_arsip) : '') + '</span>' : '';
             const file = r.ada_file ? '<span class="sub"><a href="' + API + '?aksi=file&id=' + r.id + '" target="_blank" rel="noopener">Lihat scan</a> · <a href="' + API + '?aksi=file&unduh=1&id=' + r.id + '">Unduh</a></span>' : '';

@@ -112,7 +112,7 @@
                 $('hasilNomor').textContent = d.nomor_surat;
                 $('hasilBox').style.display = '';
                 toast('Surat tersimpan dengan nomor ' + d.nomor_surat);
-                $('btnKeDisposisi').href = 'disposisi.html?surat=' + d.id;   // langkah berikutnya: salurkan lewat disposisi
+                $('btnKeDisposisi').href = 'disposisi.html?unggah=k:' + d.id;   // langkah berikutnya: unggah file surat di Disposisi
                 keModeTambah(true);
             }
             muatDaftar();
@@ -156,7 +156,7 @@
             '<td>' + (r.no_disposisi
                 ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
                   '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<a class="btn sm primary" href="disposisi.html?surat=' + r.id + '">Buat disposisi</a>') + '</td>' +
+                : '<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>') + '</td>' +
             '<td><div class="aksi"><button class="btn sm" data-ubah="' + r.id + '">Ubah</button>' +
             '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button></div></td></tr>').join('');
     }

@@ -84,11 +84,11 @@ function baca_form(array $in): array
 }
 
 const KOLOM = 's.id, s.nomor_agenda, s.nomor_surat_asal, s.tanggal_surat, s.tanggal_terima, s.jenis_pengirim, s.pengirim, s.perihal, s.sifat, s.tujuan, s.status,
-               s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, (s.file_arsip <> \'\') AS ada_file,
-               (SELECT d.id FROM disposisi d WHERE d.surat_masuk_id = s.id ORDER BY d.id LIMIT 1) AS disposisi_id,
-               (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id ORDER BY d.id LIMIT 1) AS no_disposisi,
-               (SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id ORDER BY d.id LIMIT 1) AS status_disposisi,
-               (SELECT d.tujuan_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id ORDER BY d.id LIMIT 1) AS tujuan_disposisi';
+               s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, (s.file_arsip <> \'\') AS ada_file, s.dari_surat_id,
+               (SELECT d.id FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS disposisi_id,
+               (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS no_disposisi,
+               (SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS status_disposisi,
+               (SELECT d.tujuan_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS tujuan_disposisi';
 
 try {
     $pdo = db();

@@ -16,7 +16,7 @@
     </script>
     <title>Disposisi | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=9">
+    <link rel="stylesheet" href="surat.css?v=10">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -119,19 +119,14 @@
                     <input type="text" id="q" placeholder="Cari no. disposisi, surat, tujuan…" aria-label="Cari disposisi">
                     <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
                     <select id="fBulan" aria-label="Bulan"></select>
-                    <button type="button" class="btn primary" id="btnBaru">+ Buat disposisi</button>
                 </div>
             </div>
             <div class="alur-info">
-                <b>Alur:</b> surat dinomori di <b>Penomoran</b> (atau dicatat di <b>Surat Masuk</b>) → <b>disalurkan</b> lewat disposisi ke tujuan yang benar,
-                misalnya Rektor <span class="chip bad">belum disetujui</span> → setelah disetujui <span class="chip ok">disetujui</span> → surat siap diproses lebih lanjut.
+                <b>Alur:</b> surat dinomori di <b>Penomoran</b> → klik <b>+</b> untuk <b>mengunggah file surat</b> ke disposisi <span class="chip bad">belum disetujui</span>
+                → lengkapi lembar disposisi (tombol Ubah), lalu <b>ACC</b> <span class="chip ok">disetujui</span> → surat tercatat di <b>Surat Keluar</b>
+                (surat internal otomatis juga di <b>Surat Masuk</b>) → <b>Pengarsipan</b>.
             </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead><tr><th>No. Disposisi</th><th>Surat</th><th>Disalurkan kepada</th><th>Sifat</th><th>Status</th><th>Aksi</th></tr></thead>
-                    <tbody id="tbody"><tr class="empty-row"><td colspan="6">Memuat…</td></tr></tbody>
-                </table>
-            </div>
+            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </section>
     </main>
 
@@ -139,14 +134,12 @@
     <dialog class="modal lebar" id="dlgForm">
         <form id="dspForm" novalidate>
             <div class="modal-head">
-                <h3 id="dlgJudul">Buat disposisi</h3>
-                <p>Salurkan surat ke tujuan yang benar. Disposisi baru berstatus <b style="color:var(--red)">belum disetujui</b> sampai Anda menyetujuinya.</p>
+                <h3 id="dlgJudul">Ubah disposisi</h3>
+                <p>Lengkapi lembar disposisi: kepada siapa surat disalurkan, sifat, dan isi disposisi. Kolom <b>Disalurkan kepada</b> wajib terisi sebelum di-ACC.</p>
             </div>
             <div class="modal-body">
-                <div class="field"><label for="d_sumber">Surat yang disalurkan <span class="req">*</span></label>
-                    <select id="d_sumber"><option value="">Pilih surat…</option></select>
-                    <div class="sumber-info" id="sumberInfo" style="display:none"></div>
-                    <span class="help">Surat keluar muncul setelah dinomori di menu Penomoran; surat masuk dari menu Surat Masuk.</span></div>
+                <div class="field"><label for="d_sumber">Surat yang disalurkan</label>
+                    <select id="d_sumber" disabled><option value=""></option></select></div>
                 <div class="form-grid">
                     <div class="field full"><label for="d_tujuan">Disalurkan kepada <span class="req">*</span></label>
                         <input type="text" id="d_tujuan" list="listTujuan" maxlength="100" placeholder="Contoh: Rektor">
@@ -183,6 +176,28 @@
         </form>
     </dialog>
 
+    <!-- Unggah file surat (kartu +): surat otomatis masuk ke daftar disposisi -->
+    <dialog class="modal" id="dlgUnggah">
+        <form id="unggahForm" novalidate>
+            <div class="modal-head">
+                <h3 id="uJudul">Unggah surat</h3>
+                <p>Pilih surat yang sudah bernomor, lalu unggah filenya. Surat langsung masuk ke Disposisi dengan status <b style="color:var(--red)">belum disetujui</b>.</p>
+            </div>
+            <div class="modal-body">
+                <div class="field"><label for="u_sumber">Surat <span class="req">*</span></label>
+                    <select id="u_sumber"><option value="">Pilih surat…</option></select>
+                    <div class="sumber-info" id="u_info" style="display:none"></div>
+                    <span class="help">Surat keluar muncul setelah dinomori di menu Penomoran.</span></div>
+                <div class="field"><label for="u_file">File surat <span class="req">*</span> <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
+                    <input type="file" id="u_file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn" id="uBatal">Batal</button>
+                <button type="submit" class="btn primary" id="uSimpan">Unggah</button>
+            </div>
+        </form>
+    </dialog>
+
     <!-- Pratinjau & cetak lembar disposisi -->
     <dialog class="modal lebar" id="dlgLihat">
         <div class="modal-head"><h3>Lembar disposisi</h3></div>
@@ -198,9 +213,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=1"></script>
+    <script src="app.js?v=2"></script>
     <script src="profil.js?v=1"></script>
-    <script src="disposisi.js?v=6"></script>
+    <script src="disposisi.js?v=7"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

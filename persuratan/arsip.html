@@ -16,7 +16,7 @@
     </script>
     <title>Pengarsipan | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=9">
+    <link rel="stylesheet" href="surat.css?v=10">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -123,12 +123,11 @@
                     <select id="fBulan" aria-label="Bulan"></select>
                 </div>
             </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead><tr><th>No Surat</th><th>Kategori</th><th>Perihal</th><th>Pembuat</th><th>Status</th><th>Lokasi arsip</th><th>File scan</th><th>Aksi</th></tr></thead>
-                    <tbody id="tbody"><tr class="empty-row"><td colspan="8">Memuat…</td></tr></tbody>
-                </table>
+            <div class="alur-info">
+                Klik <b>+</b> untuk memilih surat bernomor lalu mengunggah file surat dan mengarsipkannya. Surat Keluar dan Surat Masuk (yang sudah di-ACC di
+                <b>Disposisi</b>) diarsipkan di sini <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>.
             </div>
+            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </section>
     </main>
 
@@ -136,9 +135,14 @@
         <form id="dlgForm" novalidate>
             <div class="modal-head">
                 <h3 id="dlgJudul">Arsipkan surat</h3>
-                <p><b class="mono" id="dlgNomor"></b><br><span id="dlgPerihal"></span></p>
+                <p id="dlgInfo"><b class="mono" id="dlgNomor"></b><br><span id="dlgPerihal"></span></p>
             </div>
             <div class="modal-body">
+                <div class="field" id="boxSurat" style="display:none">
+                    <label for="dlgSurat">Surat <span class="req">*</span></label>
+                    <select id="dlgSurat"><option value="">Pilih surat…</option></select>
+                    <span class="help">Semua surat bernomor yang belum diarsipkan.</span>
+                </div>
                 <div class="field">
                     <label for="dlgTanggal">Tanggal diarsipkan</label>
                     <input type="date" id="dlgTanggal">
@@ -152,7 +156,7 @@
                     <input type="text" id="dlgKet" maxlength="255" placeholder="Catatan tambahan">
                 </div>
                 <div class="field">
-                    <label for="dlgFile">File scan surat <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
+                    <label for="dlgFile">File surat <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
                     <div class="file-now" id="fileNow" style="display:none">
                         <span>File saat ini: <b id="fileNowNama"></b> <a href="#" id="fileNowLihat" target="_blank" rel="noopener" class="muted">(lihat)</a></span>
                         <label><input type="checkbox" id="dlgHapusFile"> Hapus file ini</label>
@@ -173,9 +177,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=1"></script>
+    <script src="app.js?v=2"></script>
     <script src="profil.js?v=1"></script>
-    <script src="arsip.js?v=2"></script>
+    <script src="arsip.js?v=3"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

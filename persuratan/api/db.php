@@ -159,8 +159,10 @@ CREATE TABLE IF NOT EXISTS surat_masuk (
     keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
     file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
     file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    dari_surat_id    INT NULL,
     dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_agenda (tahun, bulan, urut),
+    UNIQUE KEY uq_sm_dari (dari_surat_id),
     KEY idx_sm_tanggal (tanggal_terima),
     KEY idx_sm_status (status),
     KEY idx_sm_arsip (status_arsip)
@@ -173,6 +175,10 @@ SQL);
     }
     if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_masuk_id'")->fetch()) {
         $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_masuk_id INT NULL AFTER surat_id');
+    }
+    // Surat Masuk otomatis: surat internal yang di-ACC di Disposisi tercatat juga sebagai Surat Masuk bagi penerimanya.
+    if (!$pdo->query("SHOW COLUMNS FROM surat_masuk LIKE 'dari_surat_id'")->fetch()) {
+        $pdo->exec('ALTER TABLE surat_masuk ADD COLUMN dari_surat_id INT NULL, ADD UNIQUE KEY uq_sm_dari (dari_surat_id)');
     }
     if (!$pdo->query("SHOW COLUMNS FROM surat_masuk LIKE 'jenis_pengirim'")->fetch()) {
         $pdo->exec('ALTER TABLE surat_masuk ADD COLUMN jenis_pengirim VARCHAR(10) NOT NULL DEFAULT \'eksternal\' AFTER tanggal_terima, MODIFY status VARCHAR(16) NOT NULL DEFAULT \'diterima\'');

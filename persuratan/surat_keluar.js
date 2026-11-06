@@ -9,7 +9,7 @@
     let baris = [], arsip = '', aktif = null;
 
     async function muat() {
-        const p = new URLSearchParams({ aksi: 'daftar', arsip, tahap: $('fTahap').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 500 });
+        const p = new URLSearchParams({ aksi: 'daftar', arsip, tahap: $('fTahap').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 500, acc: 1 });
         try {
             const d = await api(API + '?' + p);
             baris = d.surat;
@@ -32,14 +32,14 @@
     }
 
     function render() {
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada surat keluar. Surat baru dibuat lewat menu Penomoran.</td></tr>'; return; }
+        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada surat keluar. Surat muncul di sini setelah di-ACC di menu Disposisi.</td></tr>'; return; }
         $('tbody').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const i = TAHAP.indexOf(r.tahap);
             const dsp = r.disposisi_id
                 ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
                   '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<a class="btn sm primary" href="disposisi.html?surat=' + r.id + '">Buat disposisi</a>';
+                : '<span class="muted">-</span>';
             const aksi = [];
             if (KE_DEPAN[r.tahap]) aksi.push('<button class="btn sm primary" data-maju="' + r.id + '">' + KE_DEPAN[r.tahap] + '</button>');
             if (i > 0) aksi.push('<button class="btn sm" data-mundur="' + r.id + '">Mundurkan</button>');

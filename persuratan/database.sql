@@ -107,8 +107,10 @@ CREATE TABLE IF NOT EXISTS surat_masuk (
     keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
     file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
     file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    dari_surat_id    INT NULL,
     dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_agenda (tahun, bulan, urut),
+    UNIQUE KEY uq_sm_dari (dari_surat_id),
     KEY idx_sm_tanggal (tanggal_terima),
     KEY idx_sm_status (status),
     KEY idx_sm_arsip (status_arsip)

@@ -83,6 +83,29 @@
         return data;
     }
 
+    // Ikon untuk kartu (SVG langsung, karena kartu digambar ulang lewat JavaScript)
+    const SVG = (isi) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + isi + '</svg>';
+    const IKON = {
+        plus: SVG('<path d="M12 5v14M5 12h14"/>'),
+        file: SVG('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>'),
+    };
+
+    // Pratinjau pada kartu: gambar asli untuk JPG/PNG, ikon dokumen untuk PDF, dan penanda bila belum ada file.
+    function thumb(urlFile, namaFile) {
+        if (!namaFile) return '<span class="kartu-isi">' + IKON.file + '<small>Belum ada file</small></span>';
+        if (/\.(jpe?g|png)$/i.test(namaFile)) return '<img src="' + esc(urlFile) + '" alt="" loading="lazy">';
+        return '<span class="kartu-isi">' + IKON.file + '<small>PDF</small></span>';
+    }
+
+    // Validasi file unggahan di sisi peramban (server tetap memeriksa ulang). Mengembalikan pesan galat atau ''.
+    const MAKS_FILE = 10 * 1024 * 1024;
+    function cekFile(f) {
+        if (!f) return '';
+        if (!/\.(pdf|jpe?g|png)$/i.test(f.name)) return 'Format file harus PDF, JPG, atau PNG.';
+        if (f.size > MAKS_FILE) return 'Ukuran file maksimal 10 MB.';
+        return '';
+    }
+
     let tt;
     function toast(pesan, galat) {
         const t = $('toast');
@@ -93,5 +116,5 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN };
+    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile };
 })();

@@ -30,27 +30,39 @@
                 sel.value = cur;
             }
             render();
-        } catch (e) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="6">' + esc(e.message) + '</td></tr>'; }
+        } catch (e) { $('galeri').innerHTML = kartuTambah() + '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+    }
+
+    // Kartu pertama: tanda + untuk mengunggah file surat
+    function kartuTambah() {
+        return '<div class="kartu kartu-tambah"><button type="button" class="kartu-thumb" data-unggah="baru" aria-label="Unggah file surat" title="Unggah file surat">' + App.IKON.plus + '</button>' +
+            '<div class="kartu-judul">Unggah surat</div></div>';
+    }
+
+    function kartu(r) {
+        const ok = r.status === 'disetujui';
+        const url = API + '?aksi=file&id=' + r.id;
+        // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog unggah (selama belum di-ACC).
+        const thumb = r.file_nama
+            ? '<a class="kartu-thumb" href="' + url + '" target="_blank" rel="noopener" title="Buka file surat">' + App.thumb(url, r.file_nama) + '</a>'
+            : '<button type="button" class="kartu-thumb" ' + (ok ? 'data-lihat="' : 'data-unggah-ke="') + r.id + '" title="' + (ok ? 'Lihat lembar disposisi' : 'Unggah file surat') + '">' + App.thumb('', '') + '</button>';
+        const aksi = ['<button class="btn sm" data-lihat="' + r.id + '">Lembar</button>'];
+        if (!ok) aksi.push('<button class="btn sm primary" data-setuju="' + r.id + '">ACC</button>', '<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>');
+        else aksi.push('<button class="btn sm" data-batal="' + r.id + '">Batalkan ACC</button>');
+        aksi.push('<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
+        const sf = csv(r.sifat).map((k) => namaSifat(k)).join(', ');
+        return '<div class="kartu ' + (ok ? 'ok' : 'bad') + '">' + thumb +
+            '<div class="kartu-judul mono" title="' + esc(labelSurat(r)) + '">' + esc(labelSurat(r)) + '</div>' +
+            '<div class="kartu-sub" title="' + esc(r.hal) + '">' + esc(r.hal) + '</div>' +
+            '<div class="kartu-sub satu">' + (r.tujuan_disposisi ? 'Kepada: ' + esc(r.tujuan_disposisi) : 'Belum ada tujuan') + (sf ? ' · ' + esc(sf) : '') + '</div>' +
+            '<div class="kartu-status"><span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span>' +
+                '<span>' + esc(ok ? tglIndo(r.tanggal_setuju) : r.no_disposisi) + '</span></div>' +
+            '<div class="aksi">' + aksi.join('') + '</div></div>';
     }
 
     function render() {
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="6">Belum ada disposisi. Klik "Buat disposisi" untuk menyalurkan surat ke tujuannya.</td></tr>'; return; }
-        $('tbody').innerHTML = baris.map((r) => {
-            const ok = r.status === 'disetujui';
-            const aksi = ['<button class="btn sm" data-lihat="' + r.id + '">Lihat</button>'];
-            if (!ok) aksi.push('<button class="btn sm primary" data-setuju="' + r.id + '">Setujui</button>', '<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>');
-            else aksi.push('<button class="btn sm" data-batal="' + r.id + '">Batalkan persetujuan</button>');
-            aksi.push('<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
-            const info = r.nomor_surat ? esc(r.kode_jenis) + ' · ' + esc(r.unit_kode) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') : r.nomor_agenda ? 'Surat masuk' : '';
-            return '<tr class="' + (ok ? 'row-ok' : 'row-bad') + '">' +
-                '<td class="no-surat">' + esc(r.no_disposisi) + '<span class="sub">Tanggal ' + esc(tglIndo(r.tanggal_terima)) + '</span></td>' +
-                '<td><span class="no-surat">' + esc(labelSurat(r)) + '</span><span class="sub" style="color:var(--text-main)">' + esc(r.hal) + '</span>' + (info ? '<span class="sub">' + info + '</span>' : '') + '</td>' +
-                '<td><b>' + esc(r.tujuan_disposisi || '-') + '</b><span class="sub">Pemohon: ' + esc(r.pemohon) + '</span></td>' +
-                '<td>' + csv(r.sifat).map((k) => '<span class="tag">' + esc(namaSifat(k)) + '</span>').join('') + '</td>' +
-                '<td><span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span>' +
-                    (ok ? '<span class="sub">' + esc(tglIndo(r.tanggal_setuju)) + ' · ' + esc(r.disetujui_oleh) + '</span>' : '') + '</td>' +
-                '<td><div class="aksi" style="flex-wrap:wrap">' + aksi.join('') + '</div></td></tr>';
-        }).join('');
+        $('galeri').innerHTML = kartuTambah() + baris.map(kartu).join('') +
+            (baris.length ? '' : '<p class="galeri-kosong">Belum ada disposisi. Klik + untuk mengunggah file surat yang sudah bernomor.</p>');
     }
 
     document.querySelectorAll('#segStatus input').forEach((r) => r.addEventListener('change', () => { status = r.value; muat(); }));
@@ -73,34 +85,68 @@
     }
     $('btnBaris').addEventListener('click', () => tambahBaris());
 
+    // ---------- Unggah file surat (kartu +) ----------
+    const dlgU = $('dlgUnggah');
+    let tetapSurat = null;      // bila diisi: dialog dipakai menambah/mengganti file pada disposisi yang sudah ada
+
     // Daftar surat yang belum punya disposisi: surat keluar (Penomoran) dan surat masuk
     async function muatSumber() {
         try { sumber = await api(API + '?aksi=sumber'); } catch (e) { sumber = { surat: [], surat_masuk: [] }; toast(e.message, true); }
         const k = sumber.surat.map((x) => '<option value="k:' + x.id + '">' + esc(x.nomor_surat + ' — ' + x.perihal) + '</option>').join('');
         const m = sumber.surat_masuk.map((x) => '<option value="m:' + x.id + '">' + esc(x.nomor_agenda + ' — ' + x.perihal + ' (' + x.pengirim + ')') + '</option>').join('');
-        $('d_sumber').innerHTML = '<option value="">' + (k || m ? 'Pilih surat…' : 'Belum ada surat yang perlu disposisi') + '</option>' +
+        $('u_sumber').innerHTML = '<option value="">' + (k || m ? 'Pilih surat…' : 'Belum ada surat bernomor yang perlu diunggah') + '</option>' +
             (k ? '<optgroup label="Surat keluar (dari Penomoran)">' + k + '</optgroup>' : '') +
             (m ? '<optgroup label="Surat masuk">' + m + '</optgroup>' : '');
     }
-    function infoSumber() {
-        const v = $('d_sumber').value, box = $('sumberInfo');
-        if (!v) { box.style.display = 'none'; return; }
+    function infoUnggah() {
+        const v = $('u_sumber').value, box = $('u_info');
+        if (!v || tetapSurat) { box.style.display = 'none'; return; }
         const [t, id] = v.split(':');
-        if (t === 'k') {
-            const s = sumber.surat.find((x) => String(x.id) === id); if (!s) { box.style.display = 'none'; return; }
-            box.innerHTML = '<b>Surat keluar</b> · <span class="mono">' + esc(s.nomor_surat) + '</span><br>' + esc(s.perihal) + '<br>' +
-                esc(s.jenis_kode) + ' · ' + esc(s.unit_kode) + ' · ' + (s.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · untuk ' + esc(s.untuk);
-            $('d_hal').value = s.perihal; $('d_pemohon').value = s.pembuat_surat || '';
-        } else {
-            const s = sumber.surat_masuk.find((x) => String(x.id) === id); if (!s) { box.style.display = 'none'; return; }
-            box.innerHTML = '<b>Surat masuk</b> · <span class="mono">' + esc(s.nomor_agenda) + '</span><br>' + esc(s.perihal) + '<br>Dari ' + esc(s.pengirim) +
-                (s.tujuan ? ' · ditujukan kepada ' + esc(s.tujuan) : '');
-            $('d_hal').value = s.perihal; $('d_pemohon').value = s.pengirim || '';
-            const sf = csv(s.sifat); if (sf.length) document.querySelectorAll('#fSifat input').forEach((c) => { c.checked = sf.includes(c.value); });
-        }
+        const s = (t === 'k' ? sumber.surat : sumber.surat_masuk).find((x) => String(x.id) === id);
+        if (!s) { box.style.display = 'none'; return; }
+        box.innerHTML = t === 'k'
+            ? '<b>Surat keluar</b> · <span class="mono">' + esc(s.nomor_surat) + '</span><br>' + esc(s.perihal) + '<br>' +
+              esc(s.jenis_kode) + ' · ' + esc(s.unit_kode) + ' · ' + (s.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')
+            : '<b>Surat masuk</b> · <span class="mono">' + esc(s.nomor_agenda) + '</span><br>' + esc(s.perihal) + '<br>Dari ' + esc(s.pengirim);
         box.style.display = '';
     }
-    $('d_sumber').addEventListener('change', infoSumber);
+    $('u_sumber').addEventListener('change', infoUnggah);
+
+    // pilih: 'k:ID' (surat keluar) / 'm:ID' (surat masuk) agar langsung terpilih; ganti: disposisi yang filenya ditambah/diganti
+    async function bukaUnggah(pilih, ganti) {
+        tetapSurat = null; $('u_file').value = ''; $('u_info').style.display = 'none';
+        if (ganti) {
+            tetapSurat = ganti.surat_id ? 'k:' + ganti.surat_id : 'm:' + ganti.surat_masuk_id;
+            $('u_sumber').innerHTML = '<option value="' + tetapSurat + '">' + esc(labelSurat(ganti) + ' — ' + ganti.hal) + '</option>';
+            $('u_sumber').disabled = true;
+            $('uJudul').textContent = ganti.file_nama ? 'Ganti file surat' : 'Unggah file surat';
+        } else {
+            $('u_sumber').disabled = false; $('uJudul').textContent = 'Unggah surat';
+            await muatSumber();
+            if (pilih) { $('u_sumber').value = pilih; infoUnggah(); }
+        }
+        dlgU.showModal(); dlgU.scrollTop = 0;
+    }
+    $('uBatal').addEventListener('click', () => dlgU.close());
+    dlgU.addEventListener('click', (e) => { if (e.target === dlgU) dlgU.close(); });
+
+    $('unggahForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const v = $('u_sumber').value, file = $('u_file').files[0];
+        const salah = !v ? 'Pilih surat yang akan diunggah.' : !file ? 'Pilih file surat (PDF, JPG, atau PNG).' : App.cekFile(file);
+        if (salah) { toast(salah, true); return; }
+        const [t, id] = v.split(':');
+        const fd = new FormData();
+        fd.append('aksi', 'unggah'); fd.append(t === 'k' ? 'surat_id' : 'surat_masuk_id', id); fd.append('file', file);
+        const btn = $('uSimpan'); btn.disabled = true;
+        try {
+            const d = await api(API, fd);
+            dlgU.close();
+            toast(d.baru ? 'Surat diunggah. Disposisi ' + d.no_disposisi + ' menunggu ACC.' : 'File surat disimpan.');
+            muat();
+        } catch (e) { toast(e.message, true); }
+        finally { btn.disabled = false; }
+    });
 
     function isiForm(r) {
         r = r || {};
@@ -115,14 +161,13 @@
         for (let i = alur.length; i < KOLOM_ALUR; i++) tambahBaris();
     }
 
-    async function bukaBaru(pilih) {
-        editId = null; $('dlgJudul').textContent = 'Buat disposisi';
-        await muatSumber();
-        isiForm(); $('d_sumber').disabled = false; $('sumberInfo').style.display = 'none';
-        if (pilih) { $('d_sumber').value = pilih; infoSumber(); }
-        dlg.showModal(); dlg.scrollTop = 0;
+    // Lembar disposisi hanya diubah (dibuat otomatis saat file surat diunggah)
+    async function bukaUbah(id) {
+        const d = (await api(API + '?aksi=detail&id=' + id)).disposisi;
+        editId = id; $('dlgJudul').textContent = 'Ubah disposisi ' + d.no_disposisi;
+        $('d_sumber').innerHTML = '<option value="x">' + esc(labelSurat(d) + ' — ' + d.hal) + '</option>'; $('d_sumber').value = 'x';
+        isiForm(d); dlg.showModal(); dlg.scrollTop = 0;
     }
-    $('btnBaru').addEventListener('click', () => bukaBaru());
     $('dlgBatal').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
 
@@ -130,46 +175,49 @@
         ev.preventDefault();
         const sifat = [...document.querySelectorAll('#fSifat input:checked')].map((c) => c.value);
         const isi = [...document.querySelectorAll('#fIsi input:checked')].map((c) => +c.value);
-        const src = $('d_sumber').value;
-        const salah = (!editId && !src) ? 'Pilih surat yang akan disalurkan.' : !$('d_tujuan').value.trim() ? 'Isi tujuan penyaluran (misalnya Rektor).'
+        const salah = !$('d_tujuan').value.trim() ? 'Isi tujuan penyaluran (misalnya Rektor).'
             : !$('d_tanggal').value ? 'Isi tanggal disposisi.' : !$('d_pemohon').value.trim() ? 'Isi nama pemohon.' : !sifat.length ? 'Pilih sifat disposisi.'
             : !$('d_hal').value.trim() ? 'Isi hal (perihal).' : !isi.length ? 'Pilih minimal satu butir isi disposisi.' : '';
         if (salah) { toast(salah, true); return; }
         const alur = [...$('alurBody').querySelectorAll('tr')].map((tr) => {
             const o = {}; tr.querySelectorAll('input').forEach((i) => { o[i.dataset.k] = i.value; }); return o;
         });
-        const data = { aksi: editId ? 'ubah' : 'tambah', id: editId, tanggal_terima: $('d_tanggal').value, sifat, hal: $('d_hal').value,
+        const data = { aksi: 'ubah', id: editId, tanggal_terima: $('d_tanggal').value, sifat, hal: $('d_hal').value,
             pemohon: $('d_pemohon').value, tujuan_disposisi: $('d_tujuan').value, isi, alur };
-        if (!editId) { const [t, id] = src.split(':'); if (t === 'k') data.surat_id = +id; else data.surat_masuk_id = +id; }
         const btn = $('dlgSimpan'); btn.disabled = true;
         try {
             const d = await api(API, data);
             dlg.close();
-            toast(editId ? 'Disposisi ' + d.no_disposisi + ' diperbarui' : 'Disposisi ' + d.no_disposisi + ' tersimpan (belum disetujui)');
+            toast('Disposisi ' + d.no_disposisi + ' diperbarui');
             muat();
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
 
     // ---------- Aksi pada tabel ----------
-    $('tbody').addEventListener('click', async (ev) => {
+    $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
-        const id = +(b.dataset.lihat || b.dataset.ubah || b.dataset.setuju || b.dataset.batal || b.dataset.hapus);
+        if (b.dataset.unggah) { bukaUnggah(); return; }
+        const id = +(b.dataset.unggahKe || b.dataset.lihat || b.dataset.ubah || b.dataset.setuju || b.dataset.batal || b.dataset.hapus);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         try {
-            if (b.dataset.lihat) { lihat((await api(API + '?aksi=detail&id=' + id)).disposisi); }
-            else if (b.dataset.ubah) {
-                const d = (await api(API + '?aksi=detail&id=' + id)).disposisi;
-                editId = id; $('dlgJudul').textContent = 'Ubah disposisi ' + d.no_disposisi;
-                $('d_sumber').innerHTML = '<option value="x">' + esc(labelSurat(d) + ' — ' + d.hal) + '</option>'; $('d_sumber').value = 'x'; $('d_sumber').disabled = true;
-                $('sumberInfo').style.display = 'none';
-                isiForm(d); dlg.showModal(); dlg.scrollTop = 0;
-            } else if (b.dataset.setuju) {
-                if (!confirm('Setujui disposisi ' + r.no_disposisi + ' (disalurkan kepada ' + (r.tujuan_disposisi || '-') + ')?\n\nSetelah disetujui, statusnya hijau dan disposisi tidak bisa diubah lagi.')) return;
-                await api(API, { aksi: 'setujui', id, oleh: namaUser() }); toast('Disposisi ' + r.no_disposisi + ' disetujui'); muat();
+            if (b.dataset.unggahKe) bukaUnggah(null, r);
+            else if (b.dataset.lihat) { lihat((await api(API + '?aksi=detail&id=' + id)).disposisi); }
+            else if (b.dataset.ubah) await bukaUbah(id);
+            else if (b.dataset.setuju) {
+                if (!r.tujuan_disposisi) { toast('Isi dulu "Disalurkan kepada" sebelum meng-ACC.', true); await bukaUbah(id); return; }
+                if (!confirm('ACC disposisi ' + r.no_disposisi + ' (disalurkan kepada ' + r.tujuan_disposisi + ')?\n\n' +
+                    'Surat akan tercatat di Surat Keluar' + (r.surat_id && r.kode_tujuan === 'A' ? ' dan, karena internal, otomatis di Surat Masuk penerimanya' : '') +
+                    '. Disposisi tidak bisa diubah lagi sampai ACC dibatalkan.')) return;
+                const d = await api(API, { aksi: 'setujui', id, oleh: namaUser() });
+                toast('Disposisi ' + r.no_disposisi + ' di-ACC' + (r.surat_id ? '. Tercatat di Surat Keluar' + (d.surat_masuk ? ' dan Surat Masuk (agenda ' + d.surat_masuk + ')' : '') : '') + '.');
+                muat();
             } else if (b.dataset.batal) {
-                if (!confirm('Batalkan persetujuan disposisi ' + r.no_disposisi + '? Statusnya kembali merah.')) return;
-                await api(API, { aksi: 'batal_setuju', id }); toast('Persetujuan dibatalkan'); muat();
+                if (!confirm('Batalkan ACC disposisi ' + r.no_disposisi + '? Statusnya kembali merah' + (r.surat_id ? ' dan surat keluar dari daftar Surat Keluar' : '') + '.')) return;
+                const d = await api(API, { aksi: 'batal_setuju', id });
+                toast('ACC dibatalkan' + (d.surat_masuk_dihapus === true ? '; Surat Masuk otomatisnya ikut dihapus' :
+                    d.surat_masuk_dihapus === false ? '; Surat Masuk otomatisnya dipertahankan karena sudah diproses/diarsipkan' : '') + '.');
+                muat();
             } else if (b.dataset.hapus) {
                 if (!confirm('Hapus disposisi ' + r.no_disposisi + '? Suratnya tidak ikut terhapus.')) return;
                 await api(API, { aksi: 'hapus', id }); toast('Disposisi dihapus'); muat();
@@ -224,9 +272,9 @@
     (function mulai() {
         $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + BULAN.map((b, i) => '<option value="' + (i + 1) + '">' + b + '</option>').join('');
         muat();
-        // Dibuka dari Penomoran, Surat Keluar, atau Surat Masuk ("Buat disposisi"): surat langsung terpilih
+        // Dibuka dari Penomoran ("Unggah surat"): dialog unggah langsung terbuka dengan surat terpilih.
         const p = new URLSearchParams(location.search);
-        if (p.get('surat')) bukaBaru('k:' + +p.get('surat'));
-        else if (p.get('surat_masuk')) bukaBaru('m:' + +p.get('surat_masuk'));
+        const pilih = p.get('unggah') || (p.get('surat') ? 'k:' + +p.get('surat') : p.get('surat_masuk') ? 'm:' + +p.get('surat_masuk') : '');
+        if (/^[km]:\d+$/.test(pilih)) bukaUnggah(pilih);
     })();
 })();

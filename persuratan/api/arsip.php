@@ -5,7 +5,7 @@
  *   GET  api/arsip.php?aksi=file&id=           -> menampilkan file scan (PDF/JPG/PNG)
  *   POST api/arsip.php (multipart/form-data)
  *        aksi=simpan  : id, lokasi_arsip, keterangan_arsip, tanggal_arsip, file (opsional), hapus_file (1 = buang file lama)
- *        aksi=batal   : id  (kembalikan ke "belum diarsipkan", file scan ikut dihapus)
+ *        aksi=batal   : id  (kembalikan ke "belum diarsipkan"; file surat tetap disimpan)
  */
 require __DIR__ . '/db.php';
 
@@ -139,8 +139,8 @@ try {
             json_keluar(['ok' => true]);
 
         case 'batal':
-            hapus_file($surat['file_arsip']);
-            $pdo->prepare('UPDATE surat SET status_arsip = \'belum\', tanggal_arsip = NULL, lokasi_arsip = \'\', keterangan_arsip = \'\', file_arsip = \'\', file_nama = \'\' WHERE id = ?')
+            // File surat tetap disimpan (juga dipakai di Disposisi); hanya status dan data arsip fisik yang direset.
+            $pdo->prepare('UPDATE surat SET status_arsip = \'belum\', tanggal_arsip = NULL, lokasi_arsip = \'\', keterangan_arsip = \'\' WHERE id = ?')
                 ->execute([$id]);
             json_keluar(['ok' => true]);
 
