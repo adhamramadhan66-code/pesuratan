@@ -104,5 +104,38 @@
     $('nomorForm').addEventListener('submit', simpan);
     let t; $('q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(muat, 250); });
 
+    // ---------- Surat baru (langsung terbit) ----------
+    const bMode = () => document.querySelector('#bMode input:checked').value;
+    async function muatNomorBaru() {
+        try { $('bNomor').textContent = (await api(URL_API + '?aksi=generate_nomor')).nomor; } catch (e) { $('bNomor').textContent = '-'; }
+    }
+    function setModeBaru() {
+        const man = bMode() === 'manual';
+        $('bOto').style.display = man ? 'none' : ''; $('bManual').style.display = man ? '' : 'none';
+        if (man) $('bManual').focus();
+    }
+    $('bMode').addEventListener('change', setModeBaru);
+    $('b_tanggal').value = App.hariIni();
+    $('baruForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const f = $('b_file').files[0], g = App.cekFile(f);
+        if (!$('b_tujuan').value.trim() || !$('b_perihal').value.trim()) return toast('Tujuan dan perihal wajib diisi.', true);
+        if (bMode() === 'manual' && !$('bManual').value.trim()) return toast('Isi nomor manual, atau pilih nomor otomatis.', true);
+        if (g) return toast(g, true);
+        const fd = new FormData();
+        fd.append('aksi', 'surat_baru'); fd.append('perihal', $('b_perihal').value); fd.append('tujuan', $('b_tujuan').value);
+        fd.append('tanggal_surat', $('b_tanggal').value); fd.append('mode', bMode()); fd.append('nomor_manual', $('bManual').value);
+        if (f) fd.append('file', f);
+        $('bSimpan').disabled = true;
+        try {
+            const d = await api(URL_API, fd);
+            toast('Terbit dengan nomor ' + d.surat.nomor_surat + '. Surat ada di menu Surat Keluar.');
+            $('baruForm').reset(); $('b_tanggal').value = App.hariIni(); setModeBaru();
+        } catch (e) { toast(e.message, true); }
+        $('bSimpan').disabled = false;
+        muatNomorBaru(); muat();
+    });
+    muatNomorBaru();
+
     muat();
 })();

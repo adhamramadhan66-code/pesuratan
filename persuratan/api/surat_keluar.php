@@ -11,6 +11,7 @@
  *      aksi=ubah         (staf)     id, perihal, tujuan, tanggal_surat, [file]   (hanya saat menunggu_acc, milik sendiri)
  *      aksi=hapus        (staf)     id                                           (hanya saat menunggu_acc, milik sendiri)
  *      aksi=acc          (pimpinan) id                                           menunggu_acc -> menunggu_nomor
+ *      aksi=surat_baru   (admin)    perihal, tujuan, tanggal_surat, mode, [nomor_manual], [file]  -> langsung terbit
  *      aksi=terbitkan    (admin)    id, mode (otomatis|manual), [nomor_manual]   menunggu_nomor -> terbit
  */
 require __DIR__ . '/umum.php';
@@ -66,6 +67,42 @@ function data_draf(array $in): array
     if ($perihal === '') json_keluar(['error' => 'Perihal wajib diisi.'], 422);
     if ($tujuan === '') json_keluar(['error' => 'Tujuan surat wajib diisi.'], 422);
     return [$perihal, $tujuan, $tgl];
+}
+
+function baca_mode(array $in): array
+{
+    $mode = ($in['mode'] ?? 'otomatis') === 'manual' ? 'manual' : 'otomatis';
+    $manual = teks($in['nomor_manual'] ?? '', 60);
+    if ($mode === 'manual' && $manual === '') json_keluar(['error' => 'Isi nomor manual, atau pilih nomor otomatis.'], 422);
+    return [$mode, $manual];
+}
+
+/** menunggu_nomor -> terbit. Mengembalikan baris surat; kegagalan dijawab langsung sebagai JSON. */
+function terbitkan_surat(int $id, array $u, string $mode, string $manual, bool $wajibFile = true): array
+{
+    $pdo = db();
+    $r = ambil_keluar($id);
+    if ($r['status'] !== 'menunggu_nomor') json_keluar(['error' => 'Surat ini tidak berada di antrean penomoran (status: ' . $r['status'] . ').'], 409);
+    if ($wajibFile && $r['file_surat'] === '') json_keluar(['error' => 'Surat belum punya file draf.'], 422);
+
+    $tahun = (int) date('Y'); $bulan = (int) date('n');
+    // Nomor otomatis diulang bila bentrok (dua admin menerbitkan bersamaan).
+    for ($coba = 0; $coba < 5; $coba++) {
+        if ($mode === 'otomatis') { [$urut, $nomor] = nomor_berikut($tahun, $bulan); }
+        else { $urut = null; $nomor = $manual; }
+        try {
+            $s = $pdo->prepare("UPDATE surat_keluar SET status='terbit', nomor_surat=?, mode_nomor=?, tahun=?, bulan=?, nomor_urut=?,
+                diterbitkan_oleh=?, tanggal_terbit=? WHERE id=? AND status='menunggu_nomor'");
+            $s->execute([$nomor, $mode, $tahun, $bulan, $urut, $u['id'], date('Y-m-d H:i:s'), $id]);
+        } catch (PDOException $e) {
+            if ($e->getCode() !== '23000') throw $e;
+            if ($mode === 'manual') json_keluar(['error' => "Nomor \"$manual\" sudah dipakai surat lain."], 409);
+            continue;
+        }
+        if ($s->rowCount() === 0) json_keluar(['error' => 'Surat ini sudah diterbitkan oleh admin lain.'], 409);
+        return ambil_keluar($id);
+    }
+    json_keluar(['error' => 'Gagal mengambil nomor urut, coba lagi.'], 409);
 }
 
 jalankan(function () {
@@ -169,32 +206,28 @@ jalankan(function () {
 
         case 'terbitkan': {
             $u = wajib_peran('admin');
-            $id = (int) ($in['id'] ?? 0);
-            $mode = ($in['mode'] ?? 'otomatis') === 'manual' ? 'manual' : 'otomatis';
-            $manual = teks($in['nomor_manual'] ?? '', 60);
-            if ($mode === 'manual' && $manual === '') json_keluar(['error' => 'Isi nomor manual, atau pilih nomor otomatis.'], 422);
-            $r = ambil_keluar($id);
-            if ($r['status'] !== 'menunggu_nomor') json_keluar(['error' => 'Surat ini tidak berada di antrean penomoran (status: ' . $r['status'] . ').'], 409);
-            if ($r['file_surat'] === '') json_keluar(['error' => 'Surat belum punya file draf.'], 422);
+            [$mode, $manual] = baca_mode($in);
+            json_keluar(['ok' => true, 'surat' => baris_keluar(terbitkan_surat((int) ($in['id'] ?? 0), $u, $mode, $manual))]);
+        }
 
-            $tahun = (int) date('Y'); $bulan = (int) date('n');
-            // Nomor otomatis diulang bila bentrok (dua admin menerbitkan bersamaan).
-            for ($coba = 0; $coba < 5; $coba++) {
-                if ($mode === 'otomatis') { [$urut, $nomor] = nomor_berikut($tahun, $bulan); }
-                else { $urut = null; $nomor = $manual; }
-                try {
-                    $s = $pdo->prepare("UPDATE surat_keluar SET status='terbit', nomor_surat=?, mode_nomor=?, tahun=?, bulan=?, nomor_urut=?,
-                        diterbitkan_oleh=?, tanggal_terbit=? WHERE id=? AND status='menunggu_nomor'");
-                    $s->execute([$nomor, $mode, $tahun, $bulan, $urut, $u['id'], date('Y-m-d H:i:s'), $id]);
-                } catch (PDOException $e) {
-                    if ($e->getCode() !== '23000') throw $e;
-                    if ($mode === 'manual') json_keluar(['error' => "Nomor \"$manual\" sudah dipakai surat lain."], 409);
-                    continue;
-                }
-                if ($s->rowCount() === 0) json_keluar(['error' => 'Surat ini sudah diterbitkan oleh admin lain.'], 409);
-                json_keluar(['ok' => true, 'surat' => baris_keluar(ambil_keluar($id))]);
+        // Admin membuat surat langsung di Penomoran: simpan, lewati ACC, beri nomor, terbit dalam satu langkah.
+        case 'surat_baru': {
+            $u = wajib_peran('admin');
+            [$perihal, $tujuan, $tgl] = data_draf($in);
+            [$mode, $manual] = baca_mode($in);
+            $f = simpan_unggahan();
+            $pdo->prepare("INSERT INTO surat_keluar (perihal, tujuan, tanggal_surat, status, file_surat, file_nama, pembuat_id, acc_oleh, tanggal_acc)
+                VALUES (?, ?, ?, 'menunggu_nomor', ?, ?, ?, ?, ?)")
+                ->execute([$perihal, $tujuan, $tgl, $f[0] ?? '', $f[1] ?? '', $u['id'], $u['id'], date('Y-m-d H:i:s')]);
+            $id = (int) $pdo->lastInsertId();
+            try {
+                $r = terbitkan_surat($id, $u, $mode, $manual, false);
+            } catch (Throwable $e) {                     // gagal (mis. nomor manual kembar): batalkan surat yang baru dibuat
+                $pdo->prepare('DELETE FROM surat_keluar WHERE id = ?')->execute([$id]);
+                if ($f) hapus_file($f[0]);
+                throw $e;
             }
-            json_keluar(['error' => 'Gagal mengambil nomor urut, coba lagi.'], 409);
+            json_keluar(['ok' => true, 'surat' => baris_keluar($r)], 201);
         }
 
         default:

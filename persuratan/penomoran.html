@@ -109,6 +109,36 @@
 
         <section class="panel">
             <div class="panel-head">
+                <h3>Surat baru</h3>
+                <span class="muted" style="font-size:.8125rem">Isi data surat, pilih nomor, lalu terbitkan langsung</span>
+            </div>
+            <div class="panel-body">
+                <form id="baruForm" novalidate>
+                    <div class="form-grid">
+                        <div class="field"><label for="b_tanggal">Tanggal surat</label><input type="date" id="b_tanggal"></div>
+                        <div class="field"><label for="b_tujuan">Tujuan surat <span class="req">*</span></label>
+                            <input type="text" id="b_tujuan" maxlength="255" placeholder="Contoh: Rektor"></div>
+                        <div class="field full"><label for="b_perihal">Perihal <span class="req">*</span></label>
+                            <textarea id="b_perihal" maxlength="255" placeholder="Contoh: Surat Undangan forum PMB dan Pengelolaan Magang"></textarea></div>
+                        <div class="field"><label for="b_file">File surat <span class="opt">(opsional, PDF / JPG / PNG, maks. 10 MB)</span></label>
+                            <input type="file" id="b_file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+                        <div class="field">
+                            <span class="lbl">Nomor surat</span>
+                            <div class="seg" id="bMode" role="radiogroup" aria-label="Cara penomoran">
+                                <label><input type="radio" name="bmode" value="otomatis" checked><span>Otomatis</span></label>
+                                <label><input type="radio" name="bmode" value="manual"><span>Nomor manual</span></label>
+                            </div>
+                            <div class="nomor-box" id="bOto" style="margin-top:.6rem"><div class="lbl">Nomor otomatis</div><div class="no mono" id="bNomor">...</div></div>
+                            <input type="text" id="bManual" maxlength="60" placeholder="Contoh: 001/KHUSUS/XI/2026" autocomplete="off" style="display:none;margin-top:.6rem">
+                        </div>
+                    </div>
+                    <div class="form-actions"><button type="submit" class="btn primary" id="bSimpan">Simpan &amp; Terbitkan</button></div>
+                </form>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
                 <div><h3>Antrean penomoran</h3><span class="muted" id="jumlah" style="font-size:.8125rem"></span></div>
                 <div class="toolbar">
                     <input type="text" id="q" placeholder="Cari perihal, tujuan, pembuat…" aria-label="Cari surat">
@@ -180,7 +210,7 @@
 
     <script src="app.js?v=5"></script>
     <script src="profil.js?v=1"></script>
-    <script src="penomoran.js?v=5"></script>
+    <script src="penomoran.js?v=6"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>
