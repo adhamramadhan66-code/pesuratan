@@ -138,6 +138,23 @@ try {
                 ->execute([$tglArsip, $lokasi, $ket, $fileBaru, $namaBaru, $id]);
             json_keluar(['ok' => true]);
 
+        case 'unggah': {
+            // Hanya mengunggah/mengganti file surat (dari kartu di Surat Keluar); status arsip tidak berubah.
+            $up = $_FILES['file'] ?? null;
+            if (!$up || $up['error'] === UPLOAD_ERR_NO_FILE) json_keluar(['error' => 'Pilih file surat (PDF/JPG/PNG).'], 422);
+            if ($up['error'] === UPLOAD_ERR_INI_SIZE || $up['error'] === UPLOAD_ERR_FORM_SIZE) json_keluar(['error' => 'Ukuran file melebihi batas server (upload_max_filesize di php.ini).'], 413);
+            if ($up['error'] !== UPLOAD_ERR_OK) json_keluar(['error' => 'Upload file gagal (kode ' . $up['error'] . ').'], 400);
+            if ($up['size'] > MAKS_UKURAN) json_keluar(['error' => 'Ukuran file maksimal 10 MB.'], 422);
+            $mime = function_exists('finfo_open') ? finfo_file(finfo_open(FILEINFO_MIME_TYPE), $up['tmp_name']) : '';
+            if (!isset(TIPE_FILE[$mime])) json_keluar(['error' => 'Format file harus PDF, JPG, atau PNG.'], 422);
+            $nama = bin2hex(random_bytes(16)) . '.' . TIPE_FILE[$mime];
+            if (!move_uploaded_file($up['tmp_name'], FOLDER_ARSIP . '/' . $nama)) json_keluar(['error' => 'Gagal menyimpan file ke folder data/arsip.'], 500);
+            hapus_file($surat['file_arsip']);
+            $pdo->prepare('UPDATE surat SET file_arsip = ?, file_nama = ? WHERE id = ?')
+                ->execute([$nama, teks(basename((string) $up['name']), 200), $id]);
+            json_keluar(['ok' => true]);
+        }
+
         case 'batal':
             // File surat tetap disimpan (juga dipakai di Disposisi); hanya status dan data arsip fisik yang direset.
             $pdo->prepare('UPDATE surat SET status_arsip = \'belum\', tanggal_arsip = NULL, lokasi_arsip = \'\', keterangan_arsip = \'\' WHERE id = ?')

@@ -39,6 +39,7 @@
             const aksi = [];
             if (KE_DEPAN[r.tahap]) aksi.push('<button class="btn sm primary" data-maju="' + r.id + '">' + KE_DEPAN[r.tahap] + '</button>');
             if (i > 0) aksi.push('<button class="btn sm" data-mundur="' + r.id + '">Mundurkan</button>');
+            aksi.push('<button class="btn sm" data-unggah="' + r.id + '">' + (r.ada_file ? 'Ganti file' : '+ Unggah file') + '</button>');
             aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
@@ -57,8 +58,23 @@
 
     const ubahTahap = (id, tahap, tambahan) => api(API, Object.assign({ aksi: 'tahap', id, tahap }, tambahan || {}));
 
+    // Unggah file surat langsung dari kartu
+    const pilih = document.createElement('input');
+    pilih.type = 'file'; pilih.accept = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png'; pilih.hidden = true;
+    document.body.appendChild(pilih);
+    let idUnggah = 0;
+    pilih.addEventListener('change', async () => {
+        const f = pilih.files[0]; pilih.value = '';
+        if (!f) return;
+        const salah = App.cekFile(f); if (salah) { toast(salah, true); return; }
+        const fd = new FormData(); fd.append('aksi', 'unggah'); fd.append('id', idUnggah); fd.append('file', f);
+        try { await api('api/arsip.php', fd); toast('File surat diunggah'); muat(); }
+        catch (e) { toast(e.message, true); }
+    });
+
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
+        if (b.dataset.unggah) { idUnggah = +b.dataset.unggah; pilih.click(); return; }
         const id = +(b.dataset.maju || b.dataset.mundur);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         const i = TAHAP.indexOf(r.tahap);
