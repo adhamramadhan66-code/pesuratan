@@ -118,10 +118,10 @@
                             <div class="field">
                                 <span class="lbl">Dikirim ke</span>
                                 <div class="seg" role="radiogroup" aria-label="Dikirim ke">
-                                    <label><input type="radio" name="jalur" value="disposisi" checked><span>Disposisi</span></label>
+                                    <label><input type="radio" name="jalur" value="disposisi" checked><span>Surat Masuk</span></label>
                                     <label><input type="radio" name="jalur" value="keluar"><span>Surat Keluar</span></label>
                                 </div>
-                                <span class="help">Disposisi = perlu ACC dulu. Surat Keluar = langsung ke Surat Keluar. Surat masuk diunggah di Disposisi.</span>
+                                <span class="help">Surat Masuk = perlu ACC dulu (diunggah di Disposisi). Surat Keluar = langsung ke Surat Keluar.</span>
                             </div>
                             <div class="field">
                                 <label for="f_jenis">Jenis surat</label>
@@ -174,18 +174,6 @@
                 </div>
             </aside>
         </div>
-
-        <section class="panel">
-            <div class="panel-head">
-                <div><h3>Data surat keluar</h3><span class="muted" id="jumlah" style="font-size:.8125rem"></span></div>
-                <div class="toolbar">
-                    <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat">
-                    <select id="fTahun" aria-label="Tahun"></select>
-                    <select id="fBulan" aria-label="Bulan"></select>
-                </div>
-            </div>
-            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
-        </section>
     </main>
 
     <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
@@ -195,7 +183,7 @@
 
     <script src="app.js?v=3"></script>
     <script src="profil.js?v=1"></script>
-    <script src="penomoran.js?v=3"></script>
+    <script src="penomoran.js?v=7"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

@@ -117,7 +117,7 @@
                 $('btnKeDisposisi').textContent = keKeluar ? 'Unggah surat di Surat Keluar' : 'Unggah surat di Disposisi';
                 keModeTambah(true);
             }
-            muatDaftar();
+            muatUrut();
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
@@ -132,64 +132,14 @@
         catch (e) { toast('Tidak bisa menyalin otomatis. Salin manual: ' + t, true); }
     });
 
-    // ---------- Tabel data surat ----------
-    async function muatDaftar() {
-        const p = new URLSearchParams({ aksi: 'daftar', q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 200 });
-        try {
-            const d = await api(API + '?' + p);
-            baris = d.surat;
-            render();
-        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
-    }
-
-    function render() {
-        $('jumlah').textContent = baris.length + ' surat';
-        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada data surat.</p>'; return; }
-        $('galeri').innerHTML = baris.map((r) => {
-            const adaDsp = !!r.no_disposisi, ok = r.status_disposisi === 'disetujui';
-            const aksi = [];
-            const keluar = r.jalur === 'keluar';
-            if (keluar) aksi.push('<a class="btn sm primary" href="surat_keluar.html?q=' + encodeURIComponent(r.nomor_surat) + '">Buka di Surat Keluar</a>');
-            else if (!adaDsp || !r.ada_file) aksi.push('<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>');
-            aksi.push('<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
-            return App.kartuHtml({
-                kelas: ok ? 'ok' : adaDsp ? 'bad' : 'abu', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
-                sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                status: adaDsp
-                    ? '<span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span><span>' + esc(r.no_disposisi) + '</span>'
-                    : keluar ? '<span class="badge ok">Surat Keluar</span>' : '<span class="badge">Belum diunggah</span>',
-                aksi: aksi.join(''),
-            });
-        }).join('');
-    }
-
-    $('galeri').addEventListener('click', async (ev) => {
-        const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.ubah) { const r = baris.find((x) => +x.id === +b.dataset.ubah); if (r) keModeUbah(r); }
-        if (b.dataset.hapus) {
-            const r = baris.find((x) => +x.id === +b.dataset.hapus); if (!r) return;
-            const arsip = r.status_arsip === 'diarsipkan' ? '\n\nSurat ini sudah diarsipkan; file scan arsipnya ikut terhapus.' : '';
-            if (!confirm('Hapus surat ' + r.nomor_surat + '?' + arsip + '\n\nNomor ini tidak otomatis dipakai ulang kecuali ini surat terakhir pada bulannya.')) return;
-            try { await api(API, { aksi: 'hapus', id: r.id }); toast('Surat dihapus'); if (editId === r.id) keModeTambah(true); muatUrut(); muatDaftar(); }
-            catch (e) { toast(e.message, true); }
-        }
-    });
-
-    let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muatDaftar, 300); });
-    $('fTahun').addEventListener('change', muatDaftar);
-    $('fBulan').addEventListener('change', muatDaftar);
-
     // ---------- Mulai ----------
     (async function mulai() {
         el.tanggal.value = hariIni();
-        $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + BULAN.map((b, i) => '<option value="' + (i + 1) + '">' + b + '</option>').join('');
         try {
             opsi = await api(API + '?aksi=opsi');
             isiOpsi(el.jenis, opsi.jenis, 'Pilih jenis surat…', (x) => x.nama + ' (' + x.kode + ')');
             isiOpsi(el.unit, opsi.unit, 'Pilih unit pembuat…', (x) => x.nama + ' (' + x.kode + ')');
-            $('fTahun').innerHTML = '<option value="">Semua tahun</option>' + opsi.tahun.map((t) => '<option value="' + t + '">' + t + '</option>').join('');
         } catch (e) { toast(e.message, true); }
-        pratinjau(); muatUrut(); muatDaftar();
+        pratinjau(); muatUrut();
     })();
 })();
