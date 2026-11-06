@@ -5,6 +5,10 @@
  * Bawaan Laragon: host 127.0.0.1, port 3306, user root, tanpa kata sandi.
  * Database "persuratan" dan semua tabel dibuat otomatis saat halaman pertama dibuka.
  * Jika Anda mengimpor database.sql lewat phpMyAdmin/HeidiSQL, hasilnya sama saja.
+ *
+ * Alur e-Office:
+ *   Surat masuk : admin input (diterima) -> pimpinan buat disposisi ke staf (proses_staf) -> staf selesaikan (selesai)
+ *   Surat keluar: staf buat draft (menunggu_acc) -> pimpinan ACC (menunggu_nomor) -> admin beri nomor & terbitkan (terbit)
  */
 const MYSQL_HOST = '127.0.0.1';
 const MYSQL_PORT = 3306;
@@ -30,113 +34,47 @@ function db(): PDO
     $pdo->exec('USE `' . MYSQL_NAME . '`');
 
     buat_tabel($pdo);
-    isi_data_master($pdo);
+    isi_data_awal($pdo);
     if (!is_dir(FOLDER_ARSIP)) mkdir(FOLDER_ARSIP, 0775, true);
     return $pdo;
 }
 
+function tabel_ada(PDO $pdo, string $tabel): bool
+{
+    try { $pdo->query("SELECT 1 FROM `$tabel` LIMIT 0"); return true; } catch (PDOException $e) { return false; }
+}
+
+function kolom_ada(PDO $pdo, string $tabel, string $kolom): bool
+{
+    try { $pdo->query("SELECT `$kolom` FROM `$tabel` LIMIT 0"); return true; } catch (PDOException $e) { return false; }
+}
+
 function buat_tabel(PDO $pdo): void
 {
-    $pdo->exec('CREATE TABLE IF NOT EXISTS jenis_surat (
-        kode VARCHAR(10)  NOT NULL PRIMARY KEY,
-        nama VARCHAR(80)  NOT NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
-
-    $pdo->exec('CREATE TABLE IF NOT EXISTS unit (
-        kode VARCHAR(20)  NOT NULL PRIMARY KEY,
-        nama VARCHAR(100) NOT NULL,
-        urutan INT NOT NULL DEFAULT 0
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
-
-    // Satu baris = satu surat keluar (sama seperti sheet "Contoh" di Panduan_Persuratan.xlsx).
-    // Nomor urut dimulai dari 001 setiap awal bulan -> UNIQUE (tahun, bulan, nomor_urut).
-    $pdo->exec('CREATE TABLE IF NOT EXISTS surat (
-        id               INT AUTO_INCREMENT PRIMARY KEY,
-        tahun            SMALLINT     NOT NULL,
-        bulan            TINYINT      NOT NULL,
-        nomor_urut       INT          NOT NULL,
-        kode_tujuan      CHAR(1)      NOT NULL,
-        jenis_kode       VARCHAR(10)  NOT NULL,
-        unit_kode        VARCHAR(20)  NOT NULL,
-        nomor_surat      VARCHAR(60)  NOT NULL,
-        tanggal_surat    DATE         NOT NULL,
-        perihal          VARCHAR(255) NOT NULL,
-        untuk            VARCHAR(255) NOT NULL DEFAULT \'\',
-        jenis_ttd        VARCHAR(10)  NOT NULL DEFAULT \'basah\',
-        pejabat_ttd      VARCHAR(100) NOT NULL DEFAULT \'\',
-        pembuat_surat    VARCHAR(100) NOT NULL DEFAULT \'\',
-        pemberi_nomor    VARCHAR(100) NOT NULL DEFAULT \'\',
-        status_arsip     VARCHAR(12)  NOT NULL DEFAULT \'belum\',
-        tanggal_arsip    DATE NULL,
-        lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT \'\',
-        keterangan_arsip VARCHAR(255) NOT NULL DEFAULT \'\',
-        file_arsip       VARCHAR(80)  NOT NULL DEFAULT \'\',
-        file_nama        VARCHAR(200) NOT NULL DEFAULT \'\',
-        tahap            VARCHAR(16)  NOT NULL DEFAULT \'bernomor\',
-        tanggal_kirim    DATE NULL,
-        keterangan_kirim VARCHAR(255) NOT NULL DEFAULT \'\',
-        dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uq_nomor (tahun, bulan, nomor_urut),
-        KEY idx_tanggal (tanggal_surat),
-        KEY idx_arsip (status_arsip)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
-
-    // Lembar disposisi: permohonan surat yang harus disetujui sebelum surat dibuat di Tambah Data.
-    $pdo->exec(<<<'SQL'
-CREATE TABLE IF NOT EXISTS disposisi (
-    id             INT AUTO_INCREMENT PRIMARY KEY,
-    surat_id       INT NULL,
-    surat_masuk_id INT NULL,
-    tahun          SMALLINT     NOT NULL,
-    bulan          TINYINT      NOT NULL,
-    urut           INT          NOT NULL,
-    no_disposisi   VARCHAR(40)  NOT NULL,
-    tanggal_terima DATE         NOT NULL,
-    sifat          VARCHAR(60)  NOT NULL DEFAULT '',
-    hal            VARCHAR(255) NOT NULL,
-    kode_jenis     VARCHAR(10)  NOT NULL,
-    unit_kode      VARCHAR(20)  NOT NULL,
-    kode_tujuan    CHAR(1)      NOT NULL DEFAULT 'A',
-    untuk          VARCHAR(255) NOT NULL DEFAULT '',
-    pemohon        VARCHAR(100) NOT NULL,
-    tujuan_disposisi VARCHAR(100) NOT NULL DEFAULT '',
-    isi            VARCHAR(60)  NOT NULL DEFAULT '',
-    status         VARCHAR(12)  NOT NULL DEFAULT 'belum',
-    tanggal_setuju DATE NULL,
-    disetujui_oleh VARCHAR(100) NOT NULL DEFAULT '',
-    dibuat_pada    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_disposisi_no (tahun, bulan, urut),
-    UNIQUE KEY uq_dsp_surat (surat_id),
-    KEY idx_dsp_status (status),
-    KEY idx_dsp_tanggal (tanggal_terima)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-SQL);
-
-    $pdo->exec(<<<'SQL'
-CREATE TABLE IF NOT EXISTS disposisi_alur (
-    id           INT AUTO_INCREMENT PRIMARY KEY,
-    disposisi_id INT          NOT NULL,
-    urutan       INT          NOT NULL,
-    tanggal      DATE NULL,
-    kepada       VARCHAR(100) NOT NULL DEFAULT '',
-    isi_nomor    VARCHAR(40)  NOT NULL DEFAULT '',
-    dari         VARCHAR(100) NOT NULL DEFAULT '',
-    paraf        VARCHAR(40)  NOT NULL DEFAULT '',
-    KEY idx_alur_disposisi (disposisi_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-SQL);
-
-    // Database lama (disposisi sebagai syarat sebelum surat dibuat): sesuaikan dengan alur baru
-    // (surat dinomori dulu di Penomoran, lalu disalurkan lewat disposisi).
-    if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_id'")->fetch()) {
-        $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_id INT NULL AFTER id, ADD COLUMN tujuan_disposisi VARCHAR(100) NOT NULL DEFAULT \'\' AFTER pemohon, ADD UNIQUE KEY uq_dsp_surat (surat_id)');
-        // Disposisi lama yang sudah dipakai membuat surat tetap terhubung ke suratnya.
-        if ($pdo->query("SHOW COLUMNS FROM surat LIKE 'disposisi_id'")->fetch()) {
-            $pdo->exec('UPDATE disposisi d JOIN surat s ON s.disposisi_id = d.id SET d.surat_id = s.id WHERE d.surat_id IS NULL');
+    // Skema lama (alur Penomoran -> Disposisi -> ACC) dicadangkan dengan akhiran _lama, datanya tidak dihapus.
+    if (tabel_ada($pdo, 'surat_masuk') && !kolom_ada($pdo, 'surat_masuk', 'dibuat_oleh')) {
+        foreach (['surat', 'disposisi', 'disposisi_alur', 'surat_masuk'] as $t) {
+            if (!tabel_ada($pdo, $t)) continue;
+            $baru = $t . '_lama';
+            if (tabel_ada($pdo, $baru)) $baru .= '_' . date('YmdHis');
+            $pdo->exec("ALTER TABLE `$t` RENAME TO `$baru`");
         }
     }
 
-    // Surat masuk: surat yang diterima TSU (dari pihak luar maupun unit lain di dalam kampus).
+    // Akun login. Peran: staf (membuat draft, menyelesaikan disposisi), pimpinan (ACC, disposisi), admin (input surat masuk, penomoran, arsip).
+    $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS pengguna (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    nama        VARCHAR(100) NOT NULL,
+    email       VARCHAR(120) NOT NULL,
+    kata_sandi  VARCHAR(255) NOT NULL,
+    peran       ENUM('staf','pimpinan','admin') NOT NULL,
+    dibuat_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_pengguna_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+SQL);
+
+    // Surat masuk. diterima -> proses_staf (saat pimpinan membuat disposisi) -> selesai (saat staf menyelesaikan tugas).
     $pdo->exec(<<<'SQL'
 CREATE TABLE IF NOT EXISTS surat_masuk (
     id               INT AUTO_INCREMENT PRIMARY KEY,
@@ -147,62 +85,99 @@ CREATE TABLE IF NOT EXISTS surat_masuk (
     nomor_surat_asal VARCHAR(100) NOT NULL DEFAULT '',
     tanggal_surat    DATE NULL,
     tanggal_terima   DATE         NOT NULL,
-    jenis_pengirim   VARCHAR(10)  NOT NULL DEFAULT 'eksternal',
     pengirim         VARCHAR(150) NOT NULL,
     perihal          VARCHAR(255) NOT NULL,
-    sifat            VARCHAR(12)  NOT NULL DEFAULT 'biasa',
-    tujuan           VARCHAR(150) NOT NULL DEFAULT '',
-    status           VARCHAR(16)  NOT NULL DEFAULT 'diterima',
-    status_arsip     VARCHAR(12)  NOT NULL DEFAULT 'belum',
+    sifat            ENUM('biasa','penting','segera','rahasia') NOT NULL DEFAULT 'biasa',
+    status           ENUM('diterima','proses_staf','selesai') NOT NULL DEFAULT 'diterima',
+    file_surat       VARCHAR(80)  NOT NULL DEFAULT '',
+    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    status_arsip     ENUM('belum','diarsipkan') NOT NULL DEFAULT 'belum',
     tanggal_arsip    DATE NULL,
     lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT '',
     keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
-    file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
-    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
-    dari_surat_id    INT NULL,
+    dibuat_oleh      INT          NOT NULL,
     dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_agenda (tahun, bulan, urut),
-    UNIQUE KEY uq_sm_dari (dari_surat_id),
-    KEY idx_sm_tanggal (tanggal_terima),
     KEY idx_sm_status (status),
-    KEY idx_sm_arsip (status_arsip)
+    KEY idx_sm_tanggal (tanggal_terima),
+    CONSTRAINT fk_sm_pembuat FOREIGN KEY (dibuat_oleh) REFERENCES pengguna (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 SQL);
 
-    // Database lama: tambahkan kolom/ubah nilai yang berubah pada versi ini.
-    if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'tahap'")->fetch()) {
-        $pdo->exec('ALTER TABLE surat ADD COLUMN tahap VARCHAR(16) NOT NULL DEFAULT \'bernomor\', ADD COLUMN tanggal_kirim DATE NULL, ADD COLUMN keterangan_kirim VARCHAR(255) NOT NULL DEFAULT \'\'');
-    }
-    if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_masuk_id'")->fetch()) {
-        $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_masuk_id INT NULL AFTER surat_id');
-    }
-    // Surat Masuk otomatis: surat internal yang di-ACC di Disposisi tercatat juga sebagai Surat Masuk bagi penerimanya.
-    if (!$pdo->query("SHOW COLUMNS FROM surat_masuk LIKE 'dari_surat_id'")->fetch()) {
-        $pdo->exec('ALTER TABLE surat_masuk ADD COLUMN dari_surat_id INT NULL, ADD UNIQUE KEY uq_sm_dari (dari_surat_id)');
-    }
-    if (!$pdo->query("SHOW COLUMNS FROM surat_masuk LIKE 'jenis_pengirim'")->fetch()) {
-        $pdo->exec('ALTER TABLE surat_masuk ADD COLUMN jenis_pengirim VARCHAR(10) NOT NULL DEFAULT \'eksternal\' AFTER tanggal_terima, MODIFY status VARCHAR(16) NOT NULL DEFAULT \'diterima\'');
-        $pdo->exec('UPDATE surat_masuk SET status = \'didisposisikan\' WHERE status = \'diproses\'');
-        $pdo->exec('UPDATE surat_masuk SET status = \'ditindaklanjuti\' WHERE status = \'selesai\'');
-    }
+    // Disposisi: pimpinan meneruskan surat masuk ke satu staf. Satu surat masuk = satu disposisi.
+    $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS disposisi (
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    surat_masuk_id    INT          NOT NULL,
+    pimpinan_id       INT          NOT NULL,
+    staf_id           INT          NOT NULL,
+    instruksi         VARCHAR(500) NOT NULL,
+    batas_waktu       DATE NULL,
+    tanggal_disposisi DATE         NOT NULL,
+    status            ENUM('proses_staf','selesai') NOT NULL DEFAULT 'proses_staf',
+    catatan_selesai   VARCHAR(500) NOT NULL DEFAULT '',
+    tanggal_selesai   DATE NULL,
+    dibuat_pada       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_dsp_surat (surat_masuk_id),
+    KEY idx_dsp_staf (staf_id),
+    CONSTRAINT fk_dsp_surat   FOREIGN KEY (surat_masuk_id) REFERENCES surat_masuk (id),
+    CONSTRAINT fk_dsp_pimpinan FOREIGN KEY (pimpinan_id)   REFERENCES pengguna (id),
+    CONSTRAINT fk_dsp_staf    FOREIGN KEY (staf_id)        REFERENCES pengguna (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+SQL);
+
+    // Surat keluar: menunggu_acc -> menunggu_nomor (setelah ACC pimpinan, masuk antrean Penomoran) -> terbit (setelah diberi nomor).
+    // nomor_surat baru terisi saat terbit. Nomor otomatis berformat NNN/TU/BULAN_ROMAWI/TAHUN dan urut per bulan.
+    $pdo->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS surat_keluar (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    perihal          VARCHAR(255) NOT NULL,
+    tujuan           VARCHAR(255) NOT NULL,
+    tanggal_surat    DATE         NOT NULL,
+    status           ENUM('menunggu_acc','menunggu_nomor','terbit') NOT NULL DEFAULT 'menunggu_acc',
+    file_surat       VARCHAR(80)  NOT NULL DEFAULT '',
+    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    pembuat_id       INT          NOT NULL,
+    acc_oleh         INT NULL,
+    tanggal_acc      DATETIME NULL,
+    nomor_surat      VARCHAR(60) NULL,
+    mode_nomor       ENUM('otomatis','manual') NULL,
+    tahun            SMALLINT NULL,
+    bulan            TINYINT NULL,
+    nomor_urut       INT NULL,
+    diterbitkan_oleh INT NULL,
+    tanggal_terbit   DATETIME NULL,
+    status_arsip     ENUM('belum','diarsipkan') NOT NULL DEFAULT 'belum',
+    tanggal_arsip    DATE NULL,
+    lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT '',
+    keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
+    dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_sk_nomor (nomor_surat),
+    UNIQUE KEY uq_sk_urut (tahun, bulan, nomor_urut),
+    KEY idx_sk_status (status),
+    KEY idx_sk_tanggal (tanggal_surat),
+    CONSTRAINT fk_sk_pembuat FOREIGN KEY (pembuat_id) REFERENCES pengguna (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+SQL);
 }
 
-/** Isi jenis surat & unit dari Panduan (hanya jika tabel masih kosong). */
-function isi_data_master(PDO $pdo): void
+/** Akun demo (kata sandi semuanya tsu12345), hanya dibuat bila tabel pengguna masih kosong. */
+function isi_data_awal(PDO $pdo): void
 {
-    $master = require __DIR__ . '/master.php';
-
-    if ((int) $pdo->query('SELECT COUNT(*) FROM jenis_surat')->fetchColumn() === 0) {
-        $s = $pdo->prepare('INSERT INTO jenis_surat (kode, nama) VALUES (?, ?)');
-        foreach ($master['jenis'] as [$kode, $nama]) $s->execute([$kode, $nama]);
-    }
-    if ((int) $pdo->query('SELECT COUNT(*) FROM unit')->fetchColumn() === 0) {
-        $s = $pdo->prepare('INSERT INTO unit (kode, nama, urutan) VALUES (?, ?, ?)');
-        foreach ($master['unit'] as $i => [$kode, $nama]) $s->execute([$kode, $nama, $i + 1]);
+    if ((int) $pdo->query('SELECT COUNT(*) FROM pengguna')->fetchColumn() > 0) return;
+    $s = $pdo->prepare('INSERT INTO pengguna (nama, email, kata_sandi, peran) VALUES (?, ?, ?, ?)');
+    $hash = password_hash('tsu12345', PASSWORD_DEFAULT);
+    foreach ([
+        ['Admin TSU',       'admin@tsu.ac.id',    'admin'],
+        ['Pimpinan TSU',    'pimpinan@tsu.ac.id', 'pimpinan'],
+        ['Staf TSU',        'staf@tsu.ac.id',     'staf'],
+        ['Staf Akademik',   'staf2@tsu.ac.id',    'staf'],
+    ] as [$nama, $email, $peran]) {
+        $s->execute([$nama, $email, $hash, $peran]);
     }
 }
 
-/** Angka bulan -> romawi (1 => I ... 12 => XII), sesuai Panduan poin 5. */
+/** Angka bulan -> romawi (1 => I ... 12 => XII). */
 function bulan_romawi(int $b): string
 {
     return ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][$b] ?? '';

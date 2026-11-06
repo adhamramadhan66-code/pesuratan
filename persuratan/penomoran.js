@@ -1,191 +1,108 @@
+/* Penomoran (khusus Admin): antrean surat yang sudah di-ACC pimpinan -> Preview Draft -> Beri Nomor & Terbitkan. */
 (function () {
     'use strict';
-    const { $, esc, tglIndo, hariIni, api, toast, BULAN } = App;
-    const ROMAWI = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
-    const API = 'api/surat.php';
+    const { $, esc, tglIndo, api, toast } = App;
+    const URL_API = 'api/surat_keluar.php';
+    let antrean = [], aktif = null, tunggu = 0;
 
-    const el = {
-        tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'),
-    };
-    const radio = (name) => (document.querySelector('input[name="' + name + '"]:checked') || {}).value || '';
-    const setRadio = (name, v) => document.querySelectorAll('input[name="' + name + '"]').forEach((r) => { r.checked = r.value === v; });
+    const urlFile = (r) => URL_API + '?aksi=file&id=' + r.id;
 
-    let opsi = { jenis: [], unit: [], tahun: [] };
-    let urut = null;            // nomor urut berikutnya pada bulan yang dipilih
-    let editId = null, editNomor = '', editAsal = null;
-    let baris = [];             // data tabel yang sedang tampil
-
-    const namaDari = (daftar, kode) => (daftar.find((x) => x.kode === kode) || {}).nama || '';
-
-    // ---------- Pratinjau nomor surat ----------
-    function pratinjau() {
-        const tgl = el.tanggal.value;
-        const th = tgl ? +tgl.slice(0, 4) : '', bl = tgl ? +tgl.slice(5, 7) : 0;
-        const tujuan = radio('tujuan');
-        let nomor;
-        nomor = (urut == null ? '...' : String(urut).padStart(3, '0')) + '.' + (tujuan || '?') + '/' + (el.jenis.value || '—') + '/' +
-                     (el.unit.value || '—') + '/' + (ROMAWI[bl] || '—') + '/' + (th || '—');
-        $('nomorPreview').textContent = nomor;
-        $('nomorUrut').textContent = (urut == null ? '...' : '#' + String(urut).padStart(3, '0'));
-        $('nomorTujuan').textContent = tujuan === 'A' ? 'A — Internal' : tujuan === 'B' ? 'B — Eksternal' : '-';
-        $('nomorJenis').textContent = el.jenis.value ? el.jenis.value + ' — ' + namaDari(opsi.jenis, el.jenis.value) : '-';
-        $('nomorUnit').textContent = el.unit.value ? el.unit.value + ' — ' + namaDari(opsi.unit, el.unit.value) : '-';
-        $('nomorBulan').textContent = bl ? ROMAWI[bl] + ' — ' + BULAN[bl - 1] : '-';
-        $('nomorTahun').textContent = th || '-';
-    }
-
-    async function muatUrut() {
-        if (!el.tanggal.value) return;
-        // Saat mengubah surat: bulan & tahun tidak berubah -> nomor urut lama dipakai.
-        if (editAsal && +el.tanggal.value.slice(0, 4) === editAsal.tahun && +el.tanggal.value.slice(5, 7) === editAsal.bulan) {
-            urut = editAsal.nomor_urut; pratinjau(); return;
-        }
+    // ---------- Daftar antrean ----------
+    async function muat() {
         try {
-            const d = await api(API + '?aksi=preview&tanggal=' + encodeURIComponent(el.tanggal.value));
-            urut = d.nomor_urut;
-        } catch (e) { urut = null; }
-        pratinjau();
+            const q = encodeURIComponent($('q').value.trim());
+            const [a, b, n] = await Promise.all([
+                api(URL_API + '?aksi=daftar&status=menunggu_nomor&q=' + q),
+                api(URL_API + '?aksi=daftar&status=menunggu_acc'),
+                api(URL_API + '?aksi=generate_nomor'),
+            ]);
+            antrean = a.data;
+            $('sAntrean').textContent = antrean.length;
+            $('sAcc').textContent = b.data.length;
+            $('sNomor').textContent = n.nomor;
+            $('jumlah').textContent = antrean.length + ' surat menunggu nomor';
+            $('antreanBody').innerHTML = antrean.length ? antrean.map((r) =>
+                '<tr><td><b>' + esc(r.perihal) + '</b><span class="sub">' + (r.ada_file ? esc(r.file_nama || 'file draf') : 'Belum ada file') + '</span></td>' +
+                '<td>' + esc(r.tujuan) + '</td><td>' + esc(tglIndo(r.tanggal_surat)) + '</td>' +
+                '<td>' + esc(r.pembuat) + '</td>' +
+                '<td>' + esc(r.acc_oleh || '-') + '<span class="sub">' + esc(tglIndo(r.tanggal_acc)) + '</span></td>' +
+                '<td><div class="aksi"><button type="button" class="btn sm" data-a="preview" data-id="' + r.id + '">Preview Draft</button>' +
+                '<button type="button" class="btn sm primary" data-a="nomori" data-id="' + r.id + '">Beri Nomor &amp; Terbitkan</button></div></td></tr>'
+            ).join('') : '<tr><td colspan="6" class="galeri-kosong">Tidak ada surat dalam antrean. Surat muncul di sini setelah pimpinan menekan ACC.</td></tr>';
+        } catch (e) { toast(e.message, true); $('antreanBody').innerHTML = '<tr><td colspan="6" class="galeri-kosong">' + esc(e.message) + '</td></tr>'; }
     }
 
-    // ---------- Formulir ----------
-    function isiOpsi(sel, daftar, placeholder, labelFn) {
-        sel.innerHTML = '<option value="">' + placeholder + '</option>' +
-            daftar.map((x) => '<option value="' + esc(x.kode) + '">' + esc(labelFn(x)) + '</option>').join('');
+    // ---------- Modal Preview Draft ----------
+    function preview(r) {
+        aktif = r;
+        $('pvJudul').textContent = 'Preview draf';
+        $('pvInfo').innerHTML = '<b>' + esc(r.perihal) + '</b><br>Kepada: ' + esc(r.tujuan) + ' · Dibuat oleh ' + esc(r.pembuat);
+        $('pvIsi').innerHTML = !r.ada_file ? '<p class="galeri-kosong">Draf ini belum punya file.</p>'
+            : r.file_tipe === 'pdf' ? '<iframe src="' + esc(urlFile(r)) + '" title="Draf surat"></iframe>'
+            : '<img src="' + esc(urlFile(r)) + '" alt="Draf surat">';
+        $('pvUnduh').href = urlFile(r);
+        $('pvUnduh').style.display = r.ada_file ? '' : 'none';
+        $('dlgPreview').showModal();
+    }
+    function tutupPreview() { $('dlgPreview').close(); $('pvIsi').innerHTML = ''; }
+
+    // ---------- Form Penomoran ----------
+    async function muatNomorOtomatis() {
+        const my = ++tunggu;
+        $('nfNomor').textContent = '...';
+        try {
+            const d = await api(URL_API + '?aksi=generate_nomor');
+            if (my === tunggu) $('nfNomor').textContent = d.nomor;
+        } catch (e) { if (my === tunggu) $('nfNomor').textContent = 'Gagal memuat nomor'; }
+    }
+    const mode = () => document.querySelector('#nfMode input:checked').value;
+    function setMode() {
+        const man = mode() === 'manual';
+        $('nfOto').style.display = man ? 'none' : '';
+        $('nfMan').style.display = man ? '' : 'none';
+        if (man) $('nfManual').focus(); else muatNomorOtomatis();
+    }
+    function bukaNomor(r) {
+        aktif = r;
+        $('nfInfo').innerHTML = '<b>' + esc(r.perihal) + '</b><br>Kepada: ' + esc(r.tujuan);
+        document.querySelector('#nfMode input[value=otomatis]').checked = true;
+        $('nfManual').value = '';
+        setMode();
+        if ($('dlgPreview').open) tutupPreview();
+        $('dlgNomor').showModal();
     }
 
-    function kunci(terkunci) {
-        [el.tanggal, el.jenis, el.unit].forEach((e) => { e.disabled = terkunci; });
-        document.querySelectorAll('input[name="tujuan"]').forEach((r) => { r.disabled = terkunci; });
-    }
-
-    function bersihkanGalat() { document.querySelectorAll('.bad').forEach((e) => e.classList.remove('bad')); }
-
-    function keModeTambah(kosongkanSemua) {
-        editId = null; editNomor = ''; editAsal = null;
-        $('editBanner').classList.remove('show');
-        $('btnBatal').style.display = 'none';
-        $('btnSimpanTeks').textContent = 'Simpan & ambil nomor';
-        $('formTitle').textContent = 'Data surat baru';
-        kunci(false);
-        el.perihal.value = '';
-        if (kosongkanSemua) {
-            el.tanggal.value = hariIni(); el.jenis.value = ''; el.unit.value = '';
-            setRadio('tujuan', 'A');
-        }
-        bersihkanGalat();
-        muatUrut(); pratinjau();
-    }
-
-    function keModeUbah(r) {
-        editId = r.id; editNomor = r.nomor_surat;
-        editAsal = { tahun: +r.tahun, bulan: +r.bulan, nomor_urut: +r.nomor_urut };
-        $('hasilBox').style.display = 'none';
-        $('editBanner').classList.add('show');
-        $('editBannerNo').textContent = r.nomor_surat;
-        $('btnBatal').style.display = '';
-        $('btnSimpanTeks').textContent = 'Simpan perubahan';
-        $('formTitle').textContent = 'Ubah data surat';
-        el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
-        el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
-        el.perihal.value = r.perihal;
-        kunci(false); bersihkanGalat(); urut = editAsal.nomor_urut; pratinjau();
-        $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    $('suratForm').addEventListener('submit', async (ev) => {
+    async function simpan(ev) {
         ev.preventDefault();
-        bersihkanGalat();
-        const wajib = [['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal']];
-        for (const [k, nama] of wajib) {
-            if (!el[k].value.trim()) { el[k].classList.add('bad'); el[k].focus(); toast('Isi ' + nama + ' terlebih dahulu.', true); return; }
-        }
-        const data = {
-            aksi: editId ? 'ubah' : 'tambah', id: editId,
-            tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
-            perihal: el.perihal.value,
-        };
-        const btn = $('btnSimpan'); btn.disabled = true;
+        if (!aktif) return;
+        const man = mode() === 'manual', nomor = $('nfManual').value.trim();
+        if (man && !nomor) { toast('Isi nomor manual, atau pilih nomor otomatis.', true); $('nfManual').focus(); return; }
+        $('nfSimpan').disabled = true;
         try {
-            const d = await api(API, data);
-            if (editId) { toast('Perubahan disimpan: ' + d.nomor_surat); keModeTambah(true); }
-            else {
-                $('hasilNomor').textContent = d.nomor_surat;
-                $('hasilBox').style.display = '';
-                toast('Surat tersimpan dengan nomor ' + d.nomor_surat);
-                $('btnKeDisposisi').href = 'disposisi.html?unggah=k:' + d.id;   // langkah berikutnya: unggah file surat di Disposisi
-                keModeTambah(true);
-            }
-            muatDaftar();
+            const d = await api(URL_API, { aksi: 'terbitkan', id: aktif.id, mode: mode(), nomor_manual: nomor });
+            $('dlgNomor').close();
+            toast('Terbit dengan nomor ' + d.surat.nomor_surat + '. Surat kini ada di menu Surat Keluar.');
+            aktif = null;
         } catch (e) { toast(e.message, true); }
-        finally { btn.disabled = false; }
-    });
-    $('btnBatal').addEventListener('click', () => keModeTambah(true));
-    $('btnReset').addEventListener('click', () => keModeTambah(true));
-    el.tanggal.addEventListener('change', () => { urut = null; pratinjau(); muatUrut(); });
-    [el.jenis, el.unit].forEach((e) => e.addEventListener('change', pratinjau));
-    document.querySelectorAll('input[name="tujuan"]').forEach((r) => r.addEventListener('change', pratinjau));
-    $('btnSalin').addEventListener('click', async () => {
-        const t = $('hasilNomor').textContent;
-        try { await navigator.clipboard.writeText(t); toast('Nomor surat disalin'); }
-        catch (e) { toast('Tidak bisa menyalin otomatis. Salin manual: ' + t, true); }
-    });
-
-    // ---------- Tabel data surat ----------
-    async function muatDaftar() {
-        const p = new URLSearchParams({ aksi: 'daftar', q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 200 });
-        try {
-            const d = await api(API + '?' + p);
-            baris = d.surat;
-            render();
-        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+        $('nfSimpan').disabled = false;
+        muat();
     }
 
-    function render() {
-        $('jumlah').textContent = baris.length + ' surat';
-        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada data surat.</p>'; return; }
-        $('galeri').innerHTML = baris.map((r) => {
-            const adaDsp = !!r.no_disposisi, ok = r.status_disposisi === 'disetujui';
-            const aksi = [];
-            if (!adaDsp || !r.ada_file) aksi.push('<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>');
-            aksi.push('<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
-            return App.kartuHtml({
-                kelas: ok ? 'ok' : adaDsp ? 'bad' : 'abu', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
-                sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                status: adaDsp
-                    ? '<span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span><span>' + esc(r.no_disposisi) + '</span>'
-                    : '<span class="badge">Belum diunggah</span>',
-                aksi: aksi.join(''),
-            });
-        }).join('');
-    }
-
-    $('galeri').addEventListener('click', async (ev) => {
-        const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.ubah) { const r = baris.find((x) => +x.id === +b.dataset.ubah); if (r) keModeUbah(r); }
-        if (b.dataset.hapus) {
-            const r = baris.find((x) => +x.id === +b.dataset.hapus); if (!r) return;
-            const arsip = r.status_arsip === 'diarsipkan' ? '\n\nSurat ini sudah diarsipkan; file scan arsipnya ikut terhapus.' : '';
-            if (!confirm('Hapus surat ' + r.nomor_surat + '?' + arsip + '\n\nNomor ini tidak otomatis dipakai ulang kecuali ini surat terakhir pada bulannya.')) return;
-            try { await api(API, { aksi: 'hapus', id: r.id }); toast('Surat dihapus'); if (editId === r.id) keModeTambah(true); muatUrut(); muatDaftar(); }
-            catch (e) { toast(e.message, true); }
-        }
+    // ---------- Pasang event ----------
+    $('antreanBody').addEventListener('click', (ev) => {
+        const b = ev.target.closest('button[data-a]');
+        if (!b) return;
+        const r = antrean.find((x) => x.id === +b.dataset.id);
+        if (!r) return;
+        if (b.dataset.a === 'preview') preview(r); else bukaNomor(r);
     });
+    $('pvTutup').addEventListener('click', tutupPreview);
+    $('dlgPreview').addEventListener('close', () => { $('pvIsi').innerHTML = ''; });
+    $('pvNomori').addEventListener('click', () => aktif && bukaNomor(aktif));
+    $('nfMode').addEventListener('change', setMode);
+    $('nfBatal').addEventListener('click', () => $('dlgNomor').close());
+    $('nomorForm').addEventListener('submit', simpan);
+    let t; $('q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(muat, 250); });
 
-    let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muatDaftar, 300); });
-    $('fTahun').addEventListener('change', muatDaftar);
-    $('fBulan').addEventListener('change', muatDaftar);
-
-    // ---------- Mulai ----------
-    (async function mulai() {
-        el.tanggal.value = hariIni();
-        $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + BULAN.map((b, i) => '<option value="' + (i + 1) + '">' + b + '</option>').join('');
-        try {
-            opsi = await api(API + '?aksi=opsi');
-            isiOpsi(el.jenis, opsi.jenis, 'Pilih jenis surat…', (x) => x.nama + ' (' + x.kode + ')');
-            isiOpsi(el.unit, opsi.unit, 'Pilih unit pembuat…', (x) => x.nama + ' (' + x.kode + ')');
-            $('fTahun').innerHTML = '<option value="">Semua tahun</option>' + opsi.tahun.map((t) => '<option value="' + t + '">' + t + '</option>').join('');
-        } catch (e) { toast(e.message, true); }
-        pratinjau(); muatUrut(); muatDaftar();
-    })();
+    muat();
 })();

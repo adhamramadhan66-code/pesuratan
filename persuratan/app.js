@@ -4,21 +4,41 @@
     const SESSION_KEY = 'kampuslyCurrentUser';
     const $ = (id) => document.getElementById(id);
 
-    // ---------- Sesi login (prototipe, sama seperti sebelumnya) ----------
-    function cekSesi() {
+    // ---------- Sesi login (akun & peran dari server: api/auth.php) ----------
+    const NAMA_PERAN = { admin: 'Admin', pimpinan: 'Pimpinan', staf: 'Staf' };
+    // Menu per peran: Penomoran hanya untuk admin.
+    const MENU_ADMIN_SAJA = ['penomoran.html'];
+
+    function keLogin() {
+        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+        window.location.replace('index.html');
+    }
+    function bacaSesi() {
         try {
             const u = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-            if (!u || u.email !== 'admin@tsu.ac.id') { window.location.replace('index.html'); return null; }
-            return u;
-        } catch (e) { window.location.replace('index.html'); return null; }
+            return u && u.peran && u.id ? u : null;
+        } catch (e) { return null; }
     }
+    function cekSesi() { const u = bacaSesi(); if (!u) keLogin(); return u; }
     const user = cekSesi();
-    if (user && $('currentUserLabel')) $('currentUserLabel').textContent = user.name || user.email;
+    if (user) {
+        if ($('currentUserLabel')) $('currentUserLabel').textContent = user.nama + ' · ' + (NAMA_PERAN[user.peran] || user.peran);
+        document.querySelectorAll('.nav-menu a.nav-item').forEach((a) => {
+            if (user.peran !== 'admin' && MENU_ADMIN_SAJA.includes((a.getAttribute('href') || '').split('?')[0])) a.style.display = 'none';
+        });
+        // Halaman khusus admin: peran lain dikembalikan ke dashboard.
+        if (user.peran !== 'admin' && MENU_ADMIN_SAJA.some((h) => location.pathname.endsWith(h))) location.replace('dashboard.html');
+        // Pastikan sesi server masih berlaku (mis. server dimulai ulang).
+        fetch('api/auth.php?aksi=saya', { cache: 'no-store' }).then((r) => { if (r.status === 401) keLogin(); }).catch(() => {});
+    }
     window.addEventListener('pageshow', cekSesi);
     if ($('logoutBtn')) $('logoutBtn').addEventListener('click', (ev) => {
         ev.preventDefault();
-        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
-        window.location.replace('index.html?logout=1');
+        fetch('api/auth.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi: 'logout' }) })
+            .catch(() => {}).finally(() => {
+                try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+                window.location.replace('index.html?logout=1');
+            });
     });
 
     // ---------- Tema gelap/terang ----------
@@ -75,6 +95,7 @@
         else if (badan) opsi = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(badan) };
         let res;
         try { res = await fetch(url, opsi); } catch (e) { throw new Error('Tidak dapat terhubung ke server.'); }
+        if (res.status === 401) { keLogin(); throw new Error('Sesi login berakhir.'); }
         let data = null;
         try { data = await res.json(); } catch (e) {}
         if (!res.ok || !data) {
@@ -131,5 +152,5 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
+    window.App = { user, peran: user ? user.peran : '', NAMA_PERAN, $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
 })();

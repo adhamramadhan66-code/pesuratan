@@ -9,19 +9,17 @@
 
     // ---------- Muat & tampilkan ----------
     async function muat() {
-        const p = new URLSearchParams({ aksi: 'daftar', status, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, jenis: $('fJenis').value, pembuat: $('fPembuat').value });
+        const p = new URLSearchParams({ aksi: 'daftar', status, q: $('q').value.trim(), tahun: $('fTahun').value, jenis: $('fJenis').value });
         try {
             const d = await api(API + '?' + p);
-            baris = d.surat;
-            const belum = d.total - d.diarsipkan;
-            $('sTotal').textContent = d.total;
-            $('sSudah').textContent = d.diarsipkan;
-            $('sBelum').textContent = belum;
-            $('sPersen').textContent = d.total ? Math.round((d.diarsipkan / d.total) * 100) + '% sudah diarsipkan' : 'Belum ada surat';
-            $('sBar').style.width = (d.total ? (d.diarsipkan / d.total) * 100 : 0) + '%';
-            isiTahun(d.daftar_tahun);
-            isiPilihan($('fJenis'), 'Semua kategori', d.daftar_jenis.map((x) => [x.kode, x.nama]));
-            isiPilihan($('fPembuat'), 'Semua pembuat', d.daftar_pembuat.map((x) => [x, x]));
+            baris = d.data;
+            const s = await api('api/statistik.php');
+            const total = s.arsip.sudah + s.arsip.belum;
+            $('sTotal').textContent = total;
+            $('sSudah').textContent = s.arsip.sudah;
+            $('sBelum').textContent = s.arsip.belum;
+            $('sPersen').textContent = total ? Math.round((s.arsip.sudah / total) * 100) + '% sudah diarsipkan' : 'Belum ada surat';
+            $('sBar').style.width = (total ? (s.arsip.sudah / total) * 100 : 0) + '%';
             render();
         } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
@@ -39,37 +37,36 @@
         sel.value = cur;
     }
 
+    const kunci = (r) => r.jenis + ':' + r.id;
+    const adaAdmin = App.peran === 'admin';
     function kartu(r) {
         const sudah = r.status_arsip === 'diarsipkan';
-        const url = API + '?aksi=file&id=' + r.id;
-        // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog untuk mengunggah dan mengarsipkan.
-        const thumb = r.ada_file
-            ? '<a class="kartu-thumb" href="' + url + '" target="_blank" rel="noopener" title="Buka file surat">' + App.thumb(url, r.file_nama) + '</a>'
-            : '<button type="button" class="kartu-thumb" data-arsip="' + r.id + '" title="Unggah file dan arsipkan">' + App.thumb('', '') + '</button>';
-        const aksi = sudah
-            ? ['<button class="btn sm" data-arsip="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-batal="' + r.id + '">Batalkan</button>']
-            : ['<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>'];
+        const url = API + '?aksi=file&jenis=' + r.jenis + '&id=' + r.id;
+        const aksi = [];
+        if (adaAdmin) {
+            if (sudah) aksi.push('<button class="btn sm" data-arsip="' + kunci(r) + '">Ubah</button>', '<button class="btn sm danger" data-batal="' + kunci(r) + '">Batalkan</button>');
+            else aksi.push('<button class="btn sm primary" data-arsip="' + kunci(r) + '">Arsipkan</button>');
+        }
         if (r.ada_file) aksi.push('<a class="btn sm" href="' + url + '&unduh=1">Unduh</a>');
-        const lokasi = sudah ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : 'Hanya file digital') + ' · ' + esc(tglIndo(r.tanggal_arsip)) : esc(tglIndo(r.tanggal_surat));
-        return '<div class="kartu ' + (sudah ? 'ok' : 'bad') + '">' + thumb +
-            '<div class="kartu-judul mono" title="' + esc(r.nomor_surat) + '">' + esc(r.nomor_surat) + '</div>' +
-            '<div class="kartu-sub" title="' + esc(r.perihal) + '">' + esc(r.perihal) + '</div>' +
-            '<div class="kartu-sub satu">' + esc(r.jenis_nama) + (r.pembuat_surat ? ' · ' + esc(r.pembuat_surat) : '') + '</div>' +
-            '<div class="kartu-status"><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span><span>' + lokasi + '</span></div>' +
-            '<div class="aksi">' + aksi.join('') + '</div></div>';
+        const lokasi = sudah ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : 'Hanya file digital') + ' · ' + esc(tglIndo(r.tanggal_arsip)) : esc(tglIndo(r.tanggal));
+        return App.kartuHtml({
+            kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor, judul: esc(r.nomor),
+            thumb: App.thumbFile(url, r.ada_file ? 'x.' + r.file_tipe : '', r.ada_file),
+            sub: [esc(r.perihal), (r.jenis === 'keluar' ? 'Surat keluar · kepada ' : 'Surat masuk · dari ') + esc(r.pihak)],
+            status: '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span><span>' + lokasi + '</span>',
+            aksi: aksi.join(''),
+        });
     }
 
     function render() {
-        $('galeri').innerHTML = baris.length ? baris.map(kartu).join('') : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat dibuat lewat menu "Penomoran".</p>';
+        $('galeri').innerHTML = baris.length ? baris.map(kartu).join('') : '<p class="galeri-kosong">Belum ada surat siap arsip (surat keluar terbit / surat masuk selesai).</p>';
     }
 
     // ---------- Filter ----------
     document.querySelectorAll('#segStatus input').forEach((r) => r.addEventListener('change', () => { status = r.value; muat(); }));
     let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
     $('fTahun').addEventListener('change', muat);
-    $('fBulan').addEventListener('change', muat);
     $('fJenis').addEventListener('change', muat);
-    $('fPembuat').addEventListener('change', muat);
 
     // ---------- Dialog arsipkan / ubah ----------
     const dlg = $('dlgArsip');
@@ -79,8 +76,8 @@
         aktif = r;
         $('dlgInfo').style.display = r ? '' : 'none';
         if (r) {
-            $('dlgNomor').textContent = r.nomor_surat;
-            $('dlgPerihal').textContent = r.perihal + ' — pembuat: ' + (r.pembuat_surat || '-');
+            $('dlgNomor').textContent = r.nomor;
+            $('dlgPerihal').textContent = r.perihal + ' — ' + r.pihak;
         }
         $('dlgTanggal').value = (r && r.tanggal_arsip) || hariIni();
         $('dlgLokasi').value = (r && r.lokasi_arsip) || '';
@@ -89,8 +86,8 @@
         $('dlgHapusFile').checked = false;
         $('fileNow').style.display = r && r.ada_file ? '' : 'none';
         if (r && r.ada_file) {
-            $('fileNowNama').textContent = r.file_nama;
-            $('fileNowLihat').href = API + '?aksi=file&id=' + r.id;
+            $('fileNowNama').textContent = r.file_tipe.toUpperCase();
+            $('fileNowLihat').href = API + '?aksi=file&jenis=' + r.jenis + '&id=' + r.id;
         }
     }
 
@@ -102,11 +99,11 @@
 
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.arsip) { const r = baris.find((x) => +x.id === +b.dataset.arsip); if (r) buka(r); }
+        if (b.dataset.arsip) { const r = baris.find((x) => kunci(x) === b.dataset.arsip); if (r) buka(r); }
         if (b.dataset.batal) {
-            const r = baris.find((x) => +x.id === +b.dataset.batal); if (!r) return;
-            if (!confirm('Batalkan pengarsipan surat ' + r.nomor_surat + '? Lokasi dan tanggal arsip dihapus; file surat tetap disimpan.')) return;
-            const fd = new FormData(); fd.append('aksi', 'batal'); fd.append('id', r.id);
+            const r = baris.find((x) => kunci(x) === b.dataset.batal); if (!r) return;
+            if (!confirm('Batalkan pengarsipan surat ' + r.nomor + '? Lokasi dan tanggal arsip dihapus; file surat tetap disimpan.')) return;
+            const fd = new FormData(); fd.append('aksi', 'batal'); fd.append('jenis', r.jenis); fd.append('id', r.id);
             try { await api(API, fd); toast('Pengarsipan dibatalkan'); muat(); } catch (e) { toast(e.message, true); }
         }
     });
@@ -125,20 +122,20 @@
             toast('Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).', true); $('dlgLokasi').focus(); return;
         }
         const fd = new FormData();
-        fd.append('aksi', 'simpan'); fd.append('id', aktif.id);
+        fd.append('aksi', 'simpan'); fd.append('jenis', aktif.jenis); fd.append('id', aktif.id);
         fd.append('tanggal_arsip', $('dlgTanggal').value);
         fd.append('lokasi_arsip', $('dlgLokasi').value);
         fd.append('keterangan_arsip', $('dlgKet').value);
         if ($('dlgHapusFile').checked) fd.append('hapus_file', '1');
         if (file) fd.append('file', file);
         const btn = $('dlgSimpan'); btn.disabled = true;
-        try { await api(API, fd); dlg.close(); toast('Surat ' + aktif.nomor_surat + ' diarsipkan'); muat(); }
+        try { await api(API, fd); dlg.close(); toast('Surat ' + aktif.nomor + ' diarsipkan'); muat(); }
         catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
 
     // ---------- Mulai ----------
-    $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + BULAN.map((b, i) => '<option value="' + (i + 1) + '">' + b + '</option>').join('');
+    { const th = new Date().getFullYear(); for (let y = th; y >= th - 4; y--) $('fTahun').insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '</option>'); }
     const q0 = new URLSearchParams(location.search).get('q');
     if (q0) $('q').value = q0;
     muat();

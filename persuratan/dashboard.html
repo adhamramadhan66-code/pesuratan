@@ -8,7 +8,7 @@
         (function () {
             try {
                 const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+                if (!user || !user.peran) window.location.replace('index.html');
             } catch (error) {
                 window.location.replace('index.html');
             }
@@ -126,24 +126,24 @@
         <!-- KPI CARDS (mengikuti rentang tanggal di atas) -->
         <div class="kpi-grid">
             <div class="kpi-card dark">
-                <p class="kpi-title">Total surat keluar</p>
-                <h3 class="kpi-value" id="kTotal">0</h3>
-                <p class="kpi-trend" id="kRentang">&nbsp;</p>
+                <p class="kpi-title">Surat masuk</p>
+                <h3 class="kpi-value" id="kMasuk">0</h3>
+                <p class="kpi-trend" id="kMasukInfo">&nbsp;</p>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Surat internal (A)</p>
-                <h3 class="kpi-value" id="kInternal">0</h3>
-                <p class="kpi-trend" id="kInternalPct">&nbsp;</p>
+                <p class="kpi-title">Surat keluar terbit</p>
+                <h3 class="kpi-value" id="kKeluar">0</h3>
+                <p class="kpi-trend" id="kKeluarInfo">&nbsp;</p>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Surat eksternal (B)</p>
-                <h3 class="kpi-value" id="kEksternal">0</h3>
-                <p class="kpi-trend" id="kEksternalPct">&nbsp;</p>
+                <p class="kpi-title" id="kTugasJudul">Menunggu tindakan</p>
+                <h3 class="kpi-value" id="kTugas">0</h3>
+                <p class="kpi-trend" id="kTugasInfo">&nbsp;</p>
             </div>
             <div class="kpi-card">
                 <p class="kpi-title">Sudah diarsipkan</p>
                 <h3 class="kpi-value" id="kArsip">0</h3>
-                <p class="kpi-trend" id="kArsipPct">&nbsp;</p>
+                <p class="kpi-trend" id="kArsipInfo">&nbsp;</p>
             </div>
         </div>
 
@@ -152,7 +152,7 @@
             <div class="chart-card main-chart">
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
-                    <a class="btn-round" href="penomoran.html" title="Penomoran surat" aria-label="Penomoran surat"><i data-lucide="plus"></i></a>
+                    
                 </div>
                 <div class="bars" id="bars" aria-label="Grafik jumlah surat per bulan"></div>
             </div>
@@ -188,7 +188,7 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
     <script src="profil.js?v=1"></script>
     <script>
         // Statistik dashboard: dimuat ulang setiap rentang tanggal berubah (event dari script.js).
@@ -198,36 +198,66 @@
             let terakhir = '';
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
+            const NAMA_MASUK = { diterima: 'Diterima', proses_staf: 'Proses staf', selesai: 'Selesai' };
+            const NAMA_KELUAR = { menunggu_acc: 'Menunggu ACC', menunggu_nomor: 'Menunggu nomor', terbit: 'Terbit' };
+            let tahunMuat = 0, cacheStat = null;
+
+            async function statistik(tahun) {
+                if (cacheStat && tahunMuat === tahun) return cacheStat;
+                cacheStat = await api('api/statistik.php?tahun=' + tahun); tahunMuat = tahun;
+                return cacheStat;
+            }
+
             document.addEventListener('rentang', async (ev) => {
                 const { dari, sampai } = ev.detail;
                 if (dari + sampai === terakhir) return;
                 terakhir = dari + sampai;
                 try {
-                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai);
+                    const y = +dari.slice(0, 4);
+                    const [d, kel, mas] = await Promise.all([
+                        statistik(y),
+                        api('api/surat_keluar.php?aksi=daftar&status=terbit'),
+                        api('api/surat_masuk.php?aksi=daftar'),
+                    ]);
                     if (dari + sampai !== terakhir) return;             // sudah ada permintaan yang lebih baru
-                    const t = d.total;
-                    $('kTotal').textContent = t.total;
-                    $('kRentang').textContent = dari === sampai ? tglIndo(dari) : tglIndo(dari) + ' – ' + tglIndo(sampai);
-                    $('kInternal').textContent = t.internal;   $('kInternalPct').textContent = pct(t.internal, t.total) + ' dari total';
-                    $('kEksternal').textContent = t.eksternal; $('kEksternalPct').textContent = pct(t.eksternal, t.total) + ' dari total';
-                    $('kArsip').textContent = t.diarsipkan;    $('kArsipPct').textContent = pct(t.diarsipkan, t.total) + ' dari total';
+                    const m = d.masuk, k = d.keluar, totMasuk = m.diterima + m.proses_staf + m.selesai, totArsip = d.arsip.sudah + d.arsip.belum;
+                    $('kMasuk').textContent = totMasuk;
+                    $('kMasukInfo').textContent = m.diterima + ' diterima · ' + m.proses_staf + ' proses · ' + m.selesai + ' selesai';
+                    $('kKeluar').textContent = k.terbit;
+                    $('kKeluarInfo').textContent = k.menunggu_acc + ' menunggu ACC · ' + k.menunggu_nomor + ' menunggu nomor';
+                    const peran = App.peran;
+                    const tugas = peran === 'pimpinan' ? [m.diterima + k.menunggu_acc, 'Menunggu Anda', m.diterima + ' disposisi · ' + k.menunggu_acc + ' ACC']
+                        : peran === 'admin' ? [k.menunggu_nomor, 'Antrean penomoran', 'Siap diberi nomor']
+                        : [d.tugas_saya, 'Tugas disposisi Anda', k.menunggu_acc + ' draf menunggu ACC'];
+                    $('kTugas').textContent = tugas[0]; $('kTugasJudul').textContent = tugas[1]; $('kTugasInfo').textContent = tugas[2];
+                    $('kArsip').textContent = d.arsip.sudah; $('kArsipInfo').textContent = pct(d.arsip.sudah, totArsip) + ' dari ' + totArsip + ' surat siap arsip';
 
-                    // grafik batang per bulan (bulan yang masuk rentang disorot)
-                    const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
-                    const maks = Math.max(1, ...d.per_bulan);
-                    $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
-                    $('bars').innerHTML = d.per_bulan.map((n, i) => {
+                    // grafik batang per bulan: surat masuk + surat keluar terbit (bulan yang masuk rentang disorot)
+                    const per = d.bulanan_masuk.map((n, i) => n + d.bulanan_keluar[i]);
+                    const awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
+                    const maks = Math.max(1, ...per);
+                    $('chartJudul').textContent = 'Surat masuk + keluar per bulan — ' + d.tahun;
+                    $('bars').innerHTML = per.map((n, i) => {
                         const on = new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir;
-                        return '<div class="bar-col' + (on ? ' on' : '') + '"><span class="v">' + n + '</span><div class="b" style="height:' +
+                        return '<div class="bar-col' + (on ? ' on' : '') + '" title="Masuk ' + d.bulanan_masuk[i] + ' · Keluar ' + d.bulanan_keluar[i] + '"><span class="v">' + n + '</span><div class="b" style="height:' +
                                Math.round((n / maks) * 85) + '%"></div><span class="m">' + BLN[i] + '</span></div>';
                     }).join('');
 
-                    $('galeri').innerHTML = d.terbaru.length ? d.terbaru.map((r) => App.kartuHtml({
-                        kelas: r.status_arsip === 'diarsipkan' ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                        thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
-                        sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                        status: '<span class="badge ' + (r.status_arsip === 'diarsipkan' ? 'ok' : 'warn') + '">' + (r.status_arsip === 'diarsipkan' ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
-                    })).join('') : '<p class="galeri-kosong">Tidak ada surat pada rentang tanggal ini.</p>';
+                    // surat terbaru pada rentang (masuk berdasarkan tanggal terima, keluar berdasarkan tanggal terbit)
+                    const gabung = [
+                        ...kel.data.map((r) => ({ jenis: 'keluar', tgl: (r.tanggal_terbit || r.tanggal_surat).slice(0, 10), r })),
+                        ...mas.data.map((r) => ({ jenis: 'masuk', tgl: r.tanggal_terima, r })),
+                    ].filter((x) => x.tgl >= dari && x.tgl <= sampai).sort((a, b) => (a.tgl < b.tgl ? 1 : -1)).slice(0, 8);
+                    $('galeri').innerHTML = gabung.length ? gabung.map(({ jenis, tgl, r }) => {
+                        const url = jenis === 'keluar' ? 'api/surat_keluar.php?aksi=file&id=' + r.id : 'api/surat_masuk.php?aksi=file&id=' + r.id;
+                        return App.kartuHtml({
+                            kelas: r.status === 'terbit' || r.status === 'selesai' ? 'ok' : 'bad',
+                            judulTeks: r.nomor_surat || r.nomor_agenda, judul: esc(r.nomor_surat || r.nomor_agenda),
+                            thumb: App.thumbFile(url, r.ada_file ? 'x.' + r.file_tipe : '', r.ada_file),
+                            sub: [esc(r.perihal), (jenis === 'keluar' ? 'Surat keluar' : 'Surat masuk') + ' · ' + esc(tglIndo(tgl))],
+                            status: '<span class="badge ' + (r.status === 'terbit' || r.status === 'selesai' ? 'ok' : 'warn') + '">' + (jenis === 'keluar' ? NAMA_KELUAR : NAMA_MASUK)[r.status] + '</span>',
+                        });
+                    }).join('') : '<p class="galeri-kosong">Tidak ada surat pada rentang tanggal ini.</p>';
                 } catch (e) {
                     terakhir = '';
                     toast(e.message, true);

@@ -8,7 +8,7 @@
         (function () {
             try {
                 const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+                if (!user || !user.peran) window.location.replace('index.html');
             } catch (error) {
                 window.location.replace('index.html');
             }
@@ -16,7 +16,7 @@
     </script>
     <title>Surat Keluar | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=11">
+    <link rel="stylesheet" href="surat.css?v=12">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -91,68 +91,74 @@
 
         <div class="stat-strip">
             <div class="kpi-card dark">
-                <p class="kpi-title">Total surat keluar</p>
-                <h3 class="kpi-value" id="sTotal">0</h3>
-                <p class="kpi-trend" id="sPersen">&nbsp;</p>
-                <div class="progress"><i id="sBar" style="width:0"></i></div>
+                <p class="kpi-title">Menunggu ACC</p>
+                <h3 class="kpi-value" id="sAcc">0</h3>
+                <p class="kpi-trend">Draf di meja pimpinan</p>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Sudah terkirim</p>
-                <h3 class="kpi-value" id="sKirim">0</h3>
-                <p class="kpi-trend positive">Tahap 4 selesai</p>
+                <p class="kpi-title">Menunggu nomor</p>
+                <h3 class="kpi-value" id="sNomor" style="color:var(--red)">0</h3>
+                <p class="kpi-trend negative">Antrean Penomoran (admin)</p>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Belum diarsipkan</p>
-                <h3 class="kpi-value" id="sBelum" style="color:var(--red)">0</h3>
-                <p class="kpi-trend negative">Perlu diarsipkan</p>
+                <p class="kpi-title">Terbit</p>
+                <h3 class="kpi-value" id="sTerbit" style="color:var(--green)">0</h3>
+                <p class="kpi-trend positive">Surat keluar resmi bernomor</p>
             </div>
         </div>
 
         <section class="panel">
             <div class="panel-head">
-                <div><h3>Alur surat keluar</h3></div>
-            </div>
-            <div class="alur-info"><ol class="langkah">
-                <li><b>1</b> Draf &amp; nomor <small>Konsep disusun, nomor diberikan di Penomoran</small></li>
-                <li><b>2</b> Verifikasi &amp; persetujuan <small>Diperiksa dan disetujui atasan (lihat Disposisi)</small></li>
-                <li><b>3</b> Tanda tangan &amp; cap <small>Ditandatangani pejabat, diberi cap atau TTD elektronik</small></li>
-                <li><b>4</b> Pengiriman &amp; pengarsipan <small>Dikirim ke tujuan, salinannya diarsipkan</small></li>
-            </ol></div>
-            <div class="panel-head" style="border-top:1px solid var(--border-color)">
-                <div class="seg" id="segArsip" role="radiogroup" aria-label="Filter status arsip">
-                    <label><input type="radio" name="ar" value="" checked><span>Semua</span></label>
-                    <label><input type="radio" name="ar" value="belum"><span>Belum diarsipkan</span></label>
-                    <label><input type="radio" name="ar" value="diarsipkan"><span>Sudah diarsipkan</span></label>
+                <div class="seg" id="segStatus" role="radiogroup" aria-label="Filter status surat keluar">
+                    <label><input type="radio" name="st" value="" checked><span>Semua</span></label>
+                    <label><input type="radio" name="st" value="menunggu_acc"><span>Menunggu ACC</span></label>
+                    <label><input type="radio" name="st" value="menunggu_nomor"><span>Menunggu nomor</span></label>
+                    <label><input type="radio" name="st" value="terbit"><span>Terbit</span></label>
                 </div>
                 <div class="toolbar">
-                    <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat keluar">
-                    <select id="fTahap" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="bernomor">Bernomor</option><option value="diperiksa">Diperiksa</option><option value="ditandatangani">Ditandatangani</option><option value="terkirim">Terkirim</option></select>
+                    <input type="text" id="q" placeholder="Cari nomor, perihal, tujuan…" aria-label="Cari surat keluar">
                     <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
                     <select id="fBulan" aria-label="Bulan"></select>
+                    <button type="button" class="btn primary" id="btnDraft" style="display:none"><i data-lucide="file-plus"></i> Buat draft</button>
                 </div>
             </div>
+            <div class="alur-info" id="alurInfo"></div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </section>
     </main>
-    <!-- Dialog pengiriman -->
-    <dialog class="modal" id="dlgKirim">
-        <form id="kirimForm" novalidate>
-            <div class="modal-head"><h3>Kirim surat</h3><p><b class="mono" id="kNomor"></b><br><span id="kPerihal"></span></p></div>
-            <div class="modal-body">
-                <div class="field"><label for="k_tgl">Tanggal pengiriman</label><input type="date" id="k_tgl"></div>
-                <div class="field"><label for="k_ket">Dikirim ke / keterangan <span class="opt">(opsional)</span></label><input type="text" id="k_ket" maxlength="255" placeholder="Contoh: Diantar langsung ke Dinas Pendidikan"></div>
+
+    <!-- Draf surat (staf) -->
+    <dialog class="modal" id="dlgDraft">
+        <form id="draftForm" novalidate>
+            <div class="modal-head">
+                <h3 id="drJudul">Buat draft surat</h3>
+                <p>Draf dikirim ke pimpinan untuk di-ACC. Nomor surat diberikan admin setelah di-ACC.</p>
             </div>
-            <div class="modal-foot"><button type="button" class="btn" id="kBatal">Batal</button><button type="submit" class="btn primary" id="kSimpan">Tandai terkirim</button></div>
+            <div class="modal-body">
+                <div class="field"><label for="d_perihal">Perihal <span class="req">*</span></label>
+                    <textarea id="d_perihal" maxlength="255" placeholder="Contoh: Undangan rapat koordinasi"></textarea></div>
+                <div class="field"><label for="d_tujuan">Tujuan surat <span class="req">*</span></label>
+                    <input type="text" id="d_tujuan" maxlength="255" placeholder="Contoh: Dekan Fakultas Teknik"></div>
+                <div class="field"><label for="d_tanggal">Tanggal surat</label><input type="date" id="d_tanggal"></div>
+                <div class="field"><label for="d_file">File draf <span class="req" id="d_req">*</span> <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
+                    <input type="file" id="d_file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                    <span class="help" id="d_help"></span></div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn" id="drBatal">Batal</button>
+                <button type="submit" class="btn primary" id="drSimpan">Kirim draft</button>
+            </div>
         </form>
     </dialog>
+
     <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
     <script src="profil.js?v=1"></script>
-    <script src="surat_keluar.js?v=3"></script>
+    <script src="surat_keluar.js?v=4"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
         (function () {
             try {
                 const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+                if (!user || !user.peran) window.location.replace('index.html');
             } catch (error) {
                 window.location.replace('index.html');
             }
@@ -16,7 +16,7 @@
     </script>
     <title>Penomoran | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=11">
+    <link rel="stylesheet" href="surat.css?v=12">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -89,105 +89,98 @@
             </div>
         </header>
 
-        <div class="two-col" id="formPanel">
-            <section class="panel">
-                <div class="panel-head">
-                    <h3 id="formTitle">Surat baru</h3>
-                    <span class="muted" style="font-size:.8125rem">Nomor surat dibuat otomatis sesuai Panduan Persuratan</span>
-                </div>
-                <div class="panel-body">
-                    <div class="edit-banner" id="editBanner"><i data-lucide="pencil" class="icon-small"></i>
-                        <span>Mengubah surat <b id="editBannerNo"></b>. Bila jenis, unit, atau tujuan diganti, kode di nomor surat ikut berubah. Bila bulan/tahun pada tanggal diganti, nomor urut mengikuti bulan yang baru (lihat pratinjau di kanan).</span></div>
-
-                    <form id="suratForm" novalidate>
-                        <fieldset class="form-fields" id="formFields">
-                        <div class="form-grid">
-                            <div class="field">
-                                <label for="f_tanggal">Tanggal surat</label>
-                                <input type="date" id="f_tanggal" required>
-                                <span class="help">Bulan &amp; tahun pada nomor mengikuti tanggal ini.</span>
-                            </div>
-                            <div class="field">
-                                <span class="lbl">Tujuan surat</span>
-                                <div class="seg" role="radiogroup" aria-label="Tujuan surat">
-                                    <label><input type="radio" name="tujuan" value="A" checked><span>A — Internal</span></label>
-                                    <label><input type="radio" name="tujuan" value="B"><span>B — Eksternal</span></label>
-                                </div>
-                                <span class="help">Internal = lingkungan Universitas Tiga Serangkai.</span>
-                            </div>
-                            <div class="field">
-                                <label for="f_jenis">Jenis surat</label>
-                                <select id="f_jenis" required></select>
-                            </div>
-                            <div class="field">
-                                <label for="f_unit">Bidang / unit / lembaga pembuat</label>
-                                <select id="f_unit" required></select>
-                            </div>
-                            <div class="field full">
-                                <label for="f_perihal">Perihal</label>
-                                <textarea id="f_perihal" maxlength="255" placeholder="Contoh: Surat Undangan forum PMB dan Pengelolaan Magang" required></textarea>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary" id="btnSimpan"><i data-lucide="save"></i> <span id="btnSimpanTeks">Simpan &amp; ambil nomor</span></button>
-                            <button type="button" class="btn" id="btnBatal" style="display:none">Batal ubah</button>
-                            <button type="button" class="btn" id="btnReset">Kosongkan form</button>
-                        </div>
-                        </fieldset>
-                    </form>
-                </div>
-            </section>
-
-            <aside class="panel nomor-card">
-                <div class="panel-head"><h3>Nomor surat</h3></div>
-                <div class="panel-body">
-                    <div class="nomor-box">
-                        <div class="lbl">Pratinjau nomor</div>
-                        <div class="no mono" id="nomorPreview">...</div>
-                    </div>
-                    <ul class="nomor-parts">
-                        <li><span>Nomor urut</span><span id="nomorUrut">-</span></li>
-                        <li><span>Tujuan</span><span id="nomorTujuan">-</span></li>
-                        <li><span>Jenis</span><span id="nomorJenis">-</span></li>
-                        <li><span>Unit</span><span id="nomorUnit">-</span></li>
-                        <li><span>Bulan</span><span id="nomorBulan">-</span></li>
-                        <li><span>Tahun</span><span id="nomorTahun">-</span></li>
-                    </ul>
-                    <div id="hasilBox" style="display:none">
-                        <div class="nomor-box" style="margin-top:1rem">
-                            <div class="lbl">Nomor yang baru diambil</div>
-                            <div class="no mono" id="hasilNomor"></div>
-                        </div>
-                        <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
-                        <a class="btn primary" id="btnKeDisposisi" href="disposisi.html" style="margin-top:.5rem"><i data-lucide="upload"></i> Unggah surat di Disposisi</a>
-                        <p class="nomor-note">Langkah berikutnya: unggah file surat ini di menu Disposisi supaya bisa di-ACC.</p>
-                    </div>
-                    <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat disimpan.</p>
-                </div>
-            </aside>
+        <div class="stat-strip">
+            <div class="kpi-card dark">
+                <p class="kpi-title">Antrean penomoran</p>
+                <h3 class="kpi-value" id="sAntrean">0</h3>
+                <p class="kpi-trend">Sudah di-ACC pimpinan, menunggu nomor</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Menunggu ACC pimpinan</p>
+                <h3 class="kpi-value" id="sAcc">0</h3>
+                <p class="kpi-trend">Belum masuk antrean</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Nomor otomatis berikutnya</p>
+                <h3 class="kpi-value mono" id="sNomor" style="font-size:1.35rem">-</h3>
+                <p class="kpi-trend">Urut per bulan, mulai 001 tiap awal bulan</p>
+            </div>
         </div>
 
         <section class="panel">
             <div class="panel-head">
-                <div><h3>Data surat keluar</h3><span class="muted" id="jumlah" style="font-size:.8125rem"></span></div>
+                <div><h3>Antrean penomoran</h3><span class="muted" id="jumlah" style="font-size:.8125rem"></span></div>
                 <div class="toolbar">
-                    <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat">
-                    <select id="fTahun" aria-label="Tahun"></select>
-                    <select id="fBulan" aria-label="Bulan"></select>
+                    <input type="text" id="q" placeholder="Cari perihal, tujuan, pembuat…" aria-label="Cari surat">
                 </div>
             </div>
-            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
+            <div class="alur-info">
+                <b>Alur:</b> Staf membuat draf <span class="chip bad">menunggu ACC</span> → Pimpinan menekan <b>ACC</b> → surat masuk antrean ini
+                → Admin <b>Preview Draft</b>, lalu <b>Beri Nomor &amp; Terbitkan</b> <span class="chip ok">terbit</span> → tampil di <b>Surat Keluar</b>.
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Draf</th><th>Tujuan</th><th>Tanggal surat</th><th>Dibuat oleh</th><th>Di-ACC</th><th>Aksi</th></tr></thead>
+                    <tbody id="antreanBody"><tr><td colspan="6" class="galeri-kosong">Memuat…</td></tr></tbody>
+                </table>
+            </div>
         </section>
     </main>
+
+    <!-- Preview draf -->
+    <dialog class="modal lebar" id="dlgPreview">
+        <div class="modal-head">
+            <h3 id="pvJudul">Preview draf</h3>
+            <p id="pvInfo"></p>
+        </div>
+        <div class="modal-body"><div class="pratinjau" id="pvIsi"></div></div>
+        <div class="modal-foot">
+            <button type="button" class="btn" id="pvTutup">Tutup</button>
+            <a class="btn" id="pvUnduh" href="#" target="_blank" rel="noopener">Buka di tab baru</a>
+            <button type="button" class="btn primary" id="pvNomori">Beri Nomor &amp; Terbitkan</button>
+        </div>
+    </dialog>
+
+    <!-- Form penomoran -->
+    <dialog class="modal" id="dlgNomor">
+        <form id="nomorForm" novalidate>
+            <div class="modal-head">
+                <h3>Beri nomor &amp; terbitkan</h3>
+                <p id="nfInfo"></p>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <span class="lbl">Cara penomoran</span>
+                    <div class="seg" id="nfMode" role="radiogroup" aria-label="Cara penomoran">
+                        <label><input type="radio" name="mode" value="otomatis" checked><span>Otomatis</span></label>
+                        <label><input type="radio" name="mode" value="manual"><span>Nomor manual</span></label>
+                    </div>
+                </div>
+                <div class="field" id="nfOto">
+                    <div class="nomor-box"><div class="lbl">Nomor otomatis</div><div class="no mono" id="nfNomor">...</div></div>
+                    <span class="help">Format <span class="mono">[No]/TU/[Bulan Romawi]/[Tahun]</span>. Nomor dikunci saat disimpan.</span>
+                </div>
+                <div class="field" id="nfMan" style="display:none">
+                    <label for="nfManual">Nomor manual</label>
+                    <input type="text" id="nfManual" maxlength="60" placeholder="Contoh: 001/KHUSUS/XI/2026" autocomplete="off">
+                    <span class="help">Untuk nomor khusus. Tidak boleh sama dengan nomor surat lain.</span>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn" id="nfBatal">Batal</button>
+                <button type="submit" class="btn primary" id="nfSimpan">Simpan &amp; Terbitkan</button>
+            </div>
+        </form>
+    </dialog>
 
     <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
     <script src="profil.js?v=1"></script>
-    <script src="penomoran.js?v=3"></script>
+    <script src="penomoran.js?v=4"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

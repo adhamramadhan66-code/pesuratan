@@ -8,7 +8,7 @@
         (function () {
             try {
                 const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+                if (!user || !user.peran) window.location.replace('index.html');
             } catch (error) {
                 window.location.replace('index.html');
             }
@@ -16,7 +16,7 @@
     </script>
     <title>Pengarsipan | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=11">
+    <link rel="stylesheet" href="surat.css?v=12">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -116,16 +116,14 @@
                     <label><input type="radio" name="st" value="diarsipkan"><span>Sudah</span></label>
                 </div>
                 <div class="toolbar">
-                    <input type="text" id="q" placeholder="Cari nomor, perihal, pembuat, lokasi…" aria-label="Cari surat">
+                    <input type="text" id="q" placeholder="Cari nomor, perihal, pihak, lokasi…" aria-label="Cari surat">
                     <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
-                    <select id="fJenis" aria-label="Kategori (jenis surat)"><option value="">Semua kategori</option></select>
-                    <select id="fPembuat" aria-label="Pembuat surat"><option value="">Semua pembuat</option></select>
-                    <select id="fBulan" aria-label="Bulan"></select>
+                    <select id="fJenis" aria-label="Jenis surat"><option value="">Semua jenis</option><option value="keluar">Surat keluar</option><option value="masuk">Surat masuk</option></select>
                 </div>
             </div>
-            <div class="alur-info">
-                Setiap kotak adalah surat bernomor. Klik <b>Arsipkan</b> untuk mengisi lokasi arsip dan menambah/mengganti file surat. Surat Keluar dan Surat Masuk (yang sudah di-ACC di
-                <b>Disposisi</b>) diarsipkan di sini <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>.
+            <div class="alur-info" id="alurInfo">
+                Surat keluar yang sudah <b>terbit</b> dan surat masuk yang sudah <b>selesai</b> diarsipkan di sini
+                <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>. Pengarsipan dilakukan oleh admin.
             </div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </section>
@@ -172,9 +170,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=3"></script>
+    <script src="app.js?v=4"></script>
     <script src="profil.js?v=1"></script>
-    <script src="arsip.js?v=4"></script>
+    <script src="arsip.js?v=5"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>
