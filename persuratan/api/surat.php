@@ -87,7 +87,7 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
 const TAHAP_BOLEH = ['bernomor', 'diperiksa', 'ditandatangani', 'terkirim'];
 
 const KOLOM_LIST = 'id, nomor_surat, tahap, tanggal_kirim, keterangan_kirim, tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor,
-                    kode_tujuan, jenis_kode, unit_kode, tahun, bulan, nomor_urut, status_arsip,
+                    kode_tujuan, jenis_kode, unit_kode, tahun, bulan, nomor_urut, status_arsip, file_nama, (file_arsip <> \'\') AS ada_file,
                     (SELECT d.id FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS disposisi_id,
                     (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS no_disposisi,
                     (SELECT d.status FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS status_disposisi,

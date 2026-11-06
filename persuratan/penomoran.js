@@ -137,31 +137,30 @@
             const d = await api(API + '?' + p);
             baris = d.surat;
             render();
-        } catch (e) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="11">' + esc(e.message) + '</td></tr>'; }
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
     function render() {
         $('jumlah').textContent = baris.length + ' surat';
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="11">Belum ada data surat.</td></tr>'; return; }
-        $('tbody').innerHTML = baris.map((r, i) =>
-            '<tr><td>' + (i + 1) + '</td>' +
-            '<td class="no-surat">' + esc(r.nomor_surat) + '</td>' +
-            '<td>' + esc(tglIndo(r.tanggal_surat)) + '</td>' +
-            '<td>' + esc(r.perihal) + '</td>' +
-            '<td>' + esc(r.untuk) + '</td>' +
-            '<td>' + (r.jenis_ttd === 'scan' ? 'Scan' : 'Basah') + '</td>' +
-            '<td>' + esc(r.pejabat_ttd) + '</td>' +
-            '<td>' + esc(r.pembuat_surat) + '</td>' +
-            '<td>' + esc(r.pemberi_nomor || '-') + '</td>' +
-            '<td>' + (r.no_disposisi
-                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
-                  '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>') + '</td>' +
-            '<td><div class="aksi"><button class="btn sm" data-ubah="' + r.id + '">Ubah</button>' +
-            '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button></div></td></tr>').join('');
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada data surat.</p>'; return; }
+        $('galeri').innerHTML = baris.map((r) => {
+            const adaDsp = !!r.no_disposisi, ok = r.status_disposisi === 'disetujui';
+            const aksi = [];
+            if (!adaDsp || !r.ada_file) aksi.push('<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>');
+            aksi.push('<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
+            return App.kartuHtml({
+                kelas: ok ? 'ok' : adaDsp ? 'bad' : 'abu', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
+                thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
+                status: adaDsp
+                    ? '<span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span><span>' + esc(r.no_disposisi) + '</span>'
+                    : '<span class="badge">Belum diunggah</span>',
+                aksi: aksi.join(''),
+            });
+        }).join('');
     }
 
-    $('tbody').addEventListener('click', async (ev) => {
+    $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         if (b.dataset.ubah) { const r = baris.find((x) => +x.id === +b.dataset.ubah); if (r) keModeUbah(r); }
         if (b.dataset.hapus) {

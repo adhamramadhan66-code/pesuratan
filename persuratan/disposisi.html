@@ -16,7 +16,7 @@
     </script>
     <title>Disposisi | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=10">
+    <link rel="stylesheet" href="surat.css?v=11">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -122,8 +122,8 @@
                 </div>
             </div>
             <div class="alur-info">
-                <b>Alur:</b> surat dinomori di <b>Penomoran</b> → klik <b>+</b> untuk <b>mengunggah file surat</b> ke disposisi <span class="chip bad">belum disetujui</span>
-                → lengkapi lembar disposisi (tombol Ubah), lalu <b>ACC</b> <span class="chip ok">disetujui</span> → surat tercatat di <b>Surat Keluar</b>
+                <b>Alur:</b> surat dinomori di <b>Penomoran</b> → muncul di sini sebagai kotak <b>Belum diunggah</b>, klik untuk <b>mengunggah file surat</b> <span class="chip bad">belum disetujui</span>
+                → lengkapi tujuan disposisi (tombol Ubah), lalu <b>ACC</b> <span class="chip ok">disetujui</span> → surat tercatat di <b>Surat Keluar</b>
                 (surat internal otomatis juga di <b>Surat Masuk</b>) → <b>Pengarsipan</b>.
             </div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
@@ -181,7 +181,7 @@
         <form id="unggahForm" novalidate>
             <div class="modal-head">
                 <h3 id="uJudul">Unggah surat</h3>
-                <p>Pilih surat yang sudah bernomor, lalu unggah filenya. Surat langsung masuk ke Disposisi dengan status <b style="color:var(--red)">belum disetujui</b>.</p>
+                <p>Pilih surat yang sudah bernomor, lalu unggah filenya. Surat langsung menjadi disposisi dengan status <b style="color:var(--red)">belum disetujui</b>.</p>
             </div>
             <div class="modal-body">
                 <div class="field"><label for="u_sumber">Surat <span class="req">*</span></label>
@@ -213,9 +213,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script src="profil.js?v=1"></script>
-    <script src="disposisi.js?v=7"></script>
+    <script src="disposisi.js?v=8"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

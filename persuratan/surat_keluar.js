@@ -23,7 +23,7 @@
                 sel.value = cur;
             }
             render();
-        } catch (e) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">' + esc(e.message) + '</td></tr>'; }
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
     function langkah(t) {
@@ -32,27 +32,22 @@
     }
 
     function render() {
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada surat keluar. Surat muncul di sini setelah di-ACC di menu Disposisi.</td></tr>'; return; }
-        $('tbody').innerHTML = baris.map((r) => {
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini setelah di-ACC di menu Disposisi.</p>'; return; }
+        $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const i = TAHAP.indexOf(r.tahap);
-            const dsp = r.disposisi_id
-                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
-                  '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<span class="muted">-</span>';
             const aksi = [];
             if (KE_DEPAN[r.tahap]) aksi.push('<button class="btn sm primary" data-maju="' + r.id + '">' + KE_DEPAN[r.tahap] + '</button>');
             if (i > 0) aksi.push('<button class="btn sm" data-mundur="' + r.id + '">Mundurkan</button>');
-            return '<tr class="' + (sudah ? 'row-ok' : 'row-bad') + '">' +
-                '<td class="no-surat">' + esc(r.nomor_surat) + '<span class="sub">' + esc(tglIndo(r.tanggal_surat)) + '</span></td>' +
-                '<td>' + esc(r.perihal) + '<span class="sub">Untuk: ' + esc(r.untuk) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + '</span></td>' +
-                '<td>' + esc(r.pejabat_ttd) + '<span class="sub">TTD ' + (r.jenis_ttd === 'scan' ? 'scan' : 'basah') + ' · pembuat: ' + esc(r.pembuat_surat) + '</span></td>' +
-                '<td><span class="badge st-' + esc(r.tahap) + '">' + esc(NAMA[r.tahap] || r.tahap) + '</span>' + langkah(r.tahap) +
-                    (r.tahap === 'terkirim' ? '<span class="sub">' + esc(tglIndo(r.tanggal_kirim)) + (r.keterangan_kirim ? ' · ' + esc(r.keterangan_kirim) : '') + '</span>' : '') + '</td>' +
-                '<td>' + dsp + '</td>' +
-                '<td><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>' +
-                    '<span class="sub"><a href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat di Pengarsipan' : 'Arsipkan di Pengarsipan →') + '</a></span></td>' +
-                '<td><div class="aksi" style="flex-wrap:wrap">' + aksi.join('') + '</div></td></tr>';
+            aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
+            return App.kartuHtml({
+                kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
+                thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
+                status: '<span class="badge st-' + esc(r.tahap) + '">' + esc(NAMA[r.tahap] || r.tahap) + '</span>' + langkah(r.tahap) +
+                    '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+                aksi: aksi.join(''),
+            });
         }).join('');
     }
 
@@ -62,7 +57,7 @@
 
     const ubahTahap = (id, tahap, tambahan) => api(API, Object.assign({ aksi: 'tahap', id, tahap }, tambahan || {}));
 
-    $('tbody').addEventListener('click', async (ev) => {
+    $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         const id = +(b.dataset.maju || b.dataset.mundur);
         const r = baris.find((x) => +x.id === id); if (!r) return;

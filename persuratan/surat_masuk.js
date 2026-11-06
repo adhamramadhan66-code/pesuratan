@@ -23,34 +23,29 @@
                 sel.value = cur;
             }
             render();
-        } catch (e) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">' + esc(e.message) + '</td></tr>'; }
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
     function render() {
-        if (!baris.length) { $('tbody').innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada surat masuk. Klik "Catat surat masuk" untuk mulai.</td></tr>'; return; }
-        $('tbody').innerHTML = baris.map((r) => {
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat masuk. Klik "Catat surat masuk" untuk mulai.</p>'; return; }
+        $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const dsp = r.disposisi_id
-                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Disetujui' : 'Belum disetujui') + '</span>' +
-                  '<span class="sub">' + esc(r.no_disposisi) + (r.tujuan_disposisi ? ' · ke ' + esc(r.tujuan_disposisi) : '') + '</span>'
-                : '<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>';
-            const lokasi = sudah ? '<span class="sub" style="color:var(--text-main)">' + (r.lokasi_arsip ? esc(r.lokasi_arsip) : '<span class="muted">Hanya file digital</span>') + '</span>' +
-                '<span class="sub">' + esc(tglIndo(r.tanggal_arsip)) + (r.keterangan_arsip ? ' · ' + esc(r.keterangan_arsip) : '') + '</span>' : '';
-            const file = r.ada_file ? '<span class="sub"><a href="' + API + '?aksi=file&id=' + r.id + '" target="_blank" rel="noopener">Lihat scan</a> · <a href="' + API + '?aksi=file&unduh=1&id=' + r.id + '">Unduh</a></span>' : '';
+                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">Disposisi ' + (r.status_disposisi === 'disetujui' ? 'disetujui' : 'belum disetujui') + '</span>'
+                : '';
             const aksi = ['<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>'];
             if (r.status !== 'ditindaklanjuti') aksi.push('<button class="btn sm" data-tindak="' + r.id + '">Tandai ditindaklanjuti</button>');
             aksi.push(sudah ? '<button class="btn sm" data-arsip="' + r.id + '">Ubah arsip</button><button class="btn sm danger" data-batal="' + r.id + '">Batalkan arsip</button>'
                             : '<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>');
-            if (!r.disposisi_id) aksi.push('<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
-            return '<tr class="' + (sudah ? 'row-ok' : 'row-bad') + '">' +
-                '<td class="no-surat">' + esc(r.nomor_agenda) + '<span class="sub">Terima ' + esc(tglIndo(r.tanggal_terima)) + '</span></td>' +
-                '<td>' + esc(r.pengirim) + '<span class="sub"><span class="tag">' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + '</span>' +
-                    (r.nomor_surat_asal ? 'No. ' + esc(r.nomor_surat_asal) : 'Tanpa nomor') + (r.tanggal_surat ? ' · ' + esc(tglIndo(r.tanggal_surat)) : '') + '</span></td>' +
-                '<td>' + esc(r.perihal) + '<span class="sub"><span class="tag">' + esc(NAMA_SIFAT[r.sifat] || r.sifat) + '</span>' + (r.tujuan ? 'Untuk: ' + esc(r.tujuan) : '') + '</span></td>' +
-                '<td><span class="badge st-' + esc(r.status) + '">' + esc(NAMA_STATUS[r.status] || r.status) + '</span></td>' +
-                '<td>' + dsp + '</td>' +
-                '<td><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>' + lokasi + file + '</td>' +
-                '<td><div class="aksi" style="flex-wrap:wrap">' + aksi.join('') + '</div></td></tr>';
+            if (!r.disposisi_id) aksi.push('<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
+            return App.kartuHtml({
+                kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
+                thumb: App.thumbFile(API + '?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                sub: [esc(r.perihal), esc(r.pengirim) + ' · ' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + ' · ' + esc(NAMA_SIFAT[r.sifat] || r.sifat)],
+                status: '<span class="badge st-' + esc(r.status) + '">' + esc(NAMA_STATUS[r.status] || r.status) + '</span>' + dsp +
+                    '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+                aksi: aksi.join(''),
+            });
         }).join('');
     }
 
@@ -133,7 +128,7 @@
 
     // ---------- Aksi pada tabel ----------
     const kirim = (o) => { const fd = new FormData(); Object.keys(o).forEach((k) => fd.append(k, o[k])); return api(API, fd); };
-    $('tbody').addEventListener('click', async (ev) => {
+    $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         const id = +(b.dataset.ubah || b.dataset.tindak || b.dataset.arsip || b.dataset.batal || b.dataset.hapus);
         const r = baris.find((x) => +x.id === id); if (!r) return;

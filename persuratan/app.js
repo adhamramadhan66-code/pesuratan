@@ -97,6 +97,21 @@
         return '<span class="kartu-isi">' + IKON.file + '<small>PDF</small></span>';
     }
 
+    // Kartu seragam untuk semua halaman. o: {kelas, thumb (HTML), judul, sub: [HTML...], status (HTML), aksi (HTML)}
+    function kartuHtml(o) {
+        return '<div class="kartu ' + (o.kelas || '') + '">' + o.thumb +
+            '<div class="kartu-judul mono" title="' + esc(o.judulTeks || '') + '">' + o.judul + '</div>' +
+            (o.sub || []).map((s, i) => '<div class="kartu-sub' + (i ? ' satu' : '') + '">' + s + '</div>').join('') +
+            (o.status ? '<div class="kartu-status">' + o.status + '</div>' : '') +
+            (o.aksi ? '<div class="aksi">' + o.aksi + '</div>' : '') + '</div>';
+    }
+    // Pratinjau yang bisa diklik: membuka file bila ada, bila tidak tampil penanda "Belum ada file"
+    function thumbFile(urlFile, namaFile, ada) {
+        return ada
+            ? '<a class="kartu-thumb" href="' + esc(urlFile) + '" target="_blank" rel="noopener" title="Buka file surat">' + thumb(urlFile, namaFile) + '</a>'
+            : '<div class="kartu-thumb kosong">' + thumb('', '') + '</div>';
+    }
+
     // Validasi file unggahan di sisi peramban (server tetap memeriksa ulang). Mengembalikan pesan galat atau ''.
     const MAKS_FILE = 10 * 1024 * 1024;
     function cekFile(f) {
@@ -116,5 +131,5 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile };
+    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
 })();

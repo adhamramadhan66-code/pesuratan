@@ -21,6 +21,7 @@
         try {
             const d = await api(API + '?' + p);
             baris = d.disposisi;
+            await muatSumber();
             $('sTotal').textContent = d.total; $('sSetuju').textContent = d.disetujui; $('sBelum').textContent = d.total - d.disetujui;
             $('sPersen').textContent = d.total ? Math.round((d.disetujui / d.total) * 100) + '% sudah disetujui' : 'Belum ada disposisi';
             $('sBar').style.width = (d.total ? (d.disetujui / d.total) * 100 : 0) + '%';
@@ -30,39 +31,50 @@
                 sel.value = cur;
             }
             render();
-        } catch (e) { $('galeri').innerHTML = kartuTambah() + '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
-    // Kartu pertama: tanda + untuk mengunggah file surat
-    function kartuTambah() {
-        return '<div class="kartu kartu-tambah"><button type="button" class="kartu-thumb" data-unggah="baru" aria-label="Unggah file surat" title="Unggah file surat">' + App.IKON.plus + '</button>' +
-            '<div class="kartu-judul">Unggah surat</div></div>';
+    // Kartu surat bernomor yang filenya belum diunggah (menggantikan kartu +): klik untuk mengunggah
+    function kartuBelumUnggah(t, s) {
+        const kode = t + ':' + s.id;
+        const judul = t === 'k' ? s.nomor_surat : 'Surat masuk ' + s.nomor_agenda;
+        return App.kartuHtml({
+            kelas: 'abu', judulTeks: judul, judul: esc(judul),
+            thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Unggah file surat">' + App.thumb('', '') + '</button>',
+            sub: [esc(s.perihal), (t === 'k' ? 'Surat keluar' : 'Dari ' + esc(s.pengirim))],
+            status: '<span class="badge">Belum diunggah</span>',
+            aksi: '<button class="btn sm primary" data-unggah-pilih="' + kode + '">Unggah file</button>',
+        });
     }
 
     function kartu(r) {
         const ok = r.status === 'disetujui';
         const url = API + '?aksi=file&id=' + r.id;
-        // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog unggah (selama belum di-ACC).
-        const thumb = r.file_nama
-            ? '<a class="kartu-thumb" href="' + url + '" target="_blank" rel="noopener" title="Buka file surat">' + App.thumb(url, r.file_nama) + '</a>'
-            : '<button type="button" class="kartu-thumb" ' + (ok ? 'data-lihat="' : 'data-unggah-ke="') + r.id + '" title="' + (ok ? 'Lihat lembar disposisi' : 'Unggah file surat') + '">' + App.thumb('', '') + '</button>';
-        const aksi = ['<button class="btn sm" data-lihat="' + r.id + '">Lembar</button>'];
+        // Pratinjau: klik membuka file. Tanpa file dan belum di-ACC: klik membuka dialog unggah.
+        const thumb = (r.file_nama || ok)
+            ? App.thumbFile(url, r.file_nama, !!r.file_nama)
+            : '<button type="button" class="kartu-thumb" data-unggah-ke="' + r.id + '" title="Unggah file surat">' + App.thumb('', '') + '</button>';
+        const aksi = [];
         if (!ok) aksi.push('<button class="btn sm primary" data-setuju="' + r.id + '">ACC</button>', '<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>');
         else aksi.push('<button class="btn sm" data-batal="' + r.id + '">Batalkan ACC</button>');
         aksi.push('<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
         const sf = csv(r.sifat).map((k) => namaSifat(k)).join(', ');
-        return '<div class="kartu ' + (ok ? 'ok' : 'bad') + '">' + thumb +
-            '<div class="kartu-judul mono" title="' + esc(labelSurat(r)) + '">' + esc(labelSurat(r)) + '</div>' +
-            '<div class="kartu-sub" title="' + esc(r.hal) + '">' + esc(r.hal) + '</div>' +
-            '<div class="kartu-sub satu">' + (r.tujuan_disposisi ? 'Kepada: ' + esc(r.tujuan_disposisi) : 'Belum ada tujuan') + (sf ? ' · ' + esc(sf) : '') + '</div>' +
-            '<div class="kartu-status"><span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span>' +
-                '<span>' + esc(ok ? tglIndo(r.tanggal_setuju) : r.no_disposisi) + '</span></div>' +
-            '<div class="aksi">' + aksi.join('') + '</div></div>';
+        return App.kartuHtml({
+            kelas: ok ? 'ok' : 'bad', judulTeks: labelSurat(r), judul: esc(labelSurat(r)), thumb,
+            sub: [esc(r.hal), (r.tujuan_disposisi ? 'Kepada: ' + esc(r.tujuan_disposisi) : 'Belum ada tujuan') + (sf ? ' · ' + esc(sf) : '')],
+            status: '<span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span><span>' + esc(ok ? tglIndo(r.tanggal_setuju) : r.no_disposisi) + '</span>',
+            aksi: aksi.join(''),
+        });
     }
 
     function render() {
-        $('galeri').innerHTML = kartuTambah() + baris.map(kartu).join('') +
-            (baris.length ? '' : '<p class="galeri-kosong">Belum ada disposisi. Klik + untuk mengunggah file surat yang sudah bernomor.</p>');
+        // Surat bernomor yang belum diunggah ikut tampil (kecuali saat memfilter "Disetujui" atau mencari kata lain)
+        const q = $('q').value.trim().toLowerCase();
+        const cocok = (s) => !q || ((s.nomor_surat || s.nomor_agenda || '') + ' ' + s.perihal).toLowerCase().includes(q);
+        const pending = status === 'disetujui' ? [] :
+            sumber.surat.filter(cocok).map((s) => kartuBelumUnggah('k', s)).concat(sumber.surat_masuk.filter(cocok).map((s) => kartuBelumUnggah('m', s)));
+        const semua = pending.concat(baris.map(kartu));
+        $('galeri').innerHTML = semua.length ? semua.join('') : '<p class="galeri-kosong">Belum ada surat. Buat nomor surat di menu Penomoran, lalu unggah filenya di sini.</p>';
     }
 
     document.querySelectorAll('#segStatus input').forEach((r) => r.addEventListener('change', () => { status = r.value; muat(); }));
@@ -197,12 +209,11 @@
     // ---------- Aksi pada tabel ----------
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.unggah) { bukaUnggah(); return; }
-        const id = +(b.dataset.unggahKe || b.dataset.lihat || b.dataset.ubah || b.dataset.setuju || b.dataset.batal || b.dataset.hapus);
+        if (b.dataset.unggahPilih) { bukaUnggah(b.dataset.unggahPilih); return; }
+        const id = +(b.dataset.unggahKe || b.dataset.ubah || b.dataset.setuju || b.dataset.batal || b.dataset.hapus);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         try {
             if (b.dataset.unggahKe) bukaUnggah(null, r);
-            else if (b.dataset.lihat) { lihat((await api(API + '?aksi=detail&id=' + id)).disposisi); }
             else if (b.dataset.ubah) await bukaUbah(id);
             else if (b.dataset.setuju) {
                 if (!r.tujuan_disposisi) { toast('Isi dulu "Disalurkan kepada" sebelum meng-ACC.', true); await bukaUbah(id); return; }

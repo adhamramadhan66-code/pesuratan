@@ -23,7 +23,7 @@
             isiPilihan($('fJenis'), 'Semua kategori', d.daftar_jenis.map((x) => [x.kode, x.nama]));
             isiPilihan($('fPembuat'), 'Semua pembuat', d.daftar_pembuat.map((x) => [x, x]));
             render();
-        } catch (e) { $('galeri').innerHTML = kartuTambah() + '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
     function isiPilihan(sel, semua, daftar) {
@@ -37,12 +37,6 @@
         if (sel.options.length - 1 === daftar.length) return;
         sel.innerHTML = '<option value="">Semua tahun</option>' + daftar.map((t) => '<option value="' + t + '">' + t + '</option>').join('');
         sel.value = cur;
-    }
-
-    // Kartu pertama: tanda + untuk memilih surat dan mengunggah filenya
-    function kartuTambah() {
-        return '<div class="kartu kartu-tambah"><button type="button" class="kartu-thumb" data-tambah="baru" aria-label="Unggah file surat dan arsipkan" title="Unggah file surat dan arsipkan">' + App.IKON.plus + '</button>' +
-            '<div class="kartu-judul">Unggah surat</div></div>';
     }
 
     function kartu(r) {
@@ -66,8 +60,7 @@
     }
 
     function render() {
-        $('galeri').innerHTML = kartuTambah() + baris.map(kartu).join('') +
-            (baris.length ? '' : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat dibuat lewat menu "Penomoran"; klik + untuk mengunggah file surat.</p>');
+        $('galeri').innerHTML = baris.length ? baris.map(kartu).join('') : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat dibuat lewat menu "Penomoran".</p>';
     }
 
     // ---------- Filter ----------
@@ -80,7 +73,6 @@
 
     // ---------- Dialog arsipkan / ubah ----------
     const dlg = $('dlgArsip');
-    let belumArsip = [];        // surat yang bisa dipilih lewat kartu + (belum diarsipkan)
 
     // Isi ulang bagian dialog yang bergantung pada surat terpilih (r) — dipakai oleh Arsipkan/Ubah dan kartu +
     function isiDialog(r) {
@@ -103,28 +95,13 @@
     }
 
     function buka(r) {
-        $('boxSurat').style.display = 'none';
         isiDialog(r);
         $('dlgJudul').textContent = r.status_arsip === 'diarsipkan' ? 'Ubah data arsip' : 'Arsipkan surat';
         dlg.showModal();
     }
 
-    // Kartu +: pilih surat bernomor yang belum diarsipkan, lalu unggah filenya
-    async function bukaBaru() {
-        try { belumArsip = (await api(API + '?' + new URLSearchParams({ aksi: 'daftar', status: 'belum' }))).surat; }
-        catch (e) { toast(e.message, true); return; }
-        $('dlgSurat').innerHTML = '<option value="">' + (belumArsip.length ? 'Pilih surat…' : 'Semua surat sudah diarsipkan') + '</option>' +
-            belumArsip.map((r) => '<option value="' + r.id + '">' + esc(r.nomor_surat + ' — ' + r.perihal) + '</option>').join('');
-        $('boxSurat').style.display = '';
-        isiDialog(null);
-        $('dlgJudul').textContent = 'Unggah surat & arsipkan';
-        dlg.showModal();
-    }
-    $('dlgSurat').addEventListener('change', () => isiDialog(belumArsip.find((x) => String(x.id) === $('dlgSurat').value) || null));
-
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.tambah) { bukaBaru(); return; }
         if (b.dataset.arsip) { const r = baris.find((x) => +x.id === +b.dataset.arsip); if (r) buka(r); }
         if (b.dataset.batal) {
             const r = baris.find((x) => +x.id === +b.dataset.batal); if (!r) return;
@@ -139,7 +116,7 @@
 
     $('dlgForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        if (!aktif) { toast('Pilih surat yang akan diarsipkan.', true); $('dlgSurat').focus(); return; }
+        if (!aktif) return;
         const file = $('dlgFile').files[0];
         const galatFile = App.cekFile(file);
         if (galatFile) { toast(galatFile, true); return; }

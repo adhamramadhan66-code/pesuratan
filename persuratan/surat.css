@@ -138,6 +138,9 @@ dialog.modal::backdrop { background: rgba(0,0,0,0.55); }
 .kartu-thumb { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 3; padding: 0; overflow: hidden;
     background: var(--surface-2); border: 1px solid var(--border-color); border-radius: 0.5rem; color: var(--text-muted); cursor: pointer; font: inherit; text-decoration: none;
     transition: border-color .15s, box-shadow .15s; }
+.kartu-thumb.kosong { cursor: default; }
+.kartu-thumb.kosong:hover { border-color: var(--border-color); box-shadow: none; }
+.kartu.abu .kartu-thumb { border-top: 4px solid var(--text-muted); }
 .kartu-thumb:hover, .kartu-thumb:focus-visible { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-light); outline: none; }
 .kartu-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .kartu-isi { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
