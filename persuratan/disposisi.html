@@ -135,7 +135,7 @@
         <form id="dspForm" novalidate>
             <div class="modal-head">
                 <h3 id="dlgJudul">Ubah disposisi</h3>
-                <p>Lengkapi lembar disposisi: kepada siapa surat disalurkan, sifat, dan isi disposisi. Kolom <b>Disalurkan kepada</b> wajib terisi sebelum di-ACC.</p>
+                <p>Lengkapi disposisi: kepada siapa surat disalurkan dan sifatnya. Kolom <b>Disalurkan kepada</b> wajib terisi sebelum di-ACC.</p>
             </div>
             <div class="modal-body">
                 <div class="field"><label for="d_sumber">Surat yang disalurkan</label>
@@ -157,16 +157,6 @@
                         </div></div>
                     <div class="field full"><label for="d_hal">Hal (perihal) <span class="req">*</span></label>
                         <textarea id="d_hal" maxlength="255" placeholder="Terisi otomatis dari surat yang dipilih"></textarea></div>
-                </div>
-                <div class="field"><span class="lbl">Isi disposisi <span class="req">*</span></span><div class="isi-grid" id="fIsi"></div></div>
-                <div class="field"><span class="lbl">Alur disposisi</span>
-                    <div class="table-wrap">
-                        <table class="data-table alur-edit">
-                            <thead><tr><th>Tanggal</th><th>Kepada</th><th>Nomor isi</th><th>Dari</th><th>Paraf</th></tr></thead>
-                            <tbody id="alurBody"></tbody>
-                        </table>
-                    </div>
-                    <div><button type="button" class="btn sm" id="btnBaris">+ Tambah baris</button> <span class="help">Nomor isi: angka butir di atas, contoh <b>1,3</b>. Baris kosong diabaikan.</span></div>
                 </div>
             </div>
             <div class="modal-foot">
@@ -215,7 +205,7 @@
 
     <script src="app.js?v=3"></script>
     <script src="profil.js?v=1"></script>
-    <script src="disposisi.js?v=8"></script>
+    <script src="disposisi.js?v=9"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

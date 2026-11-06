@@ -83,19 +83,7 @@
 
     // ---------- Form disposisi ----------
     const dlg = $('dlgForm');
-    $('fIsi').innerHTML = ISI.map((t, i) => '<label><input type="checkbox" value="' + (i + 1) + '"><span>' + (i + 1) + '. ' + esc(t) + '</span></label>').join('');
 
-    function tambahBaris(r) {
-        r = r || {};
-        const tr = document.createElement('tr');
-        tr.innerHTML = '<td><input type="date" data-k="tanggal" value="' + esc(r.tanggal || '') + '"></td>' +
-            '<td><input type="text" data-k="kepada" maxlength="100" value="' + esc(r.kepada || '') + '"></td>' +
-            '<td><input type="text" data-k="isi_nomor" maxlength="40" placeholder="1,3" value="' + esc(r.isi_nomor || '') + '"></td>' +
-            '<td><input type="text" data-k="dari" maxlength="100" value="' + esc(r.dari || '') + '"></td>' +
-            '<td><input type="text" data-k="paraf" maxlength="40" value="' + esc(r.paraf || '') + '"></td>';
-        $('alurBody').appendChild(tr);
-    }
-    $('btnBaris').addEventListener('click', () => tambahBaris());
 
     // ---------- Unggah file surat (kartu +) ----------
     const dlgU = $('dlgUnggah');
@@ -164,13 +152,8 @@
         r = r || {};
         const sf = csv(r.sifat), isi = csv(r.isi);
         document.querySelectorAll('#fSifat input').forEach((c) => { c.checked = sf.includes(c.value); });
-        document.querySelectorAll('#fIsi input').forEach((c) => { c.checked = isi.includes(c.value); });
         $('d_tanggal').value = r.tanggal_terima || hariIni();
         $('d_hal').value = r.hal || ''; $('d_pemohon').value = r.pemohon || ''; $('d_tujuan').value = r.tujuan_disposisi || '';
-        $('alurBody').innerHTML = '';
-        const alur = r.alur && r.alur.length ? r.alur : [];
-        alur.forEach(tambahBaris);
-        for (let i = alur.length; i < KOLOM_ALUR; i++) tambahBaris();
     }
 
     // Lembar disposisi hanya diubah (dibuat otomatis saat file surat diunggah)
@@ -186,16 +169,12 @@
     $('dspForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const sifat = [...document.querySelectorAll('#fSifat input:checked')].map((c) => c.value);
-        const isi = [...document.querySelectorAll('#fIsi input:checked')].map((c) => +c.value);
         const salah = !$('d_tujuan').value.trim() ? 'Isi tujuan penyaluran (misalnya Rektor).'
             : !$('d_tanggal').value ? 'Isi tanggal disposisi.' : !$('d_pemohon').value.trim() ? 'Isi nama pemohon.' : !sifat.length ? 'Pilih sifat disposisi.'
-            : !$('d_hal').value.trim() ? 'Isi hal (perihal).' : !isi.length ? 'Pilih minimal satu butir isi disposisi.' : '';
+            : !$('d_hal').value.trim() ? 'Isi hal (perihal).' : '';
         if (salah) { toast(salah, true); return; }
-        const alur = [...$('alurBody').querySelectorAll('tr')].map((tr) => {
-            const o = {}; tr.querySelectorAll('input').forEach((i) => { o[i.dataset.k] = i.value; }); return o;
-        });
         const data = { aksi: 'ubah', id: editId, tanggal_terima: $('d_tanggal').value, sifat, hal: $('d_hal').value,
-            pemohon: $('d_pemohon').value, tujuan_disposisi: $('d_tujuan').value, isi, alur };
+            pemohon: $('d_pemohon').value, tujuan_disposisi: $('d_tujuan').value };
         const btn = $('dlgSimpan'); btn.disabled = true;
         try {
             const d = await api(API, data);

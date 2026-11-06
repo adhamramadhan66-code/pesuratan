@@ -115,7 +115,6 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
     if ($d['sifat'] === '')            return [null, null, 'Pilih sifat disposisi (Penting, Segera, Rahasia, atau Biasa).'];
     if ($d['hal'] === '')              return [null, null, 'Hal (perihal) wajib diisi.'];
     if ($d['pemohon'] === '')          return [null, null, 'Nama pemohon wajib diisi.'];
-    if ($d['isi'] === '')              return [null, null, 'Pilih minimal satu butir Isi disposisi.'];
 
     if ($baru) {
         $sid = (int) ($in['surat_id'] ?? 0);
@@ -438,9 +437,9 @@ try {
             if ($err) keluar(['error' => $err], 422);
             $pdo->beginTransaction();
             try {
-                $pdo->prepare('UPDATE disposisi SET tanggal_terima = ?, sifat = ?, hal = ?, pemohon = ?, tujuan_disposisi = ?, isi = ? WHERE id = ?')
-                    ->execute([$d['tanggal_terima'], $d['sifat'], $d['hal'], $d['pemohon'], $d['tujuan_disposisi'], $d['isi'], $id]);
-                simpan_alur($pdo, $id, $alur);
+                $pdo->prepare('UPDATE disposisi SET tanggal_terima = ?, sifat = ?, hal = ?, pemohon = ?, tujuan_disposisi = ? WHERE id = ?')
+                    ->execute([$d['tanggal_terima'], $d['sifat'], $d['hal'], $d['pemohon'], $d['tujuan_disposisi'], $id]);
+                if (array_key_exists('alur', $in)) simpan_alur($pdo, $id, $alur);   // form tidak lagi mengirim alur: data lama dibiarkan
                 $pdo->commit();
             } catch (Throwable $e) { if ($pdo->inTransaction()) $pdo->rollBack(); throw $e; }
             keluar(['ok' => true, 'no_disposisi' => $lama['no_disposisi']]);
