@@ -611,7 +611,7 @@
           </button>
         </form>
 
-        <p class="signup">&nbsp;</p>
+        <p class="signup">Akun tunggal untuk prototipe demo ini.</p>
         <p class="terms demo-account">Akun demo: <strong>admin@tsu.ac.id</strong><br>Kata sandi: <strong>tsu12345</strong></p>
 
       </div>
@@ -622,6 +622,8 @@
 <script>
   (function () {
     const SESSION_KEY = 'kampuslyCurrentUser';
+    const DEMO_EMAIL = 'admin@tsu.ac.id';
+    const DEMO_PASSWORD = 'tsu12345';
     const form = document.querySelector('form');
     const submitBtn = form.querySelector('.btn-primary');
     const message = document.getElementById('loginMessage');
@@ -655,7 +657,7 @@
       });
     });
 
-    form.addEventListener('submit', async function (e) {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (submitBtn.classList.contains('loading')) return;
 
@@ -665,34 +667,27 @@
         showMessage('Masukkan alamat email dan kata sandi terlebih dahulu.');
         return;
       }
+      if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+        showMessage('Email atau kata sandi salah. Gunakan akun demo yang ditampilkan di bawah form.');
+        return;
+      }
 
       submitBtn.classList.add('loading');
-      let data = null;
+      showMessage('Login berhasil. Membuka dashboard...', 'success');
       try {
-        const res = await fetch('api/auth.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ aksi: 'login', email: email, kata_sandi: password })
-        });
-        try { data = await res.json(); } catch (err) {}
-        if (!res.ok || !data || !data.pengguna) {
-          throw new Error((data && data.error) || 'Server PHP tidak aktif. Buka lewat Laragon (http://localhost/...) atau jalankan jalankan.bat.');
-        }
-      } catch (err) {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+          email: DEMO_EMAIL,
+          name: 'Admin TSU'
+        }));
+      } catch (error) {
         submitBtn.classList.remove('loading');
-        showMessage(err.message || 'Tidak dapat terhubung ke server.');
+        showMessage('Sesi tidak dapat disimpan oleh browser. Jalankan lewat localhost atau Live Server.');
         return;
       }
 
-      try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(data.pengguna));
-      } catch (error) {
-        submitBtn.classList.remove('loading');
-        showMessage('Sesi tidak dapat disimpan oleh browser. Jalankan lewat localhost.');
-        return;
-      }
-      showMessage('Login berhasil. Membuka dashboard...', 'success');
-      setTimeout(function () { window.location.replace('dashboard.html'); }, 400);
+      setTimeout(function () {
+        window.location.replace('dashboard.html');
+      }, 500);
     });
 
     document.querySelector('.sso-btn').addEventListener('click', function () {

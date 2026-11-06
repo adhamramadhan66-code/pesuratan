@@ -1,26 +1,89 @@
--- Persuratan TSU: skema MySQL untuk alur e-Office.
--- Impor lewat phpMyAdmin / HeidiSQL (opsional): aplikasi juga membuat database & tabel ini otomatis saat pertama dibuka.
---
--- ALUR SURAT MASUK (pakai Disposisi)
---   Admin input surat            -> status 'diterima'
---   Pimpinan buat disposisi staf -> status 'proses_staf'
---   Staf selesaikan tugas        -> status 'selesai'
--- ALUR SURAT KELUAR (ACC + Penomoran, tanpa Disposisi)
---   Staf buat draft              -> status 'menunggu_acc'
---   Pimpinan klik ACC            -> status 'menunggu_nomor' (otomatis masuk antrean Penomoran)
---   Admin Beri Nomor & Terbitkan -> status 'terbit' (nomor mis. 001/TU/XI/2026)
+-- Database Persuratan TSU (MySQL / MariaDB - Laragon)
+-- Opsional: aplikasi membuat semua ini otomatis. Impor file ini hanya jika ingin menyiapkan database lewat HeidiSQL/phpMyAdmin.
 
 CREATE DATABASE IF NOT EXISTS `persuratan` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `persuratan`;
 
-CREATE TABLE IF NOT EXISTS pengguna (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    nama        VARCHAR(100) NOT NULL,
-    email       VARCHAR(120) NOT NULL,
-    kata_sandi  VARCHAR(255) NOT NULL,
-    peran       ENUM('staf','pimpinan','admin') NOT NULL,
-    dibuat_pada TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_pengguna_email (email)
+CREATE TABLE IF NOT EXISTS jenis_surat (
+    kode VARCHAR(10)  NOT NULL PRIMARY KEY,
+    nama VARCHAR(80)  NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS unit (
+    kode VARCHAR(20)  NOT NULL PRIMARY KEY,
+    nama VARCHAR(100) NOT NULL,
+    urutan INT NOT NULL DEFAULT 0
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS surat (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    tahun            SMALLINT     NOT NULL,
+    bulan            TINYINT      NOT NULL,
+    nomor_urut       INT          NOT NULL,
+    kode_tujuan      CHAR(1)      NOT NULL,
+    jenis_kode       VARCHAR(10)  NOT NULL,
+    unit_kode        VARCHAR(20)  NOT NULL,
+    nomor_surat      VARCHAR(60)  NOT NULL,
+    tanggal_surat    DATE         NOT NULL,
+    perihal          VARCHAR(255) NOT NULL,
+    untuk            VARCHAR(255) NOT NULL DEFAULT '',
+    jenis_ttd        VARCHAR(10)  NOT NULL DEFAULT 'basah',
+    pejabat_ttd      VARCHAR(100) NOT NULL DEFAULT '',
+    pembuat_surat    VARCHAR(100) NOT NULL DEFAULT '',
+    pemberi_nomor    VARCHAR(100) NOT NULL DEFAULT '',
+    status_arsip     VARCHAR(12)  NOT NULL DEFAULT 'belum',
+    tanggal_arsip    DATE NULL,
+    lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT '',
+    keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
+    file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
+    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    tahap            VARCHAR(16)  NOT NULL DEFAULT 'bernomor',
+    tanggal_kirim    DATE NULL,
+    keterangan_kirim VARCHAR(255) NOT NULL DEFAULT '',
+    dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_nomor (tahun, bulan, nomor_urut),
+    KEY idx_tanggal (tanggal_surat),
+    KEY idx_arsip (status_arsip)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS disposisi (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    surat_id       INT NULL,
+    surat_masuk_id INT NULL,
+    tahun          SMALLINT     NOT NULL,
+    bulan          TINYINT      NOT NULL,
+    urut           INT          NOT NULL,
+    no_disposisi   VARCHAR(40)  NOT NULL,
+    tanggal_terima DATE         NOT NULL,
+    sifat          VARCHAR(60)  NOT NULL DEFAULT '',
+    hal            VARCHAR(255) NOT NULL,
+    kode_jenis     VARCHAR(10)  NOT NULL,
+    unit_kode      VARCHAR(20)  NOT NULL,
+    kode_tujuan    CHAR(1)      NOT NULL DEFAULT 'A',
+    untuk          VARCHAR(255) NOT NULL DEFAULT '',
+    pemohon        VARCHAR(100) NOT NULL,
+    tujuan_disposisi VARCHAR(100) NOT NULL DEFAULT '',
+    isi            VARCHAR(60)  NOT NULL DEFAULT '',
+    status         VARCHAR(12)  NOT NULL DEFAULT 'belum',
+    tanggal_setuju DATE NULL,
+    disetujui_oleh VARCHAR(100) NOT NULL DEFAULT '',
+    dibuat_pada    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_disposisi_no (tahun, bulan, urut),
+    UNIQUE KEY uq_dsp_surat (surat_id),
+    KEY idx_dsp_status (status),
+    KEY idx_dsp_tanggal (tanggal_terima)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS disposisi_alur (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    disposisi_id INT          NOT NULL,
+    urutan       INT          NOT NULL,
+    tanggal      DATE NULL,
+    kepada       VARCHAR(100) NOT NULL DEFAULT '',
+    isi_nomor    VARCHAR(40)  NOT NULL DEFAULT '',
+    dari         VARCHAR(100) NOT NULL DEFAULT '',
+    paraf        VARCHAR(40)  NOT NULL DEFAULT '',
+    KEY idx_alur_disposisi (disposisi_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS surat_masuk (
@@ -32,74 +95,92 @@ CREATE TABLE IF NOT EXISTS surat_masuk (
     nomor_surat_asal VARCHAR(100) NOT NULL DEFAULT '',
     tanggal_surat    DATE NULL,
     tanggal_terima   DATE         NOT NULL,
+    jenis_pengirim   VARCHAR(10)  NOT NULL DEFAULT 'eksternal',
     pengirim         VARCHAR(150) NOT NULL,
     perihal          VARCHAR(255) NOT NULL,
-    sifat            ENUM('biasa','penting','segera','rahasia') NOT NULL DEFAULT 'biasa',
-    status           ENUM('diterima','proses_staf','selesai') NOT NULL DEFAULT 'diterima',
-    file_surat       VARCHAR(80)  NOT NULL DEFAULT '',
-    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
-    status_arsip     ENUM('belum','diarsipkan') NOT NULL DEFAULT 'belum',
+    sifat            VARCHAR(12)  NOT NULL DEFAULT 'biasa',
+    tujuan           VARCHAR(150) NOT NULL DEFAULT '',
+    status           VARCHAR(16)  NOT NULL DEFAULT 'diterima',
+    status_arsip     VARCHAR(12)  NOT NULL DEFAULT 'belum',
     tanggal_arsip    DATE NULL,
     lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT '',
     keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
-    dibuat_oleh      INT          NOT NULL,
+    file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
+    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    dari_surat_id    INT NULL,
     dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_agenda (tahun, bulan, urut),
-    KEY idx_sm_status (status),
+    UNIQUE KEY uq_sm_dari (dari_surat_id),
     KEY idx_sm_tanggal (tanggal_terima),
-    CONSTRAINT fk_sm_pembuat FOREIGN KEY (dibuat_oleh) REFERENCES pengguna (id)
+    KEY idx_sm_status (status),
+    KEY idx_sm_arsip (status_arsip)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS disposisi (
-    id                INT AUTO_INCREMENT PRIMARY KEY,
-    surat_masuk_id    INT          NOT NULL,
-    pimpinan_id       INT          NOT NULL,
-    staf_id           INT          NOT NULL,
-    instruksi         VARCHAR(500) NOT NULL,
-    batas_waktu       DATE NULL,
-    tanggal_disposisi DATE         NOT NULL,
-    status            ENUM('proses_staf','selesai') NOT NULL DEFAULT 'proses_staf',
-    catatan_selesai   VARCHAR(500) NOT NULL DEFAULT '',
-    tanggal_selesai   DATE NULL,
-    dibuat_pada       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_dsp_surat (surat_masuk_id),
-    KEY idx_dsp_staf (staf_id),
-    CONSTRAINT fk_dsp_surat   FOREIGN KEY (surat_masuk_id) REFERENCES surat_masuk (id),
-    CONSTRAINT fk_dsp_pimpinan FOREIGN KEY (pimpinan_id)   REFERENCES pengguna (id),
-    CONSTRAINT fk_dsp_staf    FOREIGN KEY (staf_id)        REFERENCES pengguna (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Database lama: aplikasi menyesuaikan sendiri (kolom baru pada tabel surat, disposisi, dan surat_masuk) saat halaman pertama dibuka.
 
-CREATE TABLE IF NOT EXISTS surat_keluar (
-    id               INT AUTO_INCREMENT PRIMARY KEY,
-    perihal          VARCHAR(255) NOT NULL,
-    tujuan           VARCHAR(255) NOT NULL,
-    tanggal_surat    DATE         NOT NULL,
-    status           ENUM('menunggu_acc','menunggu_nomor','terbit') NOT NULL DEFAULT 'menunggu_acc',
-    file_surat       VARCHAR(80)  NOT NULL DEFAULT '',
-    file_nama        VARCHAR(200) NOT NULL DEFAULT '',
-    pembuat_id       INT          NOT NULL,
-    acc_oleh         INT NULL,
-    tanggal_acc      DATETIME NULL,
-    nomor_surat      VARCHAR(60) NULL,
-    mode_nomor       ENUM('otomatis','manual') NULL,
-    tahun            SMALLINT NULL,
-    bulan            TINYINT NULL,
-    nomor_urut       INT NULL,
-    diterbitkan_oleh INT NULL,
-    tanggal_terbit   DATETIME NULL,
-    status_arsip     ENUM('belum','diarsipkan') NOT NULL DEFAULT 'belum',
-    tanggal_arsip    DATE NULL,
-    lokasi_arsip     VARCHAR(150) NOT NULL DEFAULT '',
-    keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
-    dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_sk_nomor (nomor_surat),
-    UNIQUE KEY uq_sk_urut (tahun, bulan, nomor_urut),
-    KEY idx_sk_status (status),
-    KEY idx_sk_tanggal (tanggal_surat),
-    CONSTRAINT fk_sk_pembuat FOREIGN KEY (pembuat_id) REFERENCES pengguna (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT IGNORE INTO jenis_surat (kode, nama) VALUES
+  ('SK', 'Surat keputusan'),
+  ('ST', 'Surat tugas'),
+  ('SU', 'Surat undangan'),
+  ('SPm', 'Surat permohonan'),
+  ('SPn', 'Surat pernyataan'),
+  ('SE', 'Surat edaran'),
+  ('SKet', 'Surat keterangan'),
+  ('SPb', 'Surat pemberitahuan'),
+  ('SB', 'Surat balasan'),
+  ('SR', 'Surat rekomendasi'),
+  ('SPPD', 'Surat perintah perjalanan dinas'),
+  ('SPeng', 'Surat pengantar'),
+  ('SPK', 'Surat Perjanjian kerja'),
+  ('SPh', 'Surat Penghargaan'),
+  ('PR', 'Peraturan rektor'),
+  ('M', 'Memo internal'),
+  ('K', 'Surat Kuasa'),
+  ('THib', 'Surat penerimaan hibah'),
+  ('SHib', 'Surat penyerahan hibah'),
+  ('Spin', 'Surat peminjaman'),
+  ('Shap', 'Surat penghapusan aset'),
+  ('MOU', 'Nota kesepahaman'),
+  ('MOA', 'Surat perjanjian'),
+  ('STK', 'Surat ucapan terimakasih'),
+  ('STF', 'Sertifikat'),
+  ('BA', 'Berita Acara'),
+  ('ASET', 'Form Serah Terima Aset'),
+  ('IA', 'Implementation Arrangement');
 
--- Satu akun dulu: admin (bisa mengakses semua fitur), kata sandi: tsu12345. Hash di bawah dibuat dengan password_hash() PHP; aplikasi juga mengisinya otomatis bila tabel kosong.
--- Jalankan baris berikut dari PHP bila ingin membuat hash sendiri:  php -r "echo password_hash('tsu12345', PASSWORD_DEFAULT);"
-INSERT IGNORE INTO pengguna (nama, email, kata_sandi, peran) VALUES
-  ('Admin TSU', 'admin@tsu.ac.id', '$2y$10$dbmAT0dXPlouxcvnA9rvD.ZIYzSxOPpU5kFaFCPk7yOoBXV2bvvdG', 'admin');
+INSERT IGNORE INTO unit (kode, nama, urutan) VALUES
+  ('REK', 'Rektor', 1),
+  ('SEK', 'Sekretaris universitas', 2),
+  ('WR1', 'Wakil rektor 1', 3),
+  ('WR2', 'Wakil rektor 2', 4),
+  ('WR3', 'Wakil rektor 3', 5),
+  ('D-TEK', 'Dekan Fak. Teknik', 6),
+  ('D-SH', 'Dekan Fak. Sains dan humaniora', 7),
+  ('D-SV', 'Dekan Fak. Sekolah Vokasi', 8),
+  ('PS-SI.S1', 'Sistem informasi-S1', 9),
+  ('PS-I', 'Informatika', 10),
+  ('PS-RK', 'Rekayasa Komputer', 11),
+  ('PS-M.S1', 'Manajemen', 12),
+  ('PS-PGSD.S1', 'PGSD', 13),
+  ('PS-Psi.S1', 'Psikologi', 14),
+  ('PS-SI.D3', 'Sistem Informasi-D3', 15),
+  ('PS-TI', 'Teknologi Informasi', 16),
+  ('PS-DKV', 'Desain Komunikasi Visual', 17),
+  ('PS-DPT', 'Desain Produk Tekstil', 18),
+  ('PS-SIA', 'Sistem Informasi Akuntansi', 19),
+  ('LPPM', 'LPPM', 20),
+  ('LPM', 'LPM', 21),
+  ('BAUK', 'BAUK', 22),
+  ('BAAK', 'BAAK', 23),
+  ('BAKPPU', 'BAKPU', 24),
+  ('SEN', 'Senat universitas', 25),
+  ('SPI', 'SPI', 26),
+  ('Perp', 'UPT Perpustakaan', 27),
+  ('Lab', 'UPT Laboratorium', 28),
+  ('Marcom', 'UPT Marcom', 29),
+  ('PMB', 'PMB', 30),
+  ('KUI', 'UPT KUI', 31),
+  ('UNIV', 'UNIVERSITAS', 32),
+  ('PPsT', 'PUSAT PSIKOLOGI TERAPAN', 33),
+  ('KUK', 'KANTOR URUSAN KEMAHASISWAAN', 34),
+  ('CCDC', 'CHARACTER AND CAREER DEVELOPMENT CENTER', 35);

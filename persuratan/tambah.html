@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman demo: hanya dibuka jika sesi login tersedia.
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+            } catch (error) {
+                window.location.replace('index.html');
+            }
+        })();
+    </script>
+    <title>Tambah Data | Persuratan TSU</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=11">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="disposisi.html" class="nav-item">
+                    <i data-lucide="clipboard-check" class="icon"></i>
+                    <span>Disposisi</span>
+                </a>
+                <a href="tambah.html" class="nav-item active">
+                    <i data-lucide="file-plus" class="icon"></i>
+                    <span>Tambah Data</span>
+                </a>
+                <a href="arsip.html" class="nav-item">
+                    <i data-lucide="archive" class="icon"></i>
+                    <span>Pengarsipan</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Persuratan</p>
+                <h2>Tambah data surat</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="two-col" id="formPanel">
+            <section class="panel">
+                <div class="panel-head">
+                    <h3 id="formTitle">Data surat baru</h3>
+                    <span class="muted" style="font-size:.8125rem">Nomor surat dibuat otomatis sesuai Panduan Persuratan</span>
+                </div>
+                <div class="panel-body">
+                    <div class="edit-banner" id="editBanner"><i data-lucide="pencil" class="icon-small"></i>
+                        <span>Mengubah surat <b id="editBannerNo"></b>. Bila jenis, unit, atau tujuan diganti, kode di nomor surat ikut berubah. Bila bulan/tahun pada tanggal diganti, nomor urut mengikuti bulan yang baru (lihat pratinjau di kanan).</span></div>
+
+                    <form id="suratForm" novalidate>
+                        <div class="gate" id="gate">
+                            <div class="field">
+                                <label for="f_disposisi">Disposisi yang sudah disetujui <span class="req">*</span></label>
+                                <select id="f_disposisi"><option value="">Memuat…</option></select>
+                                <span class="help" id="gateHelp">Surat hanya bisa dibuat dari disposisi yang sudah disetujui (hijau).</span>
+                            </div>
+                            <div class="gate-empty" id="gateEmpty" style="display:none">
+                                <span>Belum ada disposisi yang disetujui. Buat dan setujui disposisi lebih dulu.</span>
+                                <a class="btn sm primary" href="disposisi.html">Ke menu Disposisi</a>
+                            </div>
+                        </div>
+                        <fieldset class="form-fields" id="formFields" disabled>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="f_tanggal">Tanggal surat</label>
+                                <input type="date" id="f_tanggal" required>
+                                <span class="help">Bulan &amp; tahun pada nomor mengikuti tanggal ini.</span>
+                            </div>
+                            <div class="field">
+                                <span class="lbl">Tujuan surat</span>
+                                <div class="seg" role="radiogroup" aria-label="Tujuan surat">
+                                    <label><input type="radio" name="tujuan" value="A" checked><span>A — Internal</span></label>
+                                    <label><input type="radio" name="tujuan" value="B"><span>B — Eksternal</span></label>
+                                </div>
+                                <span class="help">Internal = lingkungan Universitas Tiga Serangkai.</span>
+                            </div>
+                            <div class="field">
+                                <label for="f_jenis">Jenis surat</label>
+                                <select id="f_jenis" required></select>
+                            </div>
+                            <div class="field">
+                                <label for="f_unit">Bidang / unit / lembaga pembuat</label>
+                                <select id="f_unit" required></select>
+                            </div>
+                            <div class="field full">
+                                <label for="f_perihal">Perihal</label>
+                                <textarea id="f_perihal" maxlength="255" placeholder="Contoh: Surat Undangan forum PMB dan Pengelolaan Magang" required></textarea>
+                            </div>
+                            <div class="field full">
+                                <label for="f_untuk">Untuk</label>
+                                <input type="text" id="f_untuk" maxlength="255" placeholder="Nama penerima, atau &quot;terlampir&quot; bila banyak" required>
+                            </div>
+                            <div class="field">
+                                <span class="lbl">Tanda tangan</span>
+                                <div class="seg" role="radiogroup" aria-label="Jenis tanda tangan">
+                                    <label><input type="radio" name="ttd" value="basah" checked><span>Basah</span></label>
+                                    <label><input type="radio" name="ttd" value="scan"><span>Scan</span></label>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="f_pejabat">Pejabat TTD</label>
+                                <input type="text" id="f_pejabat" maxlength="100" placeholder="Contoh: Sekretaris" required>
+                            </div>
+                            <div class="field">
+                                <label for="f_pembuat">Pembuat surat</label>
+                                <input type="text" id="f_pembuat" maxlength="100" placeholder="Nama staf pembuat" required>
+                            </div>
+                            <div class="field">
+                                <label for="f_pemberi">Pemberi nomor surat <span class="opt">(opsional)</span></label>
+                                <input type="text" id="f_pemberi" maxlength="100" placeholder="Bila surat dari unit selain sekretariat dan biro">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn primary" id="btnSimpan"><i data-lucide="save"></i> <span id="btnSimpanTeks">Simpan &amp; ambil nomor</span></button>
+                            <button type="button" class="btn" id="btnBatal" style="display:none">Batal ubah</button>
+                            <button type="button" class="btn" id="btnReset">Kosongkan form</button>
+                        </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </section>
+
+            <aside class="panel nomor-card">
+                <div class="panel-head"><h3>Nomor surat</h3></div>
+                <div class="panel-body">
+                    <div class="nomor-box">
+                        <div class="lbl">Pratinjau nomor</div>
+                        <div class="no mono" id="nomorPreview">...</div>
+                    </div>
+                    <ul class="nomor-parts">
+                        <li><span>Nomor urut</span><span id="nomorUrut">-</span></li>
+                        <li><span>Tujuan</span><span id="nomorTujuan">-</span></li>
+                        <li><span>Jenis</span><span id="nomorJenis">-</span></li>
+                        <li><span>Unit</span><span id="nomorUnit">-</span></li>
+                        <li><span>Bulan</span><span id="nomorBulan">-</span></li>
+                        <li><span>Tahun</span><span id="nomorTahun">-</span></li>
+                    </ul>
+                    <div id="hasilBox" style="display:none">
+                        <div class="nomor-box" style="margin-top:1rem">
+                            <div class="lbl">Nomor yang baru diambil</div>
+                            <div class="no mono" id="hasilNomor"></div>
+                        </div>
+                        <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
+                    </div>
+                    <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat disimpan.</p>
+                </div>
+            </aside>
+        </div>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div><h3>Data surat keluar</h3><span class="muted" id="jumlah" style="font-size:.8125rem"></span></div>
+                <div class="toolbar">
+                    <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat">
+                    <select id="fTahun" aria-label="Tahun"></select>
+                    <select id="fBulan" aria-label="Bulan"></select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr>
+                        <th>No</th><th>No Surat</th><th>Tanggal Surat</th><th>Perihal</th><th>Untuk</th>
+                        <th>TTD</th><th>Pejabat TTD</th><th>Pembuat Surat</th><th>Pemberi Nomor</th><th>Disposisi</th><th>Aksi</th>
+                    </tr></thead>
+                    <tbody id="tbody"><tr class="empty-row"><td colspan="11">Memuat…</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=3"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="tambah.js?v=3"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

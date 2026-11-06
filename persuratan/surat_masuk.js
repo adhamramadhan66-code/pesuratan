@@ -1,102 +1,152 @@
-/* Surat Masuk: Admin input (diterima) -> Pimpinan disposisi ke staf (proses_staf) -> Staf selesaikan (selesai). */
 (function () {
     'use strict';
-    const { $, esc, tglIndo, api, toast, peran } = App;
-    const URL_API = 'api/surat_masuk.php';
-    const LABEL = { diterima: 'Diterima', proses_staf: 'Proses staf', selesai: 'Selesai' };
-    const KELAS = { diterima: 'abu', proses_staf: 'bad', selesai: 'ok' };
-    const BADGE = { diterima: 'warn', proses_staf: 'warn', selesai: 'ok' };
-    let data = [], ubahId = null, mulaiMemuat = 0;
+    const { $, esc, tglIndo, hariIni, api, toast, BULAN } = App;
+    const API = 'api/surat_masuk.php';
+    const MAKS = 10 * 1024 * 1024;
+    const NAMA_STATUS = { diterima: 'Diterima', didisposisikan: 'Didisposisikan', ditindaklanjuti: 'Ditindaklanjuti' };
+    const NAMA_SIFAT = { biasa: 'Biasa', penting: 'Penting', segera: 'Segera', rahasia: 'Rahasia' };
 
-    const INFO = {
-        admin: 'Klik <b>Input surat masuk</b>, lalu tekan <b>Disposisi</b> pada surat <span class="chip bad">diterima</span> untuk meneruskannya. Tandai selesai di menu <b>Disposisi</b>.',
-        pimpinan: 'Surat <b>diterima</b> menunggu disposisi Anda. Tekan <b>Disposisi</b> untuk meneruskannya ke staf.',
-        staf: 'Hanya surat yang didisposisikan kepada Anda yang tampil di sini. Selesaikan tugasnya di menu <b>Disposisi</b>.'
-    };
-    $('alurInfo').innerHTML = INFO[peran] || '';
-    if (peran === 'admin') $('btnTambah').style.display = '';
-    const status = () => document.querySelector('#segStatus input:checked').value;
+    let baris = [], arsip = '', editId = null, aktif = null;
 
+    // ---------- Daftar ----------
     async function muat() {
-        const my = ++mulaiMemuat;
-        const q = new URLSearchParams({ aksi: 'daftar', status: status(), q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
+        const p = new URLSearchParams({ aksi: 'daftar', arsip, status: $('fStatus').value, jenis: $('fJenis').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
         try {
-            const d = await api(URL_API + '?' + q);
-            if (my !== mulaiMemuat) return;
-            data = d.data; gambar();
-            const s = await api('api/statistik.php');
-            $('sTerima').textContent = s.masuk.diterima; $('sProses').textContent = s.masuk.proses_staf; $('sSelesai').textContent = s.masuk.selesai;
-        } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+            const d = await api(API + '?' + p);
+            baris = d.surat_masuk;
+            $('sTotal').textContent = d.total; $('sTindak').textContent = d.ditindaklanjuti; $('sBelum').textContent = d.total - d.diarsipkan;
+            $('sPersen').textContent = d.total ? Math.round((d.diarsipkan / d.total) * 100) + '% sudah diarsipkan' : 'Belum ada surat masuk';
+            $('sBar').style.width = (d.total ? (d.diarsipkan / d.total) * 100 : 0) + '%';
+            const sel = $('fTahun'), cur = sel.value;
+            if (sel.options.length - 1 !== d.daftar_tahun.length) {
+                sel.innerHTML = '<option value="">Semua tahun</option>' + d.daftar_tahun.map((t) => '<option value="' + t + '">' + t + '</option>').join('');
+                sel.value = cur;
+            }
+            render();
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
-    function aksi(r) {
-        let h = r.ada_file ? '<a class="btn sm" href="' + esc(URL_API + '?aksi=file&id=' + r.id) + '" target="_blank" rel="noopener">Lihat</a>' : '';
-        if (App.bisa('pimpinan') && r.status === 'diterima') h += '<a class="btn sm primary" href="disposisi.html?surat=' + r.id + '">Disposisi</a>';
-        if (peran === 'admin' && r.status === 'diterima')
-            h += '<button type="button" class="btn sm" data-a="ubah" data-id="' + r.id + '">Ubah</button><button type="button" class="btn sm danger" data-a="hapus" data-id="' + r.id + '">Hapus</button>';
-        return h;
+    function render() {
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat masuk. Surat internal muncul di sini otomatis setelah di-ACC di menu Disposisi.</p>'; return; }
+        $('galeri').innerHTML = baris.map((r) => {
+            const sudah = r.status_arsip === 'diarsipkan';
+            const dsp = r.disposisi_id
+                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">Disposisi ' + (r.status_disposisi === 'disetujui' ? 'disetujui' : 'belum disetujui') + '</span>'
+                : '';
+            const aksi = ['<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>'];
+            if (r.status !== 'ditindaklanjuti') aksi.push('<button class="btn sm" data-tindak="' + r.id + '">Tandai ditindaklanjuti</button>');
+            aksi.push(sudah ? '<button class="btn sm" data-arsip="' + r.id + '">Ubah arsip</button><button class="btn sm danger" data-batal="' + r.id + '">Batalkan arsip</button>'
+                            : '<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>');
+            if (!r.disposisi_id) aksi.push('<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
+            return App.kartuHtml({
+                kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
+                thumb: App.thumbFile(API + '?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                sub: [esc(r.perihal), esc(r.pengirim) + ' · ' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + ' · ' + esc(NAMA_SIFAT[r.sifat] || r.sifat)],
+                status: '<span class="badge st-' + esc(r.status) + '">' + esc(NAMA_STATUS[r.status] || r.status) + '</span>' + dsp +
+                    '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+                aksi: aksi.join(''),
+            });
+        }).join('');
     }
 
-    function gambar() {
-        $('galeri').innerHTML = data.length ? data.map((r) => App.kartuHtml({
-            kelas: KELAS[r.status], judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
-            thumb: App.thumbFile(URL_API + '?aksi=file&id=' + r.id, r.ada_file ? 'x.' + r.file_tipe : '', r.ada_file),
-            sub: [esc(r.perihal), 'Dari: ' + esc(r.pengirim),
-                  esc(tglIndo(r.tanggal_terima)) + (r.sifat !== 'biasa' ? ' · ' + esc(r.sifat) : '') + (r.disposisi ? ' · Staf: ' + esc(r.disposisi.staf) : '')],
-            status: '<span class="badge ' + BADGE[r.status] + '">' + LABEL[r.status] + '</span>',
-            aksi: aksi(r),
-        })).join('') : '<p class="galeri-kosong">Belum ada surat masuk pada filter ini.</p>';
-        if (window.lucide) lucide.createIcons();
+    document.querySelectorAll('#segArsip input').forEach((r) => r.addEventListener('change', () => { arsip = r.value; muat(); }));
+    let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
+    ['fStatus', 'fJenis', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
+
+    // ---------- Form catat / ubah ----------
+    const dlg = $('dlgForm');
+    const jenisDipilih = () => (document.querySelector('input[name="m_jenis"]:checked') || {}).value || 'eksternal';
+    function isiForm(r) {
+        r = r || {};
+        $('m_terima').value = r.tanggal_terima || hariIni(); $('m_tgl').value = r.tanggal_surat || ''; $('m_asal').value = r.nomor_surat_asal || '';
+        document.querySelectorAll('input[name="m_jenis"]').forEach((c) => { c.checked = c.value === (r.jenis_pengirim || 'eksternal'); });
+        $('m_pengirim').value = r.pengirim || ''; $('m_perihal').value = r.perihal || ''; $('m_tujuan').value = r.tujuan || '';
+        $('m_sifat').value = r.sifat || 'biasa'; $('m_status').value = r.status || 'diterima'; $('m_file').value = ''; $('m_hapusFile').checked = false;
+        $('boxStatus').style.display = r.id ? '' : 'none';
+        $('fileNowM').style.display = r.ada_file ? '' : 'none';
+        if (r.ada_file) { $('fileNowNamaM').textContent = r.file_nama; $('fileNowLihatM').href = API + '?aksi=file&id=' + r.id; }
+    }
+    $('dlgBatal').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
+    function cekFile(f) {
+        if (!f) return true;
+        if (!/\.(pdf|jpe?g|png)$/i.test(f.name)) { toast('Format file harus PDF, JPG, atau PNG.', true); return false; }
+        if (f.size > MAKS) { toast('Ukuran file maksimal 10 MB.', true); return false; }
+        return true;
     }
 
-    // ---------- Input / ubah (admin) ----------
-    function buka(r) {
-        ubahId = r ? r.id : null;
-        $('mJudul').textContent = r ? 'Ubah surat masuk' : 'Input surat masuk';
-        $('m_pengirim').value = r ? r.pengirim : ''; $('m_perihal').value = r ? r.perihal : '';
-        $('m_asal').value = r ? r.nomor_surat_asal : ''; $('m_sifat').value = r ? r.sifat : 'biasa';
-        $('m_tglSurat').value = r ? (r.tanggal_surat || '') : ''; $('m_tglTerima').value = r ? r.tanggal_terima : App.hariIni();
-        $('m_file').value = ''; $('m_help').textContent = r ? 'Kosongkan bila file tidak diganti.' : '';
-        $('dlgMasuk').showModal();
-    }
-    $('btnTambah').addEventListener('click', () => buka(null));
-    $('mBatal').addEventListener('click', () => $('dlgMasuk').close());
-    $('masukForm').addEventListener('submit', async (ev) => {
+    $('smForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const f = $('m_file').files[0], g = App.cekFile(f);
-        if (!$('m_pengirim').value.trim() || !$('m_perihal').value.trim()) return toast('Pengirim dan perihal wajib diisi.', true);
-        if (g) return toast(g, true);
+        const salah = !$('m_terima').value ? 'Isi tanggal terima.' : !$('m_pengirim').value.trim() ? 'Isi pengirim.' : !$('m_perihal').value.trim() ? 'Isi perihal.' : '';
+        if (salah) { toast(salah, true); return; }
+        const file = $('m_file').files[0]; if (!cekFile(file)) return;
         const fd = new FormData();
-        fd.append('aksi', ubahId ? 'ubah' : 'tambah'); if (ubahId) fd.append('id', ubahId);
-        [['pengirim', 'm_pengirim'], ['perihal', 'm_perihal'], ['nomor_surat_asal', 'm_asal'], ['sifat', 'm_sifat'], ['tanggal_surat', 'm_tglSurat'], ['tanggal_terima', 'm_tglTerima']]
-            .forEach(([k, id]) => fd.append(k, $(id).value));
-        if (f) fd.append('file', f);
-        $('mSimpan').disabled = true;
+        fd.append('aksi', editId ? 'ubah' : 'tambah'); if (editId) fd.append('id', editId);
+        [['tanggal_terima', 'm_terima'], ['tanggal_surat', 'm_tgl'], ['nomor_surat_asal', 'm_asal'], ['pengirim', 'm_pengirim'], ['perihal', 'm_perihal'],
+         ['tujuan', 'm_tujuan'], ['sifat', 'm_sifat'], ['status', 'm_status']].forEach(([k, id]) => fd.append(k, $(id).value));
+        fd.append('jenis_pengirim', jenisDipilih());
+        if ($('m_hapusFile').checked) fd.append('hapus_file', '1');
+        if (file) fd.append('file', file);
+        const btn = $('dlgSimpan'); btn.disabled = true;
         try {
-            const d = await api(URL_API, fd);
-            $('dlgMasuk').close();
-            toast(ubahId ? 'Surat masuk diperbarui.' : 'Tersimpan dengan nomor agenda ' + d.surat.nomor_agenda + '.');
+            const d = await api(API, fd); dlg.close();
+            toast(editId ? 'Surat masuk ' + d.nomor_agenda + ' diperbarui' : 'Surat masuk dicatat dengan nomor agenda ' + d.nomor_agenda);
             muat();
         } catch (e) { toast(e.message, true); }
-        $('mSimpan').disabled = false;
+        finally { btn.disabled = false; }
     });
 
+    // ---------- Dialog arsip ----------
+    const dlgA = $('dlgArsip');
+    function bukaArsip(r) {
+        aktif = r; $('arNomor').textContent = r.nomor_agenda; $('arPerihal').textContent = r.perihal;
+        $('arJudul').textContent = r.status_arsip === 'diarsipkan' ? 'Ubah data arsip' : 'Arsipkan surat masuk';
+        $('a_tgl').value = r.tanggal_arsip || hariIni(); $('a_lokasi').value = r.lokasi_arsip || ''; $('a_ket').value = r.keterangan_arsip || '';
+        $('a_file').value = ''; $('a_hapusFile').checked = false;
+        $('fileNowA').style.display = r.ada_file ? '' : 'none';
+        if (r.ada_file) { $('fileNowNamaA').textContent = r.file_nama; $('fileNowLihatA').href = API + '?aksi=file&id=' + r.id; }
+        dlgA.showModal(); dlgA.scrollTop = 0;
+    }
+    $('arBatal').addEventListener('click', () => dlgA.close());
+    dlgA.addEventListener('click', (e) => { if (e.target === dlgA) dlgA.close(); });
+    $('arsipForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const file = $('a_file').files[0]; if (!cekFile(file)) return;
+        const adaFile = aktif.ada_file && !$('a_hapusFile').checked;
+        if (!$('a_lokasi').value.trim() && !file && !adaFile) { toast('Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).', true); $('a_lokasi').focus(); return; }
+        const fd = new FormData();
+        fd.append('aksi', 'arsip_simpan'); fd.append('id', aktif.id); fd.append('tanggal_arsip', $('a_tgl').value);
+        fd.append('lokasi_arsip', $('a_lokasi').value); fd.append('keterangan_arsip', $('a_ket').value);
+        if ($('a_hapusFile').checked) fd.append('hapus_file', '1'); if (file) fd.append('file', file);
+        const btn = $('arSimpan'); btn.disabled = true;
+        try { await api(API, fd); dlgA.close(); toast('Surat masuk ' + aktif.nomor_agenda + ' diarsipkan'); muat(); }
+        catch (e) { toast(e.message, true); }
+        finally { btn.disabled = false; }
+    });
+
+    // ---------- Aksi pada tabel ----------
+    const kirim = (o) => { const fd = new FormData(); Object.keys(o).forEach((k) => fd.append(k, o[k])); return api(API, fd); };
     $('galeri').addEventListener('click', async (ev) => {
-        const b = ev.target.closest('button[data-a]');
-        if (!b) return;
-        const r = data.find((x) => x.id === +b.dataset.id);
-        if (!r) return;
-        if (b.dataset.a === 'ubah') return buka(r);
-        if (!confirm('Hapus surat masuk ' + r.nomor_agenda + '?')) return;
-        try { await api(URL_API, { aksi: 'hapus', id: r.id }); toast('Surat masuk dihapus.'); } catch (e) { toast(e.message, true); }
-        muat();
+        const b = ev.target.closest('button'); if (!b) return;
+        const id = +(b.dataset.ubah || b.dataset.tindak || b.dataset.arsip || b.dataset.batal || b.dataset.hapus);
+        const r = baris.find((x) => +x.id === id); if (!r) return;
+        try {
+            if (b.dataset.ubah) { editId = id; $('dlgJudul').textContent = 'Ubah surat masuk ' + r.nomor_agenda; isiForm(r); dlg.showModal(); dlg.scrollTop = 0; }
+            else if (b.dataset.tindak) { await kirim({ aksi: 'status', id, status: 'ditindaklanjuti' }); toast(r.nomor_agenda + ' ditandai ditindaklanjuti'); muat(); }
+            else if (b.dataset.arsip) bukaArsip(r);
+            else if (b.dataset.batal) {
+                if (!confirm('Batalkan pengarsipan surat masuk ' + r.nomor_agenda + '? Lokasi dan tanggal arsip dihapus; file scan tetap disimpan.')) return;
+                await kirim({ aksi: 'arsip_batal', id }); toast('Pengarsipan dibatalkan'); muat();
+            } else if (b.dataset.hapus) {
+                if (!confirm('Hapus surat masuk ' + r.nomor_agenda + '? File scan-nya ikut terhapus.')) return;
+                await kirim({ aksi: 'hapus', id }); toast('Surat masuk dihapus'); muat();
+            }
+        } catch (e) { toast(e.message, true); }
     });
 
-    const th = new Date().getFullYear();
-    for (let y = th; y >= th - 4; y--) $('fTahun').insertAdjacentHTML('beforeend', '<option value="' + y + '">' + y + '</option>');
-    $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + App.BULAN.map((n, i) => '<option value="' + (i + 1) + '">' + n + '</option>').join('');
-    ['fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
-    $('segStatus').addEventListener('change', muat);
-    let t; $('q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(muat, 250); });
+    // ---------- Mulai ----------
+    $('fBulan').innerHTML = '<option value="">Semua bulan</option>' + BULAN.map((b, i) => '<option value="' + (i + 1) + '">' + b + '</option>').join('');
+    const q0 = new URLSearchParams(location.search).get('q'); if (q0) $('q').value = q0;
     muat();
 })();
