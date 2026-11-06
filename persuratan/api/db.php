@@ -85,6 +85,7 @@ function buat_tabel(PDO $pdo): void
         file_arsip       VARCHAR(80)  NOT NULL DEFAULT \'\',
         file_nama        VARCHAR(200) NOT NULL DEFAULT \'\',
         tahap            VARCHAR(16)  NOT NULL DEFAULT \'bernomor\',
+        jalur            VARCHAR(10)  NOT NULL DEFAULT \'disposisi\',
         tanggal_kirim    DATE NULL,
         keterangan_kirim VARCHAR(255) NOT NULL DEFAULT \'\',
         dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -184,6 +185,10 @@ SQL);
     // Database lama: tambahkan kolom/ubah nilai yang berubah pada versi ini.
     if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'tahap'")->fetch()) {
         $pdo->exec('ALTER TABLE surat ADD COLUMN tahap VARCHAR(16) NOT NULL DEFAULT \'bernomor\', ADD COLUMN tanggal_kirim DATE NULL, ADD COLUMN keterangan_kirim VARCHAR(255) NOT NULL DEFAULT \'\'');
+    }
+    // Jalur surat dipilih di Penomoran: 'disposisi' (lewat Disposisi) atau 'keluar' (langsung ke Surat Keluar).
+    if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'jalur'")->fetch()) {
+        $pdo->exec('ALTER TABLE surat ADD COLUMN jalur VARCHAR(10) NOT NULL DEFAULT \'disposisi\' AFTER tahap');
     }
     if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_masuk_id'")->fetch()) {
         $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_masuk_id INT NULL AFTER surat_id');

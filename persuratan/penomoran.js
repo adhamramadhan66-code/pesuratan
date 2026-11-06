@@ -70,7 +70,7 @@
         el.perihal.value = '';
         if (kosongkanSemua) {
             el.tanggal.value = hariIni(); el.jenis.value = ''; el.unit.value = '';
-            setRadio('tujuan', 'A');
+            setRadio('tujuan', 'A'); setRadio('jalur', 'disposisi');
         }
         bersihkanGalat();
         muatUrut(); pratinjau();
@@ -85,7 +85,7 @@
         $('btnBatal').style.display = '';
         $('btnSimpanTeks').textContent = 'Simpan perubahan';
         $('formTitle').textContent = 'Ubah data surat';
-        el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
+        el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan); setRadio('jalur', r.jalur || 'disposisi');
         el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
         el.perihal.value = r.perihal;
         kunci(false); bersihkanGalat(); urut = editAsal.nomor_urut; pratinjau();
@@ -101,7 +101,7 @@
         }
         const data = {
             aksi: editId ? 'ubah' : 'tambah', id: editId,
-            tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
+            tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jalur: radio('jalur'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
             perihal: el.perihal.value,
         };
         const btn = $('btnSimpan'); btn.disabled = true;
@@ -112,7 +112,9 @@
                 $('hasilNomor').textContent = d.nomor_surat;
                 $('hasilBox').style.display = '';
                 toast('Surat tersimpan dengan nomor ' + d.nomor_surat);
-                $('btnKeDisposisi').href = 'disposisi.html?unggah=k:' + d.id;   // langkah berikutnya: unggah file surat di Disposisi
+                const keKeluar = data.jalur === 'keluar';
+                $('btnKeDisposisi').href = keKeluar ? 'surat_keluar.html' : 'disposisi.html?unggah=k:' + d.id;   // langkah berikutnya: unggah file di Surat Keluar / Disposisi
+                $('btnKeDisposisi').textContent = keKeluar ? 'Unggah surat di Surat Keluar' : 'Unggah surat di Disposisi';
                 keModeTambah(true);
             }
             muatDaftar();
@@ -146,7 +148,9 @@
         $('galeri').innerHTML = baris.map((r) => {
             const adaDsp = !!r.no_disposisi, ok = r.status_disposisi === 'disetujui';
             const aksi = [];
-            if (!adaDsp || !r.ada_file) aksi.push('<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>');
+            const keluar = r.jalur === 'keluar';
+            if (keluar) aksi.push('<a class="btn sm primary" href="surat_keluar.html?q=' + encodeURIComponent(r.nomor_surat) + '">Buka di Surat Keluar</a>');
+            else if (!adaDsp || !r.ada_file) aksi.push('<a class="btn sm primary" href="disposisi.html?unggah=k:' + r.id + '">Unggah surat</a>');
             aksi.push('<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: ok ? 'ok' : adaDsp ? 'bad' : 'abu', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
@@ -154,7 +158,7 @@
                 sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
                 status: adaDsp
                     ? '<span class="badge ' + (ok ? 'ok' : 'warn') + '">' + (ok ? 'Disetujui' : 'Belum disetujui') + '</span><span>' + esc(r.no_disposisi) + '</span>'
-                    : '<span class="badge">Belum diunggah</span>',
+                    : keluar ? '<span class="badge ok">Surat Keluar</span>' : '<span class="badge">Belum diunggah</span>',
                 aksi: aksi.join(''),
             });
         }).join('');

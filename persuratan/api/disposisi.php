@@ -372,7 +372,7 @@ try {
 
             case 'sumber':
                 $surat = $pdo->query('SELECT s.id, s.nomor_surat, s.tanggal_surat, s.perihal, s.untuk, s.jenis_kode, s.unit_kode, s.kode_tujuan, s.pembuat_surat
-                                      FROM surat s WHERE NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_id = s.id)
+                                      FROM surat s WHERE s.jalur = \'disposisi\' AND NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_id = s.id)
                                       ORDER BY s.tanggal_surat DESC, s.id DESC LIMIT 300')->fetchAll();
                 $masuk = $pdo->query('SELECT m.id, m.nomor_agenda, m.tanggal_terima, m.perihal, m.pengirim, m.tujuan, m.sifat
                                       FROM surat_masuk m WHERE m.dari_surat_id IS NULL AND NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_masuk_id = m.id)

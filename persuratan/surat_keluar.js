@@ -32,7 +32,7 @@
     }
 
     function render() {
-        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini setelah di-ACC di menu Disposisi.</p>'; return; }
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini bila dipilih "Surat Keluar" di Penomoran, atau setelah di-ACC di menu Disposisi.</p>'; return; }
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const i = TAHAP.indexOf(r.tahap);

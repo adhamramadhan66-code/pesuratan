@@ -69,6 +69,7 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
     if ($baru) {
         $d['tanggal_surat'] = tanggal_valid($in['tanggal_surat'] ?? '');
         if (!$d['tanggal_surat']) return [null, 'Tanggal surat tidak valid.'];
+        $d['jalur'] = ($in['jalur'] ?? '') === 'keluar' ? 'keluar' : 'disposisi';
         $d['kode_tujuan'] = ($in['kode_tujuan'] ?? '') === 'B' ? 'B' : (($in['kode_tujuan'] ?? '') === 'A' ? 'A' : '');
         if ($d['kode_tujuan'] === '') return [null, 'Pilih tujuan surat (internal / eksternal).'];
 
@@ -86,7 +87,7 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
 
 const TAHAP_BOLEH = ['bernomor', 'diperiksa', 'ditandatangani', 'terkirim'];
 
-const KOLOM_LIST = 'id, nomor_surat, tahap, tanggal_kirim, keterangan_kirim, tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor,
+const KOLOM_LIST = 'id, nomor_surat, tahap, jalur, tanggal_kirim, keterangan_kirim, tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor,
                     kode_tujuan, jenis_kode, unit_kode, tahun, bulan, nomor_urut, status_arsip, file_nama, (file_arsip <> \'\') AS ada_file,
                     (SELECT d.id FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS disposisi_id,
                     (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS no_disposisi,
@@ -127,7 +128,7 @@ try {
                 // acc=1: hanya surat yang disposisinya sudah di-ACC (dipakai halaman Surat Keluar)
                 $sudahAcc = 'EXISTS (SELECT 1 FROM disposisi dx WHERE dx.surat_id = surat.id AND dx.status = \'disetujui\')';
                 $hanyaAcc = ($_GET['acc'] ?? '') === '1';
-                if ($hanyaAcc) $where[] = $sudahAcc;
+                if ($hanyaAcc) $where[] = '(jalur = \'keluar\' OR ' . $sudahAcc . ')';
                 $limit = max(1, min(500, (int) ($_GET['limit'] ?? 100)));
                 $sql = 'SELECT ' . KOLOM_LIST . ' FROM surat' . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
                      . ' ORDER BY tanggal_surat DESC, id DESC LIMIT ' . $limit;
@@ -182,11 +183,11 @@ try {
                 $nomor = format_nomor($urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $bulan, $tahun);
                 try {
                     $pdo->prepare('INSERT INTO surat (tahun, bulan, nomor_urut, kode_tujuan, jenis_kode, unit_kode, nomor_surat,
-                            tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                            tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor, jalur)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                         ->execute([$tahun, $bulan, $urut, $d['kode_tujuan'], $d['jenis_kode'], $d['unit_kode'], $nomor,
                             $d['tanggal_surat'], $d['perihal'], $d['untuk'] ?? '', $d['jenis_ttd'] ?? 'basah', $d['pejabat_ttd'] ?? '',
-                            $d['pembuat_surat'] ?? '', $d['pemberi_nomor'] ?? '']);
+                            $d['pembuat_surat'] ?? '', $d['pemberi_nomor'] ?? '', $d['jalur']]);
                     keluar(['ok' => true, 'id' => (int) $pdo->lastInsertId(), 'nomor_surat' => $nomor], 201);
                 } catch (PDOException $e) {
                     if ($e->getCode() !== '23000') throw $e;   // selain duplikat nomor -> lempar
@@ -217,6 +218,7 @@ try {
                     foreach (['untuk', 'jenis_ttd', 'pejabat_ttd', 'pembuat_surat', 'pemberi_nomor'] as $kol) {
                         if (array_key_exists($kol, $d)) { $set[] = "$kol = ?"; $par[] = $d[$kol]; }
                     }
+                    if (!$pdo->query('SELECT 1 FROM disposisi WHERE surat_id = ' . $id)->fetch()) { $set[] = 'jalur = ?'; $par[] = $d['jalur']; }
                     $par[] = $id;
                     $pdo->prepare('UPDATE surat SET ' . implode(', ', $set) . ' WHERE id = ?')->execute($par);
                     keluar(['ok' => true, 'nomor_surat' => $nomor]);
