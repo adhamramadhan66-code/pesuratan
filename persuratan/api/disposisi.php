@@ -375,7 +375,7 @@ try {
                                       FROM surat s WHERE NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_id = s.id)
                                       ORDER BY s.tanggal_surat DESC, s.id DESC LIMIT 300')->fetchAll();
                 $masuk = $pdo->query('SELECT m.id, m.nomor_agenda, m.tanggal_terima, m.perihal, m.pengirim, m.tujuan, m.sifat
-                                      FROM surat_masuk m WHERE NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_masuk_id = m.id)
+                                      FROM surat_masuk m WHERE m.dari_surat_id IS NULL AND NOT EXISTS (SELECT 1 FROM disposisi d WHERE d.surat_masuk_id = m.id)
                                       ORDER BY m.tanggal_terima DESC, m.id DESC LIMIT 300')->fetchAll();
                 keluar(['surat' => $surat, 'surat_masuk' => $masuk]);
 
