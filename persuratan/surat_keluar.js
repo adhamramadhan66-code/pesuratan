@@ -31,13 +31,14 @@
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const aksi = [];
-            aksi.push('<button class="btn sm" data-unggah="' + r.id + '">' + (r.ada_file ? 'Ganti file' : '+ Unggah file') + '</button>');
+            if (r.ada_file) aksi.push('<button class="btn sm" data-unggah="' + r.id + '">Ganti file</button>');   // belum ada file: klik pratinjau untuk mengunggah
             // Arsipkan hanya bila file surat sudah diunggah
             if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
             aksi.push('<button class="btn sm merah-garis" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                thumb: r.ada_file ? App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, true)
+                    : '<button type="button" class="kartu-thumb" data-unggah="' + r.id + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>',
                 sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
                 status: (r.jalur === 'keluar' ? '<span class="badge">Tanpa ACC</span>' : '<span class="badge ok">Sudah di-ACC</span>') +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',

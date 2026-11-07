@@ -40,10 +40,9 @@
         const judul = t === 'k' ? s.nomor_surat : 'Surat masuk ' + s.nomor_agenda;
         return App.kartuHtml({
             kelas: 'abu', judulTeks: judul, judul: esc(judul),
-            thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Unggah file surat">' + App.thumb('', '') + '</button>',
+            thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>',
             sub: [esc(s.perihal), (t === 'k' ? 'Surat keluar' : 'Dari ' + esc(s.pengirim))],
             status: '<span class="badge">Belum diunggah</span>',
-            aksi: '<button class="btn sm primary" data-unggah-pilih="' + kode + '">Unggah file</button>',
         });
     }
 
@@ -53,7 +52,7 @@
         // Pratinjau: klik membuka file. Tanpa file dan belum di-ACC: klik membuka dialog unggah.
         const thumb = (r.file_nama || ok)
             ? App.thumbFile(url, r.file_nama, !!r.file_nama)
-            : '<button type="button" class="kartu-thumb" data-unggah-ke="' + r.id + '" title="Unggah file surat">' + App.thumb('', '') + '</button>';
+            : '<button type="button" class="kartu-thumb" data-unggah-ke="' + r.id + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>';
         const aksi = [];
         if (!ok) aksi.push('<button class="btn sm primary" data-setuju="' + r.id + '">ACC</button>', '<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>');
         else aksi.push('<button class="btn sm" data-batal="' + r.id + '">Batalkan ACC</button>');
