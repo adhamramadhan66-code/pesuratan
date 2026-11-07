@@ -40,7 +40,9 @@
             if (KE_DEPAN[r.tahap]) aksi.push('<button class="btn sm primary" data-maju="' + r.id + '">' + KE_DEPAN[r.tahap] + '</button>');
             if (i > 0) aksi.push('<button class="btn sm" data-mundur="' + r.id + '">Mundurkan</button>');
             aksi.push('<button class="btn sm" data-unggah="' + r.id + '">' + (r.ada_file ? 'Ganti file' : '+ Unggah file') + '</button>');
-            aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
+            // Arsipkan hanya bila file surat sudah diunggah
+            if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
+            aksi.push('<button class="btn sm merah-garis" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
                 thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
@@ -75,6 +77,13 @@
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         if (b.dataset.unggah) { idUnggah = +b.dataset.unggah; pilih.click(); return; }
+        if (b.dataset.hapus) {
+            const h = baris.find((x) => +x.id === +b.dataset.hapus); if (!h) return;
+            if (!confirm('Hapus surat ' + h.nomor_surat + '? Surat dan filenya dihapus, nomornya tidak terpakai.')) return;
+            try { await api('api/surat.php', { aksi: 'hapus', id: h.id }); toast('Surat ' + h.nomor_surat + ' dihapus'); muat(); }
+            catch (e) { toast(e.message, true); }
+            return;
+        }
         const id = +(b.dataset.maju || b.dataset.mundur);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         const i = TAHAP.indexOf(r.tahap);

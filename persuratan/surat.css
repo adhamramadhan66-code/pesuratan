@@ -236,3 +236,9 @@ dialog.modal.lebar { width: min(860px, calc(100vw - 2rem)); }
 .stp i.sudah { background: var(--text-muted); }
 .stp i.kini { background: var(--text-main); }
 @media (max-width: 900px) { .langkah { grid-auto-flow: row; grid-auto-columns: auto; } }
+
+/* Tombol merah: .merah (penuh) untuk Batal, .merah-garis (garis) untuk Hapus */
+.btn.merah { background: var(--red); border-color: var(--red); color: #fff; }
+.btn.merah:hover { filter: brightness(0.92); }
+.btn.merah-garis { border-color: var(--red); color: var(--red); }
+.btn.merah-garis:hover { background: rgba(239,68,68,0.08); }
