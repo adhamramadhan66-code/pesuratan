@@ -51,12 +51,12 @@
             : ['<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>'];
         if (r.ada_file) aksi.push('<a class="btn sm" href="' + url + '&unduh=1">Unduh</a>');
         const lokasi = sudah ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : 'Hanya file digital') + ' · ' + esc(tglIndo(r.tanggal_arsip)) : esc(tglIndo(r.tanggal_surat));
-        return '<div class="kartu ' + (sudah ? 'ok' : 'bad') + '">' + thumb +
-            '<div class="kartu-judul mono" title="' + esc(r.nomor_surat) + '">' + esc(r.nomor_surat) + '</div>' +
-            '<div class="kartu-sub" title="' + esc(r.perihal) + '">' + esc(r.perihal) + '</div>' +
-            '<div class="kartu-sub satu">' + esc(r.jenis_nama) + (r.pembuat_surat ? ' · ' + esc(r.pembuat_surat) : '') + '</div>' +
-            '<div class="kartu-status"><span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span><span>' + lokasi + '</span></div>' +
-            '<div class="aksi">' + aksi.join('') + '</div></div>';
+        return App.kartuHtml({
+            kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat), thumb,
+            sub: [esc(r.perihal), esc(r.jenis_nama) + (r.pembuat_surat ? ' · ' + esc(r.pembuat_surat) : ''), lokasi],
+            status: '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+            aksi: aksi.join(''),
+        });
     }
 
     function render() {

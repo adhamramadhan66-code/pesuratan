@@ -295,3 +295,20 @@ dialog.modal.lebar { width: min(860px, calc(100vw - 2rem)); }
 .terbaru-filter select { flex: 0 1 auto; max-width: 100%; }
 .terbaru-filter .search-box { flex: 1 1 260px; min-width: 200px; }
 .terbaru-filter .search-box input { width: 100%; }
+
+/* Kartu gaya toko online: ringkas di galeri, detail di dialog */
+.kartu-klik { cursor: pointer; border-radius: 1rem; transition: transform .15s; }
+.kartu-klik:hover { transform: translateY(-2px); }
+.kartu-klik:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.kartu-klik .kartu-thumb.tampil { border-top: 1px solid var(--border-color) !important; }
+.kartu-klik:hover .kartu-thumb.tampil { border-color: var(--green) !important; box-shadow: 0 0 0 3px var(--green-light); }
+dialog.detail { width: min(520px, calc(100vw - 2rem)); cursor: default; }
+dialog.detail .modal-body { gap: .6rem; }
+.detail-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.detail-head h3 { margin: 0; word-break: break-all; }
+.detail-tutup { font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--text-muted); padding: 0 .4rem; border-radius: .4rem; }
+.detail-tutup:hover { color: var(--text-main); background: var(--surface-3); }
+.detail-petunjuk { margin: 0; font-size: .75rem; color: var(--text-muted); text-align: center; }
+.detail-baris { margin: 0; font-size: .9rem; line-height: 1.5; }
+dialog.detail .modal-foot.aksi { flex-wrap: wrap; justify-content: flex-start; }
+dialog.detail .kartu-thumb { aspect-ratio: 16 / 9; max-height: 15rem; }

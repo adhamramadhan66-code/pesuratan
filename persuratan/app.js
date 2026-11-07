@@ -97,14 +97,45 @@
         return '<span class="kartu-isi">' + IKON.file + '<small>PDF</small></span>';
     }
 
-    // Kartu seragam untuk semua halaman. o: {kelas, thumb (HTML), judul, sub: [HTML...], status (HTML), aksi (HTML)}
+    // Kartu seragam untuk semua halaman, gaya toko online: di galeri hanya pratinjau + nomor + perihal.
+    // Klik kartu membuka detail (status, keterangan, dan semua tombol aksi) dalam dialog.
+    // o: {kelas, thumb (HTML), judul, judulTeks, sub: [HTML...], status (HTML), aksi (HTML)}
     function kartuHtml(o) {
-        return '<div class="kartu ' + (o.kelas || '') + '">' + o.thumb +
+        const w = document.createElement('div');
+        w.innerHTML = o.thumb || '';
+        const asli = w.firstElementChild;                       // pratinjau asli (tautan ke file / tombol unggah) dipindah ke dialog
+        const isi = asli ? asli.innerHTML : '';
+        const petunjuk = asli && asli.getAttribute('title') ? '<p class="detail-petunjuk">' + esc(asli.getAttribute('title')) + '</p>' : '';
+        const sub = o.sub || [];
+        return '<article class="kartu kartu-klik" tabindex="0" role="button" aria-label="Lihat detail ' + esc(o.judulTeks || '') + '">' +
+            '<div class="kartu-thumb tampil">' + isi + '</div>' +
             '<div class="kartu-judul mono" title="' + esc(o.judulTeks || '') + '">' + o.judul + '</div>' +
-            (o.sub || []).map((s, i) => '<div class="kartu-sub' + (i ? ' satu' : '') + '">' + s + '</div>').join('') +
-            (o.status ? '<div class="kartu-status">' + o.status + '</div>' : '') +
-            (o.aksi ? '<div class="aksi">' + o.aksi + '</div>' : '') + '</div>';
+            (sub[0] ? '<div class="kartu-sub">' + sub[0] + '</div>' : '') +
+            '<dialog class="modal detail">' +
+                '<div class="modal-head detail-head"><h3 class="mono">' + o.judul + '</h3><span class="detail-tutup" role="button" tabindex="0" aria-label="Tutup">&times;</span></div>' +
+                '<div class="modal-body">' + (asli ? asli.outerHTML + petunjuk : '') +
+                    sub.map((s) => '<p class="detail-baris">' + s + '</p>').join('') +
+                    (o.status ? '<div class="kartu-status">' + o.status + '</div>' : '') +
+                '</div>' +
+                (o.aksi ? '<div class="modal-foot aksi">' + o.aksi + '</div>' : '') +
+            '</dialog></article>';
     }
+    // Buka/tutup dialog detail kartu (satu pendengar untuk seluruh halaman)
+    document.addEventListener('click', (e) => {
+        const dlg = e.target.closest('dialog.detail');
+        if (dlg) {
+            if (e.target === dlg || e.target.closest('.detail-tutup') || e.target.closest('button')) dlg.close();   // tombol aksi: tutup, lalu pengendali halaman bekerja
+            return;
+        }
+        const k = e.target.closest('.kartu-klik');
+        if (k && !e.target.closest('a, button')) k.querySelector('dialog.detail').showModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const t = e.target;
+        if (t.classList && t.classList.contains('detail-tutup')) { t.closest('dialog').close(); e.preventDefault(); }
+        else if (t.classList && t.classList.contains('kartu-klik')) { t.querySelector('dialog.detail').showModal(); e.preventDefault(); }
+    });
     // Pratinjau yang bisa diklik: membuka file bila ada, bila tidak tampil penanda "Belum ada file"
     function thumbFile(urlFile, namaFile, ada) {
         return ada
