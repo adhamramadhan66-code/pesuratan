@@ -31,7 +31,7 @@
             const sudah = r.status_arsip === 'diarsipkan';
             const aksi = ['<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>'];
             const acc = +r.acc_masuk === 1;
-            aksi.unshift(acc ? '<button class="btn sm" data-acc="' + r.id + '" data-nilai="0">Batalkan ACC</button>' : '<button class="btn sm primary" data-acc="' + r.id + '" data-nilai="1">ACC</button>');
+            if (!r.disposisi_id) aksi.unshift(acc ? '<button class="btn sm" data-acc="' + r.id + '" data-nilai="0">Batalkan ACC</button>' : '<button class="btn sm primary" data-acc="' + r.id + '" data-nilai="1">ACC</button>');
             // Arsipkan hanya bila link surat sudah ditempel dan sudah di-ACC
             if (sudah) aksi.push('<a class="btn sm" href="arsip.html?tab=m&q=' + encodeURIComponent(r.nomor_agenda) + '">Lihat arsip</a>');
             else if (r.ada_file && acc) aksi.push('<a class="btn sm primary" href="arsip.html?tab=m&q=' + encodeURIComponent(r.nomor_agenda) + '">Arsipkan</a>');
