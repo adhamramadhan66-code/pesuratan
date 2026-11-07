@@ -128,14 +128,14 @@ try {
                 // acc=1: hanya surat yang disposisinya sudah di-ACC (dipakai halaman Surat Keluar)
                 $sudahAcc = 'EXISTS (SELECT 1 FROM disposisi dx WHERE dx.surat_id = surat.id AND dx.status = \'disetujui\')';
                 $hanyaAcc = ($_GET['acc'] ?? '') === '1';
-                if ($hanyaAcc) $where[] = '(jalur = \'keluar\' OR ' . $sudahAcc . ')';
+                if ($hanyaAcc) $where[] = 'jalur = \'keluar\'';
                 $limit = max(1, min(500, (int) ($_GET['limit'] ?? 100)));
                 $sql = 'SELECT ' . KOLOM_LIST . ' FROM surat' . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
                      . ' ORDER BY tanggal_surat DESC, id DESC LIMIT ' . $limit;
                 $s = $pdo->prepare($sql);
                 $s->execute($par);
                 $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(acc_keluar = 1), 0) AS acc, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
-                                 . ($hanyaAcc ? ' WHERE (jalur = \'keluar\' OR ' . $sudahAcc . ')' : ''))->fetch();
+                                 . ($hanyaAcc ? ' WHERE jalur = \'keluar\'' : ''))->fetch();
                 $thn = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat' => $s->fetchAll(), 'ringkas' => array_map('intval', $r), 'daftar_tahun' => $thn]);
 

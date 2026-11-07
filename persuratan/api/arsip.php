@@ -65,17 +65,19 @@ try {
 
         if ($aksi !== 'daftar') json_keluar(['error' => 'Aksi tidak dikenal.'], 400);
 
-        $where = []; $par = [];
+        // Pengarsipan hanya untuk surat keluar yang sudah diunggah (link Drive) dan sudah di-ACC
+        $syarat = 's.jalur = \'keluar\' AND s.acc_keluar = 1 AND (s.file_arsip <> \'\' OR s.link_drive <> \'\')';
+        $where = [$syarat]; $par = [];
         $status = $_GET['status'] ?? '';
-        if (in_array($status, ['belum', 'diarsipkan'], true)) { $where[] = 'status_arsip = ?'; $par[] = $status; }
+        if (in_array($status, ['belum', 'diarsipkan'], true)) { $where[] = 's.status_arsip = ?'; $par[] = $status; }
         if (($q = teks($_GET['q'] ?? '', 80)) !== '') {
-            $where[] = '(nomor_surat LIKE ? OR perihal LIKE ? OR untuk LIKE ? OR lokasi_arsip LIKE ? OR pembuat_surat LIKE ?)';
+            $where[] = '(s.nomor_surat LIKE ? OR s.perihal LIKE ? OR s.untuk LIKE ? OR s.lokasi_arsip LIKE ? OR s.pembuat_surat LIKE ?)';
             array_push($par, ...array_fill(0, 5, "%$q%"));
         }
         if (($j = teks($_GET['jenis'] ?? '', 10)) !== '') { $where[] = 's.jenis_kode = ?'; $par[] = $j; }
         if (($pb = teks($_GET['pembuat'] ?? '', 100)) !== '') { $where[] = 's.pembuat_surat = ?'; $par[] = $pb; }
-        if ((int) ($_GET['tahun'] ?? 0) > 0) { $where[] = 'tahun = ?'; $par[] = (int) $_GET['tahun']; }
-        if ((int) ($_GET['bulan'] ?? 0) > 0) { $where[] = 'bulan = ?'; $par[] = (int) $_GET['bulan']; }
+        if ((int) ($_GET['tahun'] ?? 0) > 0) { $where[] = 's.tahun = ?'; $par[] = (int) $_GET['tahun']; }
+        if ((int) ($_GET['bulan'] ?? 0) > 0) { $where[] = 's.bulan = ?'; $par[] = (int) $_GET['bulan']; }
 
         $sql = 'SELECT s.id, s.nomor_surat, s.tanggal_surat, s.perihal, s.untuk, s.jenis_ttd, s.pejabat_ttd, s.pembuat_surat,
                        s.jenis_kode, COALESCE(j.nama, s.jenis_kode) AS jenis_nama, s.status_arsip, s.tanggal_arsip,
@@ -86,7 +88,7 @@ try {
         $baris = $s->fetchAll();
         foreach ($baris as &$b) $b['ada_file'] = (bool) $b['ada_file'];
 
-        $ringkas = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat')->fetch();
+        $ringkas = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat s WHERE ' . $syarat)->fetch();
         $tahun = $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN);
         $jenis = $pdo->query('SELECT DISTINCT s.jenis_kode AS kode, COALESCE(j.nama, s.jenis_kode) AS nama FROM surat s
                               LEFT JOIN jenis_surat j ON j.kode = s.jenis_kode ORDER BY nama')->fetchAll();

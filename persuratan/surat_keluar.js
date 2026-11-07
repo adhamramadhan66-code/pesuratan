@@ -27,12 +27,12 @@
     }
 
     function render() {
-        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini bila dipilih "Surat Keluar" di Penomoran, atau setelah di-ACC di menu Disposisi.</p>'; return; }
+        if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini bila dipilih "Surat Keluar" di Penomoran.</p>'; return; }
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const aksi = [];
-            // Arsipkan hanya bila file surat sudah diunggah
-            if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
+            // Arsipkan hanya bila file surat sudah diunggah dan sudah di-ACC
+            if ((r.ada_file && +r.acc_keluar) || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
             aksi.unshift(+r.acc_keluar
                 ? '<button class="btn sm" data-acc="' + r.id + '" data-nilai="0">Batalkan ACC</button>'
                 : '<button class="btn sm primary" data-acc="' + r.id + '" data-nilai="1">ACC</button>');
