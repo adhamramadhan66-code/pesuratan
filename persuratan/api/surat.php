@@ -151,8 +151,10 @@ try {
                 $tot = array_map('intval', $s->fetch());
 
                 $tahun = (int) substr($dari, 0, 4);
-                $s = $pdo->prepare('SELECT bulan, COUNT(*) AS n FROM surat WHERE tahun = ? GROUP BY bulan');
-                $s->execute([$tahun]);
+                // Grafik bisa disaring per jenis surat (parameter jenis = kode jenis).
+                $jenisGrafik = (string) ($_GET['jenis'] ?? '');
+                $s = $pdo->prepare('SELECT bulan, COUNT(*) AS n FROM surat WHERE tahun = ?' . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY bulan');
+                $s->execute($jenisGrafik !== '' ? [$tahun, $jenisGrafik] : [$tahun]);
                 $perBulan = array_fill(1, 12, 0);
                 foreach ($s->fetchAll() as $r) $perBulan[(int) $r['bulan']] = (int) $r['n'];
 

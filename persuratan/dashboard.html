@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=14">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -138,6 +138,7 @@
             <div class="chart-card main-chart">
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
+                    <select id="fGrafikJenis" class="grafik-filter" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select>
                     <a class="btn-round" href="penomoran.html" title="Penomoran surat" aria-label="Penomoran surat"><i data-lucide="plus"></i></a>
                 </div>
                 <div class="bars" id="bars" aria-label="Grafik jumlah surat per bulan"></div>
@@ -181,7 +182,31 @@
         (function () {
             const { $, esc, tglIndo, api, toast } = App;
             const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-            let terakhir = '';
+            let terakhir = '', rentangIni = null;
+
+            // ---------- Grafik: kolom dibuat sekali, lalu tingginya dianimasikan naik/turun ----------
+            function gambarGrafik(data, maks, aktif) {
+                const bars = $('bars');
+                if (bars.children.length !== 12) {
+                    bars.innerHTML = BLN.map((m) => '<div class="bar-col"><span class="v">0</span><div class="b" style="height:0"></div><span class="m">' + m + '</span></div>').join('');
+                    void bars.offsetHeight;   // pastikan tinggi awal 0 tergambar dulu supaya batang "tumbuh" dari bawah
+                }
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    [...bars.children].forEach((kol, i) => {
+                        kol.classList.toggle('on', aktif(i));
+                        kol.querySelector('.v').textContent = data[i];
+                        kol.querySelector('.b').style.height = Math.round((data[i] / maks) * 85) + '%';
+                    });
+                }));
+            }
+            let filterTerisi = false;
+            function isiFilterJenis(daftar) {
+                if (filterTerisi || !daftar.length) return;
+                filterTerisi = true;
+                const sel = $('fGrafikJenis');
+                sel.insertAdjacentHTML('beforeend', daftar.slice().sort((x, y) => x.nama.localeCompare(y.nama)).map((j) => '<option value="' + esc(j.kode) + '">' + esc(j.nama) + ' (' + esc(j.kode) + ')</option>').join(''));
+            }
+            $('fGrafikJenis').addEventListener('change', () => { if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); });
 
             // ---------- Jenis surat: carousel otomatis + seret, atau kotak-kotak (Lihat semua) ----------
             const trek = $('jenisTrack'), grid = $('jenisGrid'), tombol = $('btnJenisSemua');
@@ -244,11 +269,12 @@
 
             document.addEventListener('rentang', async (ev) => {
                 const { dari, sampai } = ev.detail;
-                if (dari + sampai === terakhir) return;
-                terakhir = dari + sampai;
+                rentangIni = { dari, sampai };
+                if (dari + sampai + $('fGrafikJenis').value === terakhir) return;
+                terakhir = dari + sampai + $('fGrafikJenis').value;
                 try {
-                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai);
-                    if (dari + sampai !== terakhir) return;             // sudah ada permintaan yang lebih baru
+                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai + '&jenis=' + encodeURIComponent($('fGrafikJenis').value));
+                    if (dari + sampai + $('fGrafikJenis').value !== terakhir) return;             // sudah ada permintaan yang lebih baru
                     const t = d.total;
                     tampilJenis(d.per_jenis || []);
 
@@ -256,11 +282,8 @@
                     const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
                     const maks = Math.max(1, ...d.per_bulan);
                     $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
-                    $('bars').innerHTML = d.per_bulan.map((n, i) => {
-                        const on = new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir;
-                        return '<div class="bar-col' + (on ? ' on' : '') + '"><span class="v">' + n + '</span><div class="b" style="height:' +
-                               Math.round((n / maks) * 85) + '%"></div><span class="m">' + BLN[i] + '</span></div>';
-                    }).join('');
+                    gambarGrafik(d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
+                    isiFilterJenis(d.per_jenis || []);
 
                     $('galeri').innerHTML = d.terbaru.length ? d.terbaru.map((r) => App.kartuHtml({
                         kelas: r.status_arsip === 'diarsipkan' ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
