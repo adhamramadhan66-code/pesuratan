@@ -5,10 +5,14 @@
 
     let baris = [];
     let status = '';            // '' | belum | diarsipkan
+    let tipe = new URLSearchParams(location.search).get('tab') === 'm' ? 'm' : 'k';   // k = surat keluar, m = surat masuk
+    const apiTipe = (t) => t === 'm' ? 'api/surat_masuk.php' : API;
     let aktif = null;           // surat yang sedang di dialog
 
     // ---------- Muat & tampilkan ----------
     async function muat() {
+        $('fJenis').style.display = $('fPembuat').style.display = tipe === 'm' ? 'none' : '';
+        if (tipe === 'm') return muatMasuk();
         const p = new URLSearchParams({ aksi: 'daftar', status, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, jenis: $('fJenis').value, pembuat: $('fPembuat').value });
         try {
             const d = await api(API + '?' + p);
@@ -22,6 +26,21 @@
             isiTahun(d.daftar_tahun);
             isiPilihan($('fJenis'), 'Semua kategori', d.daftar_jenis.map((x) => [x.kode, x.nama]));
             isiPilihan($('fPembuat'), 'Semua pembuat', d.daftar_pembuat.map((x) => [x, x]));
+            render();
+        } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+    }
+
+    async function muatMasuk() {
+        const p = new URLSearchParams({ aksi: 'daftar', siap_arsip: 1, arsip: status, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
+        try {
+            const d = await api('api/surat_masuk.php?' + p);
+            // samakan bentuk dengan surat keluar
+            baris = d.surat_masuk.map((r) => Object.assign(r, { nomor_surat: r.nomor_agenda, jenis_nama: 'Surat masuk', pembuat_surat: r.pengirim, tipe: 'm' }));
+            const all = await api('api/surat_masuk.php?aksi=daftar&siap_arsip=1');
+            $('sTotal').textContent = all.total_siap; $('sSudah').textContent = all.diarsipkan_siap; $('sBelum').textContent = all.total_siap - all.diarsipkan_siap;
+            $('sPersen').textContent = all.total_siap ? Math.round((all.diarsipkan_siap / all.total_siap) * 100) + '% sudah diarsipkan' : 'Belum ada surat';
+            $('sBar').style.width = (all.total_siap ? (all.diarsipkan_siap / all.total_siap) * 100 : 0) + '%';
+            isiTahun(d.daftar_tahun);
             render();
         } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
@@ -41,7 +60,7 @@
 
     function kartu(r) {
         const sudah = r.status_arsip === 'diarsipkan';
-        const url = API + '?aksi=file&id=' + r.id;
+        const url = apiTipe(r.tipe) + '?aksi=file&id=' + r.id;
         // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog untuk mengunggah dan mengarsipkan.
         const thumb = r.ada_file
             ? App.thumbSurat({ ada: true, link: r.link_drive, url, nama: r.file_nama })
@@ -60,10 +79,11 @@
     }
 
     function render() {
-        $('galeri').innerHTML = baris.length ? baris.map(kartu).join('') : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat dibuat lewat menu "Penomoran".</p>';
+        $('galeri').innerHTML = baris.length ? baris.map(kartu).join('') : '<p class="galeri-kosong">Tidak ada surat yang cocok. Surat tampil di sini setelah ada link Drive dan di-ACC.</p>';
     }
 
     // ---------- Filter ----------
+    document.querySelectorAll('#segTipe input').forEach((r) => { r.checked = r.value === tipe; r.addEventListener('change', () => { tipe = r.value; muat(); }); });
     document.querySelectorAll('#segStatus input').forEach((r) => r.addEventListener('change', () => { status = r.value; muat(); }));
     let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
     $('fTahun').addEventListener('change', muat);
@@ -90,7 +110,7 @@
         $('fileNow').style.display = r && r.ada_file ? '' : 'none';
         if (r && r.ada_file) {
             $('fileNowNama').textContent = r.link_drive ? 'Link Google Drive' : r.file_nama;
-            $('fileNowLihat').href = r.link_drive || API + '?aksi=file&id=' + r.id;
+            $('fileNowLihat').href = r.link_drive || apiTipe(r.tipe) + '?aksi=file&id=' + r.id;
         }
     }
 
@@ -106,8 +126,8 @@
         if (b.dataset.batal) {
             const r = baris.find((x) => +x.id === +b.dataset.batal); if (!r) return;
             if (!confirm('Batalkan pengarsipan surat ' + r.nomor_surat + '? Lokasi dan tanggal arsip dihapus; file surat tetap disimpan.')) return;
-            const fd = new FormData(); fd.append('aksi', 'batal'); fd.append('id', r.id);
-            try { await api(API, fd); toast('Pengarsipan dibatalkan'); muat(); } catch (e) { toast(e.message, true); }
+            const fd = new FormData(); fd.append('aksi', r.tipe === 'm' ? 'arsip_batal' : 'batal'); fd.append('id', r.id);
+            try { await api(apiTipe(r.tipe), fd); toast('Pengarsipan dibatalkan'); muat(); } catch (e) { toast(e.message, true); }
         }
     });
 
@@ -124,14 +144,14 @@
             toast('Isi lokasi arsip fisik atau tempel link Drive surat (minimal salah satu).', true); $('dlgLokasi').focus(); return;
         }
         const fd = new FormData();
-        fd.append('aksi', 'simpan'); fd.append('id', aktif.id);
+        fd.append('aksi', aktif.tipe === 'm' ? 'arsip_simpan' : 'simpan'); fd.append('id', aktif.id);
         fd.append('tanggal_arsip', $('dlgTanggal').value);
         fd.append('lokasi_arsip', $('dlgLokasi').value);
         fd.append('keterangan_arsip', $('dlgKet').value);
         if ($('dlgHapusFile').checked) fd.append('hapus_file', '1');
         if (file) fd.append('link', file);
         const btn = $('dlgSimpan'); btn.disabled = true;
-        try { await api(API, fd); dlg.close(); toast('Surat ' + aktif.nomor_surat + ' diarsipkan'); muat(); }
+        try { await api(apiTipe(aktif.tipe), fd); dlg.close(); toast('Surat ' + aktif.nomor_surat + ' diarsipkan'); muat(); }
         catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });

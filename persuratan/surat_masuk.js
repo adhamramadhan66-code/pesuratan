@@ -30,14 +30,17 @@
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const aksi = ['<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>'];
-            aksi.push(sudah ? '<button class="btn sm" data-arsip="' + r.id + '">Ubah arsip</button><button class="btn sm danger" data-batal="' + r.id + '">Batalkan arsip</button>'
-                            : '<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>');
+            const acc = +r.acc_masuk === 1;
+            aksi.unshift(acc ? '<button class="btn sm" data-acc="' + r.id + '" data-nilai="0">Batalkan ACC</button>' : '<button class="btn sm primary" data-acc="' + r.id + '" data-nilai="1">ACC</button>');
+            // Arsipkan hanya bila link surat sudah ditempel dan sudah di-ACC
+            if (sudah) aksi.push('<a class="btn sm" href="arsip.html?tab=m&q=' + encodeURIComponent(r.nomor_agenda) + '">Lihat arsip</a>');
+            else if (r.ada_file && acc) aksi.push('<a class="btn sm primary" href="arsip.html?tab=m&q=' + encodeURIComponent(r.nomor_agenda) + '">Arsipkan</a>');
             if (!r.disposisi_id) aksi.push('<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
                 thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: API + '?aksi=file&id=' + r.id, nama: r.file_nama }),
                 sub: [esc(r.perihal), esc(r.pengirim) + ' · ' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + ' · ' + esc(NAMA_SIFAT[r.sifat] || r.sifat)],
-                status: '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Sudah di-ACC' : 'Belum di-ACC') + '</span>' +
+                status: '<span class="badge ' + (+r.acc_masuk ? 'ok' : 'warn') + '">' + (+r.acc_masuk ? 'Sudah di-ACC' : 'Belum di-ACC') + '</span>' +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
                 aksi: aksi.join(''),
             });
@@ -119,6 +122,10 @@
     const kirim = (o) => { const fd = new FormData(); Object.keys(o).forEach((k) => fd.append(k, o[k])); return api(API, fd); };
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
+        if (b.dataset.acc) {
+            try { await kirim({ aksi: 'acc', id: b.dataset.acc, nilai: b.dataset.nilai }); toast(+b.dataset.nilai ? 'Surat masuk di-ACC' : 'ACC dibatalkan'); muat(); } catch (e) { toast(e.message, true); }
+            return;
+        }
         const id = +(b.dataset.ubah || b.dataset.tindak || b.dataset.arsip || b.dataset.batal || b.dataset.hapus);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         try {

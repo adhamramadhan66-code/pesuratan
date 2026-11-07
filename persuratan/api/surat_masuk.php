@@ -83,13 +83,13 @@ function baca_form(array $in): array
     return [$d, null];
 }
 
-const ACC_SQL = '(SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1)';
+const ACC_SQL = '(CASE WHEN s.acc_masuk = 1 THEN \'disetujui\' END)';
 
 const KOLOM = 's.id, s.nomor_agenda, s.nomor_surat_asal, s.tanggal_surat, s.tanggal_terima, s.jenis_pengirim, s.pengirim, s.perihal, s.sifat, s.tujuan, s.status,
                s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, s.link_drive, (s.file_arsip <> \'\' OR s.link_drive <> \'\') AS ada_file, s.dari_surat_id,
                (SELECT d.id FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS disposisi_id,
                (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS no_disposisi,
-               (SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS status_disposisi,
+               (SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS status_disposisi, s.acc_masuk,
                (SELECT d.tujuan_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS tujuan_disposisi';
 
 try {
@@ -124,6 +124,7 @@ try {
                 $where = []; $par = [];
                 if (($_GET['acc'] ?? '') === 'sudah') $where[] = ACC_SQL . ' = \'disetujui\'';
                 if (($_GET['acc'] ?? '') === 'belum') $where[] = '(' . ACC_SQL . ' IS NULL OR ' . ACC_SQL . ' <> \'disetujui\')';
+                if (($_GET['siap_arsip'] ?? '') === '1') $where[] = 's.acc_masuk = 1 AND (s.file_arsip <> \'\' OR s.link_drive <> \'\')';
                 if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $where[] = 's.status_arsip = ?'; $par[] = $_GET['arsip']; }
                 if (in_array($_GET['jenis'] ?? '', JENIS_PENGIRIM, true)) { $where[] = 's.jenis_pengirim = ?'; $par[] = $_GET['jenis']; }
                 if (in_array($_GET['sifat'] ?? '', SIFAT_BOLEH, true)) { $where[] = 's.sifat = ?'; $par[] = $_GET['sifat']; }
@@ -142,7 +143,8 @@ try {
                 unset($b);
                 $r = $pdo->query('SELECT COUNT(*) AS total, (SELECT COUNT(*) FROM surat_masuk s WHERE ' . ACC_SQL . ' = \'disetujui\') AS selesai, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat_masuk')->fetch();
                 $tahun = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat_masuk ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
-                keluar(['surat_masuk' => $baris, 'total' => (int) $r['total'], 'ditindaklanjuti' => (int) $r['selesai'], 'diarsipkan' => (int) $r['diarsipkan'], 'daftar_tahun' => $tahun]);
+                $siap = $pdo->query('SELECT COUNT(*) AS t, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS d FROM surat_masuk WHERE acc_masuk = 1 AND (file_arsip <> \'\' OR link_drive <> \'\')')->fetch();
+                keluar(['total_siap' => (int) $siap['t'], 'diarsipkan_siap' => (int) $siap['d'], 'surat_masuk' => $baris, 'total' => (int) $r['total'], 'ditindaklanjuti' => (int) $r['selesai'], 'diarsipkan' => (int) $r['diarsipkan'], 'daftar_tahun' => $tahun]);
 
             default:
                 keluar(['error' => 'Aksi tidak dikenal.'], 400);
@@ -206,6 +208,12 @@ try {
             if ($no = $c->fetchColumn()) keluar(['error' => 'Surat masuk ini sudah punya disposisi ' . $no . '. Hapus disposisinya terlebih dahulu.'], 409);
             $pdo->prepare('DELETE FROM surat_masuk WHERE id = ?')->execute([$id]);
             hapus_file($r['file_arsip']);
+            keluar(['ok' => true]);
+
+        case 'acc':
+            $id = (int) ($_POST['id'] ?? 0);
+            if (!ambil($pdo, $id)) keluar(['error' => 'Surat masuk tidak ditemukan.'], 404);
+            $pdo->prepare('UPDATE surat_masuk SET acc_masuk = ? WHERE id = ?')->execute([empty($_POST['nilai']) ? 0 : 1, $id]);
             keluar(['ok' => true]);
 
         case 'status':

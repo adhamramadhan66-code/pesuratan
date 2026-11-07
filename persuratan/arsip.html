@@ -110,6 +110,10 @@
 
         <section class="panel">
             <div class="panel-head">
+                <div class="seg" id="segTipe" role="radiogroup" aria-label="Jenis surat">
+                    <label><input type="radio" name="tp" value="k" checked><span>Surat Keluar</span></label>
+                    <label><input type="radio" name="tp" value="m"><span>Surat Masuk</span></label>
+                </div>
                 <div class="seg" id="segStatus" role="radiogroup" aria-label="Filter status arsip">
                     <label><input type="radio" name="st" value="" checked><span>Semua</span></label>
                     <label><input type="radio" name="st" value="belum"><span>Belum</span></label>
@@ -124,7 +128,7 @@
                 </div>
             </div>
             <div class="alur-info">
-                Surat keluar masuk ke sini setelah <b>link Drive-nya ditempel</b> dan sudah di-<b>ACC</b> di menu Surat Keluar. Klik <b>Arsipkan</b> untuk mengisi lokasi arsip <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>.
+                Surat Keluar dan Surat Masuk masuk ke sini setelah <b>link Drive-nya ditempel</b> dan sudah di-<b>ACC</b> di menunya masing-masing. Klik <b>Arsipkan</b> untuk mengisi lokasi arsip <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>.
             </div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </section>
@@ -173,7 +177,7 @@
 
     <script src="app.js?v=7"></script>
     <script src="profil.js?v=1"></script>
-    <script src="arsip.js?v=100"></script>
+    <script src="arsip.js?v=101"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

@@ -196,6 +196,10 @@ SQL);
     if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'acc_keluar'")->fetch()) {
         $pdo->exec('ALTER TABLE surat ADD COLUMN acc_keluar TINYINT(1) NOT NULL DEFAULT 0 AFTER jalur');
     }
+    // ACC khusus Surat Masuk (dilakukan di halaman Surat Masuk)
+    if (!$pdo->query("SHOW COLUMNS FROM surat_masuk LIKE 'acc_masuk'")->fetch()) {
+        $pdo->exec('ALTER TABLE surat_masuk ADD COLUMN acc_masuk TINYINT(1) NOT NULL DEFAULT 0');
+    }
     // Surat disimpan sebagai link Google Drive (bukan unggah file ke server). File unggahan lama tetap bisa dibuka.
     foreach (['surat', 'surat_masuk'] as $t) {
         if (!$pdo->query("SHOW COLUMNS FROM $t LIKE 'link_drive'")->fetch()) {
