@@ -168,7 +168,8 @@
                         </div>
                         <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
                         <a class="btn primary" id="btnKeDisposisi" href="disposisi.html" style="margin-top:.5rem"><i data-lucide="upload"></i> Unggah surat di Disposisi</a>
-                        <p class="nomor-note">Langkah berikutnya: unggah file surat ini di menu Disposisi supaya bisa di-ACC.</p>
+                        <button type="button" class="btn" id="btnBatalNomor" style="margin-top:.5rem"><i data-lucide="x"></i> Batal, tidak jadi diunggah</button>
+                        <p class="nomor-note" id="catatanHasil">Langkah berikutnya: unggah file surat ini di menu Disposisi supaya bisa di-ACC. Bila tidak jadi, klik Batal agar nomor ini dihapus.</p>
                     </div>
                     <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat disimpan.</p>
                 </div>
@@ -183,7 +184,7 @@
 
     <script src="app.js?v=3"></script>
     <script src="profil.js?v=1"></script>
-    <script src="penomoran.js?v=7"></script>
+    <script src="penomoran.js?v=7x"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

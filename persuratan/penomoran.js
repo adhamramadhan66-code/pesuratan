@@ -110,10 +110,12 @@
             if (editId) { toast('Perubahan disimpan: ' + d.nomor_surat); keModeTambah(true); }
             else {
                 $('hasilNomor').textContent = d.nomor_surat;
+                idBaru = d.id;
                 $('hasilBox').style.display = '';
                 toast('Surat tersimpan dengan nomor ' + d.nomor_surat);
                 const keKeluar = data.jalur === 'keluar';
                 $('btnKeDisposisi').href = keKeluar ? 'surat_keluar.html' : 'disposisi.html?unggah=k:' + d.id;   // langkah berikutnya: unggah file di Surat Keluar / Disposisi
+                $('catatanHasil').textContent = 'Langkah berikutnya: unggah file surat ini di menu ' + (keKeluar ? 'Surat Keluar' : 'Disposisi' ) + (keKeluar ? '.' : ' supaya bisa di-ACC.') + ' Bila tidak jadi, klik Batal agar nomor ini dihapus.';
                 $('btnKeDisposisi').textContent = keKeluar ? 'Unggah surat di Surat Keluar' : 'Unggah surat di Disposisi';
                 keModeTambah(true);
             }
@@ -126,6 +128,17 @@
     el.tanggal.addEventListener('change', () => { urut = null; pratinjau(); muatUrut(); });
     [el.jenis, el.unit].forEach((e) => e.addEventListener('change', pratinjau));
     document.querySelectorAll('input[name="tujuan"]').forEach((r) => r.addEventListener('change', pratinjau));
+    let idBaru = 0;     // surat yang baru saja diberi nomor (untuk tombol Batal)
+    $('btnBatalNomor').addEventListener('click', async () => {
+        if (!idBaru || !confirm('Batalkan nomor ' + $('hasilNomor').textContent + '? Surat ini dihapus dan nomornya tidak terpakai.')) return;
+        const btn = $('btnBatalNomor'); btn.disabled = true;
+        try {
+            await api(API, { aksi: 'hapus', id: idBaru });
+            toast('Nomor ' + $('hasilNomor').textContent + ' dibatalkan');
+            idBaru = 0; $('hasilBox').style.display = 'none'; urut = null; muatUrut();
+        } catch (e) { toast(e.message, true); }
+        finally { btn.disabled = false; }
+    });
     $('btnSalin').addEventListener('click', async () => {
         const t = $('hasilNomor').textContent;
         try { await navigator.clipboard.writeText(t); toast('Nomor surat disalin'); }
