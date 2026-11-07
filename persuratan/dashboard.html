@@ -185,7 +185,7 @@
 
             // ---------- Jenis surat: carousel otomatis + seret, atau kotak-kotak (Lihat semua) ----------
             const trek = $('jenisTrack'), grid = $('jenisGrid'), tombol = $('btnJenisSemua');
-            let semuaMode = false, ttd = '', geserAktif = true, tahan = false;
+            let posisi = 0, semuaMode = false, ttd = '', geserAktif = true, tahan = false;
             const kartuJenis = (j) => '<a class="jenis-card" draggable="false" href="arsip.html?q=' + encodeURIComponent('/' + j.kode + '/') + '">' +
                 '<span class="jk">' + esc(j.kode) + '</span><span class="jn">' + esc(j.nama) + '</span><span class="jc"><b>' + j.n + '</b> surat</span></a>';
             function tampilJenis(daftar) {
@@ -194,18 +194,20 @@
                 if (tanda === ttd) return;
                 ttd = tanda;
                 grid.innerHTML = dibuat.length ? dibuat.map(kartuJenis).join('') : '<p class="galeri-kosong">Belum ada surat yang dibuat.</p>';
-                const atas = dibuat.slice(0, 8);
-                trek.innerHTML = atas.length ? '<div class="jenis-set">' + atas.map(kartuJenis).join('') + '</div>' : '<p class="galeri-kosong">Belum ada surat yang dibuat.</p>';
-                trek.scrollLeft = 0;
+                const atas = daftar.slice(0, 8);   // jenis yang sudah dipakai di depan, sisanya mengisi sampai 8 kotak
+                trek.innerHTML = atas.length ? '<div class="jenis-set">' + atas.map(kartuJenis).join('') + '</div>' : '<p class="galeri-kosong">Belum ada jenis surat.</p>';
+                trek.scrollLeft = 0; posisi = 0;
                 const set = trek.querySelector('.jenis-set');
-                if (set && set.scrollWidth > trek.clientWidth) trek.appendChild(set.cloneNode(true));   // salinan agar putarannya mulus
+                if (set) {
+                    const asli = set.innerHTML;
+                    for (let i = 0; i < 6 && set.scrollWidth <= trek.clientWidth + 16; i++) set.insertAdjacentHTML('beforeend', asli);   // pastikan lebih lebar dari layar
+                    trek.appendChild(set.cloneNode(true));   // salinan agar putarannya mulus
+                }
             }
-            // geser otomatis (berhenti saat kursor di atasnya / sedang diseret / pengguna memilih mengurangi gerakan)
-            const kurangiGerak = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-            let posisi = 0;
+            // geser otomatis (berhenti saat kursor di atasnya atau sedang diseret)
             function gerak() {
                 const sets = trek.querySelectorAll('.jenis-set');
-                if (geserAktif && !tahan && !semuaMode && !kurangiGerak && sets.length === 2) {
+                if (geserAktif && !tahan && !semuaMode && sets.length === 2) {
                     posisi += 0.6;
                     const setengah = sets[1].offsetLeft - sets[0].offsetLeft;
                     if (posisi >= setengah) posisi -= setengah;
