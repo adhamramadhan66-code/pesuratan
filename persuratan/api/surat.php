@@ -87,7 +87,7 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
 
 const TAHAP_BOLEH = ['bernomor', 'diperiksa', 'ditandatangani', 'terkirim'];
 
-const KOLOM_LIST = 'id, nomor_surat, tahap, jalur, tanggal_kirim, keterangan_kirim, tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor,
+const KOLOM_LIST = 'id, nomor_surat, tahap, jalur, acc_keluar, tanggal_kirim, keterangan_kirim, tanggal_surat, perihal, untuk, jenis_ttd, pejabat_ttd, pembuat_surat, pemberi_nomor,
                     kode_tujuan, jenis_kode, unit_kode, tahun, bulan, nomor_urut, status_arsip, file_nama, link_drive, (file_arsip <> \'\' OR link_drive <> \'\') AS ada_file,
                     (SELECT d.id FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS disposisi_id,
                     (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_id = surat.id LIMIT 1) AS no_disposisi,
@@ -134,7 +134,7 @@ try {
                      . ' ORDER BY tanggal_surat DESC, id DESC LIMIT ' . $limit;
                 $s = $pdo->prepare($sql);
                 $s->execute($par);
-                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(jalur = \'disposisi\' AND ' . $sudahAcc . '), 0) AS acc, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
+                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(acc_keluar = 1), 0) AS acc, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
                                  . ($hanyaAcc ? ' WHERE (jalur = \'keluar\' OR ' . $sudahAcc . ')' : ''))->fetch();
                 $thn = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat' => $s->fetchAll(), 'ringkas' => array_map('intval', $r), 'daftar_tahun' => $thn]);
@@ -283,6 +283,13 @@ try {
             $tgl = $kirim ? (tanggal_valid($in['tanggal_kirim'] ?? '') ?: date('Y-m-d')) : null;
             $ket = $kirim ? teks($in['keterangan_kirim'] ?? '', 255) : '';
             $pdo->prepare('UPDATE surat SET tahap = ?, tanggal_kirim = ?, keterangan_kirim = ? WHERE id = ?')->execute([$tahap, $tgl, $ket, $id]);
+            keluar(['ok' => true]);
+
+        case 'acc_keluar':
+            $id = (int) ($in['id'] ?? 0);
+            $c = $pdo->prepare('UPDATE surat SET acc_keluar = ? WHERE id = ?');
+            $c->execute([empty($in['nilai']) ? 0 : 1, $id]);
+            if (!$c->rowCount() && !$pdo->query('SELECT 1 FROM surat WHERE id = ' . $id)->fetch()) keluar(['error' => 'Surat tidak ditemukan.'], 404);
             keluar(['ok' => true]);
 
         case 'hapus':

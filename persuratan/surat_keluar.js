@@ -33,12 +33,15 @@
             const aksi = [];
             // Arsipkan hanya bila file surat sudah diunggah
             if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
+            aksi.unshift(+r.acc_keluar
+                ? '<button class="btn sm" data-acc="' + r.id + '" data-nilai="0">Batalkan ACC</button>'
+                : '<button class="btn sm primary" data-acc="' + r.id + '" data-nilai="1">ACC</button>');
             aksi.push('<button class="btn sm merah-garis" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
                 thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama, ganti: r.ada_file ? r.id : 0, unggah: r.ada_file ? 0 : r.id }),
                 sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                status: (r.jalur === 'keluar' ? '<span class="badge">Tanpa ACC</span>' : '<span class="badge ok">Sudah di-ACC</span>') +
+                status: (+r.acc_keluar ? '<span class="badge ok">Sudah di-ACC</span>' : '<span class="badge warn">Belum di-ACC</span>') +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
                 aksi: aksi.join(''),
             });
@@ -62,6 +65,12 @@
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         if (b.dataset.unggah) { const r = baris.find((x) => +x.id === +b.dataset.unggah); if (r) simpanLink(r); return; }
+        if (b.dataset.acc) {
+            const r = baris.find((x) => +x.id === +b.dataset.acc); if (!r) return;
+            try { await api(API, { aksi: 'acc_keluar', id: r.id, nilai: +b.dataset.nilai }); toast(+b.dataset.nilai ? r.nomor_surat + ' di-ACC' : 'ACC ' + r.nomor_surat + ' dibatalkan'); muat(); }
+            catch (e) { toast(e.message, true); }
+            return;
+        }
         if (b.dataset.pilih) {
             const r = baris.find((x) => +x.id === +b.dataset.pilih); if (!r) return;
             App.pilihBukaGanti(r.link_drive || 'api/arsip.php?aksi=file&id=' + r.id, () => simpanLink(r)); return;
