@@ -1,129 +1,87 @@
-/* Kalender dashboard: popup tanggal/bulan/tahun + kalender bulan penuh.
-   Semua berbasis waktu nyata (new Date()). */
+/* Kalender dashboard = pengendali rentang waktu untuk kotak Jenis surat dan grafik.
+   - Klik tanggal        -> per hari
+   - Klik nama bulan     -> per bulan
+   - Klik angka tahun    -> per tahun
+   Panah: pindah bulan (mode bulan ikut pindah, mode tahun pindah tahun, mode hari hanya menggeser tampilan).
+   Memberi tahu halaman lewat event "rentang" {dari, sampai, mode, label}. */
 (function () {
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const MONTHS_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     const $ = (id) => document.getElementById(id);
 
     const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     let today = dayStart(new Date());
-    let anchor = new Date(today);      // tanggal terpilih
-    let period = 'month';              // day | week | month | year
-    let mini = { y: anchor.getFullYear(), m: anchor.getMonth() };
-    let pop  = { y: anchor.getFullYear(), m: anchor.getMonth() };
+    let anchor = new Date(today);          // tanggal terpilih
+    let period = 'month';                  // day | month | year
+    let view = { y: anchor.getFullYear(), m: anchor.getMonth() };   // bulan yang sedang ditampilkan
 
     const same = (a, b) => a.getTime() === b.getTime();
-    const fmt = (d) => d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
     function getRange() {
-        const y = anchor.getFullYear(), m = anchor.getMonth(), d = anchor.getDate();
+        const y = anchor.getFullYear(), m = anchor.getMonth();
         if (period === 'day')  return [new Date(anchor), new Date(anchor)];
-        if (period === 'week') return [new Date(y, m, d - anchor.getDay()), new Date(y, m, d - anchor.getDay() + 6)];
         if (period === 'year') return [new Date(y, 0, 1), new Date(y, 11, 31)];
         return [new Date(y, m, 1), new Date(y, m + 1, 0)];
     }
+    function labelRentang() {
+        if (period === 'day') return anchor.getDate() + ' ' + MONTHS[anchor.getMonth()] + ' ' + anchor.getFullYear();
+        if (period === 'year') return 'Tahun ' + anchor.getFullYear();
+        return MONTHS_FULL[anchor.getMonth()] + ' ' + anchor.getFullYear();
+    }
 
-    function buildGrid(container, view, onPick) {
+    function renderKalender() {
         const [rs, re] = getRange();
-        const highlightRange = period === 'day' || period === 'week';
-        container.textContent = '';
+        $('calBulan').textContent = MONTHS_FULL[view.m];
+        $('calTahun').textContent = view.y;
+        $('calBulan').classList.toggle('aktif', period === 'month' && anchor.getFullYear() === view.y && anchor.getMonth() === view.m);
+        $('calTahun').classList.toggle('aktif', period === 'year' && anchor.getFullYear() === view.y);
+
+        const box = $('miniDates');
+        box.textContent = '';
         const first = new Date(view.y, view.m, 1);
         const total = new Date(view.y, view.m + 1, 0).getDate();
         for (let i = 0; i < first.getDay(); i++) {
-            const e = document.createElement('span');
-            e.className = 'empty';
-            container.appendChild(e);
+            const e = document.createElement('span'); e.className = 'empty'; box.appendChild(e);
         }
         for (let n = 1; n <= total; n++) {
             const date = new Date(view.y, view.m, n);
             const b = document.createElement('button');
-            b.type = 'button';
-            b.textContent = n;
+            b.type = 'button'; b.textContent = n;
             if (same(date, today)) b.classList.add('today');
-            if (highlightRange && date >= rs && date <= re) b.classList.add('in-range');
-            if (same(date, anchor)) { b.classList.add('selected'); b.setAttribute('aria-current', 'date'); }
-            b.addEventListener('click', () => onPick(date));
-            container.appendChild(b);
+            if (period !== 'day' && date >= rs && date <= re) b.classList.add('in-range');    // bulan/tahun: seluruh tanggal di rentang diwarnai
+            if (period === 'day' && same(date, anchor)) { b.classList.add('selected'); b.setAttribute('aria-current', 'date'); }
+            b.addEventListener('click', () => { period = 'day'; anchor = date; renderAll(); });
+            box.appendChild(b);
         }
     }
-
-    function fillMonths() {
-        const sel = $('monthSelect');
-        if (sel.options.length) return;
-        MONTHS.forEach((m, i) => sel.add(new Option(m, i)));
-    }
-
-    function fillYears() {
-        const sel = $('yearSelect');
-        const from = Math.min(today.getFullYear() - 10, pop.y);
-        const to = Math.max(today.getFullYear() + 5, pop.y);
-        if (sel.options.length && +sel.options[0].value === from && +sel.options[sel.options.length - 1].value === to) return;
-        sel.textContent = '';
-        for (let y = from; y <= to; y++) sel.add(new Option(y, y));
-    }
-
-    function renderMini() {
-        $('calTitle').textContent = MONTHS_FULL[mini.m] + ' ' + mini.y;
-        buildGrid($('miniDates'), mini, setAnchor);
-    }
-    function renderPopup() {
-        fillMonths();
-        fillYears();
-        $('monthSelect').value = pop.m;
-        $('yearSelect').value = pop.y;
-        buildGrid($('popupDates'), pop, (d) => { setAnchor(d); closePopup(); });
-    }
-    function renderHeader() {
-        const [s, e] = getRange();
-        $('dateRangeText').textContent = same(s, e) ? fmt(s) : fmt(s) + ' - ' + fmt(e);
-        document.querySelectorAll('.filter-group button').forEach((b) =>
-            b.classList.toggle('active', b.dataset.period === period));
-    }
     function renderAll() {
-        renderHeader(); renderMini(); renderPopup();
-        // Beri tahu halaman (dashboard) bahwa rentang tanggal berubah.
+        renderKalender();
         const [rs, re] = getRange();
-        const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        document.dispatchEvent(new CustomEvent('rentang', { detail: { dari: iso(rs), sampai: iso(re) } }));
+        document.dispatchEvent(new CustomEvent('rentang', { detail: { dari: iso(rs), sampai: iso(re), mode: period, label: labelRentang() } }));
     }
 
-    function setAnchor(d) {
-        anchor = dayStart(d);
-        mini = { y: anchor.getFullYear(), m: anchor.getMonth() };
-        pop = { ...mini };
+    $('calBulan').addEventListener('click', () => { period = 'month'; anchor = new Date(view.y, view.m, 1); renderAll(); });
+    $('calTahun').addEventListener('click', () => { period = 'year'; anchor = new Date(view.y, 0, 1); renderAll(); });
+
+    function geser(delta) {
+        if (period === 'year') {
+            view = { y: view.y + delta, m: view.m };
+            anchor = new Date(view.y, 0, 1);
+        } else {
+            const d = new Date(view.y, view.m + delta, 1);
+            view = { y: d.getFullYear(), m: d.getMonth() };
+            if (period === 'month') anchor = new Date(view.y, view.m, 1);
+        }
         renderAll();
     }
+    $('calPrev').addEventListener('click', () => geser(-1));
+    $('calNext').addEventListener('click', () => geser(1));
 
-    // --- popup buka/tutup ---
-    const popup = $('datepickerPopup'), btn = $('datePickerBtn');
-    function openPopup() { pop = { y: anchor.getFullYear(), m: anchor.getMonth() }; renderPopup(); popup.classList.add('show'); btn.setAttribute('aria-expanded', 'true'); }
-    function closePopup() { popup.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); }
-    btn.addEventListener('click', (e) => { e.stopPropagation(); popup.classList.contains('show') ? closePopup() : openPopup(); });
-    popup.addEventListener('click', (e) => e.stopPropagation());
-    document.addEventListener('click', closePopup);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
-
-    $('monthSelect').addEventListener('change', (e) => { pop.m = +e.target.value; renderPopup(); });
-    $('yearSelect').addEventListener('change', (e) => { pop.y = +e.target.value; renderPopup(); });
-    $('popupToday').addEventListener('click', () => { setAnchor(today); closePopup(); });
-
-    // --- kalender bulan penuh: panah bulan ---
-    function shiftMini(delta) {
-        const d = new Date(mini.y, mini.m + delta, 1);
-        mini = { y: d.getFullYear(), m: d.getMonth() };
-        renderMini();
-    }
-    $('calPrev').addEventListener('click', () => shiftMini(-1));
-    $('calNext').addEventListener('click', () => shiftMini(1));
-
-    // --- Day / Week / Month / Year ---
-    document.querySelectorAll('.filter-group button').forEach((b) =>
-        b.addEventListener('click', () => { period = b.dataset.period; renderAll(); }));
-
-    // --- ganti hari otomatis saat lewat tengah malam ---
+    // ganti hari otomatis saat lewat tengah malam
     setInterval(() => {
         const now = dayStart(new Date());
-        if (!same(now, today)) { today = now; renderAll(); }
+        if (!same(now, today)) { today = now; renderKalender(); }
     }, 60000);
 
     renderAll();

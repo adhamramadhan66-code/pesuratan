@@ -162,11 +162,24 @@ try {
                                     ORDER BY tanggal_surat DESC, id DESC LIMIT 8');
                 $s->execute([$dari, $sampai]);
                 // Jumlah surat per jenis (seluruh waktu) untuk kotak Jenis surat di dashboard; yang terbanyak di depan.
-                $perJenis = $pdo->query('SELECT j.kode, j.nama, COUNT(s.id) AS n FROM jenis_surat j LEFT JOIN surat s ON s.jenis_kode = j.kode
-                                         GROUP BY j.kode, j.nama ORDER BY n DESC, j.nama')->fetchAll();
+                // Jumlah per jenis mengikuti rentang tanggal yang dipilih di kalender.
+                $q = $pdo->prepare('SELECT j.kode, j.nama, COUNT(s.id) AS n FROM jenis_surat j
+                                    LEFT JOIN surat s ON s.jenis_kode = j.kode AND s.tanggal_surat BETWEEN ? AND ?
+                                    GROUP BY j.kode, j.nama ORDER BY n DESC, j.nama');
+                $q->execute([$dari, $sampai]);
+                $perJenis = $q->fetchAll();
+
+                // Per hari pada bulan dari tanggal awal (untuk grafik saat kalender memilih hari/bulan).
+                $awalBulan = substr($dari, 0, 7) . '-01';
+                $akhirBulan = date('Y-m-t', strtotime($awalBulan));
+                $q = $pdo->prepare('SELECT DAY(tanggal_surat) AS h, COUNT(*) AS n FROM surat WHERE tanggal_surat BETWEEN ? AND ?'
+                                   . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY h');
+                $q->execute($jenisGrafik !== '' ? [$awalBulan, $akhirBulan, $jenisGrafik] : [$awalBulan, $akhirBulan]);
+                $perHari = array_fill(1, (int) date('t', strtotime($awalBulan)), 0);
+                foreach ($q->fetchAll() as $r) $perHari[(int) $r['h']] = (int) $r['n'];
                 foreach ($perJenis as &$pj) $pj['n'] = (int) $pj['n'];
                 unset($pj);
-                keluar(['per_jenis' => $perJenis, 'total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan), 'terbaru' => $s->fetchAll()]);
+                keluar(['per_hari' => array_values($perHari), 'per_jenis' => $perJenis, 'total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan), 'terbaru' => $s->fetchAll()]);
 
             default:
                 keluar(['error' => 'Aksi tidak dikenal.'], 400);

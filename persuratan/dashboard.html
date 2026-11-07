@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=14">
+    <link rel="stylesheet" href="surat.css?v=15">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -93,40 +93,10 @@
             </div>
         </header>
 
-        <!-- FILTERS -->
-        <div class="filters" data-dash>
-            <div class="filter-group">
-                <button type="button" data-period="day">Day</button>
-                <button type="button" data-period="week">Week</button>
-                <button type="button" data-period="month" class="active">Month</button>
-                <button type="button" data-period="year">Year</button>
-            </div>
-
-            <div class="date-picker-wrapper">
-                <button type="button" class="date-picker" id="datePickerBtn" aria-haspopup="dialog" aria-expanded="false">
-                    <i data-lucide="calendar" class="icon-small"></i>
-                    <span id="dateRangeText"></span>
-                </button>
-                <div class="datepicker-popup" id="datepickerPopup" role="dialog" aria-label="Pilih tanggal">
-                    <div class="popup-header">
-                        <select id="monthSelect" aria-label="Bulan"></select>
-                        <select id="yearSelect" aria-label="Tahun"></select>
-                    </div>
-                    <div class="popup-grid-header">
-                        <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-                    </div>
-                    <div class="popup-dates" id="popupDates"></div>
-                    <div class="popup-footer">
-                        <button type="button" class="popup-today" id="popupToday">Today</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
         <section class="jenis-sec" id="jenisSec" aria-label="Jenis surat">
             <div class="jenis-head">
-                <h3>Jenis surat</h3>
+                <h3>Jenis surat <span class="jenis-rentang" id="jenisRentang"></span></h3>
                 <button type="button" class="btn sm" id="btnJenisSemua">Lihat semua</button>
             </div>
             <div class="jenis-track" id="jenisTrack" aria-label="Jenis surat yang sudah dibuat"></div>
@@ -139,13 +109,12 @@
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
                     <select id="fGrafikJenis" class="grafik-filter" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select>
-                    <a class="btn-round" href="penomoran.html" title="Penomoran surat" aria-label="Penomoran surat"><i data-lucide="plus"></i></a>
                 </div>
                 <div class="bars" id="bars" aria-label="Grafik jumlah surat per bulan"></div>
             </div>
             <div class="chart-card side-chart">
                 <div class="calendar-header">
-                    <h3 id="calTitle"></h3>
+                    <h3 class="cal-judul"><button type="button" class="cal-pilih" id="calBulan" title="Klik: tampilkan per bulan"></button> <button type="button" class="cal-pilih" id="calTahun" title="Klik: tampilkan per tahun"></button></h3>
                     <div class="calendar-nav">
                         <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Bulan sebelumnya"><i data-lucide="chevron-left"></i></button>
                         <button type="button" class="cal-nav-btn" id="calNext" aria-label="Bulan berikutnya"><i data-lucide="chevron-right"></i></button>
@@ -155,6 +124,7 @@
                     <div class="mini-days"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
                     <div class="mini-dates" id="miniDates"></div>
                 </div>
+                <p class="cal-hint">Klik <b>tanggal</b> = per hari · klik <b>nama bulan</b> = per bulan · klik <b>tahun</b> = per tahun. Kotak jenis surat dan grafik mengikuti pilihan ini.</p>
             </div>
         </div>
 
@@ -182,13 +152,15 @@
         (function () {
             const { $, esc, tglIndo, api, toast } = App;
             const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const BLN_PENUH = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             let terakhir = '', rentangIni = null;
 
             // ---------- Grafik: kolom dibuat sekali, lalu tingginya dianimasikan naik/turun ----------
-            function gambarGrafik(data, maks, aktif) {
+            function gambarGrafik(label, data, maks, aktif) {
                 const bars = $('bars');
-                if (bars.children.length !== 12) {
-                    bars.innerHTML = BLN.map((m) => '<div class="bar-col"><span class="v">0</span><div class="b" style="height:0"></div><span class="m">' + m + '</span></div>').join('');
+                bars.classList.toggle('padat', label.length > 12);
+                if (bars.children.length !== label.length) {
+                    bars.innerHTML = label.map((m) => '<div class="bar-col"><span class="v">0</span><div class="b" style="height:0"></div><span class="m">' + esc(m) + '</span></div>').join('');
                     void bars.offsetHeight;   // pastikan tinggi awal 0 tergambar dulu supaya batang "tumbuh" dari bawah
                 }
                 requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -268,21 +240,28 @@
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
             document.addEventListener('rentang', async (ev) => {
-                const { dari, sampai } = ev.detail;
-                rentangIni = { dari, sampai };
-                if (dari + sampai + $('fGrafikJenis').value === terakhir) return;
-                terakhir = dari + sampai + $('fGrafikJenis').value;
+                const { dari, sampai, mode } = ev.detail;
+                rentangIni = ev.detail;
+                const kunci = dari + sampai + mode + $('fGrafikJenis').value;
+                if (kunci === terakhir) return;
+                terakhir = kunci;
                 try {
                     const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai + '&jenis=' + encodeURIComponent($('fGrafikJenis').value));
-                    if (dari + sampai + $('fGrafikJenis').value !== terakhir) return;             // sudah ada permintaan yang lebih baru
-                    const t = d.total;
+                    if (kunci !== terakhir) return;             // sudah ada permintaan yang lebih baru
+                    $('jenisRentang').textContent = '· ' + ev.detail.label;
                     tampilJenis(d.per_jenis || []);
 
-                    // grafik batang per bulan (bulan yang masuk rentang disorot)
+                    // Grafik mengikuti kalender: tahun -> per bulan; bulan/hari -> per hari pada bulan itu (hari terpilih disorot)
                     const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
-                    const maks = Math.max(1, ...d.per_bulan);
-                    $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
-                    gambarGrafik(d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
+                    if (mode === 'year') {
+                        const maks = Math.max(1, ...d.per_bulan);
+                        $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
+                        gambarGrafik(BLN, d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
+                    } else {
+                        const m = +dari.slice(5, 7) - 1, maks = Math.max(1, ...d.per_hari);
+                        $('chartJudul').textContent = 'Surat per hari — ' + BLN_PENUH[m] + ' ' + y;
+                        gambarGrafik(d.per_hari.map((_, i) => String(i + 1)), d.per_hari, maks, (i) => new Date(y, m, i + 1) >= awal && new Date(y, m, i + 1) <= akhir);
+                    }
                     isiFilterJenis(d.per_jenis || []);
 
                     $('galeri').innerHTML = d.terbaru.length ? d.terbaru.map((r) => App.kartuHtml({
@@ -306,7 +285,7 @@
             });
         })();
     </script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>
