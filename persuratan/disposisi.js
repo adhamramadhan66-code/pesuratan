@@ -40,7 +40,7 @@
         const judul = t === 'k' ? s.nomor_surat : 'Surat masuk ' + s.nomor_agenda;
         return App.kartuHtml({
             kelas: 'abu', judulTeks: judul, judul: esc(judul),
-            thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>',
+            thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Klik gambar di atas untuk menempel link Google Drive surat">' + App.thumb('', '') + '</button>',
             sub: [esc(s.perihal), (t === 'k' ? 'Surat keluar' : 'Dari ' + esc(s.pengirim))],
             status: '<span class="badge">Belum diunggah</span>',
         });
@@ -50,9 +50,10 @@
         const ok = r.status === 'disetujui';
         const url = API + '?aksi=file&id=' + r.id;
         // Pratinjau: klik membuka file. Tanpa file dan belum di-ACC: klik membuka dialog unggah.
-        const thumb = (r.file_nama || ok)
-            ? App.thumbFile(url, r.file_nama, !!r.file_nama)
-            : '<button type="button" class="kartu-thumb" data-unggah-ke="' + r.id + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>';
+        const ada = !!(r.file_nama || r.link_drive);
+        const thumb = (ada || ok)
+            ? App.thumbSurat({ ada, link: r.link_drive, url, nama: r.file_nama, ganti: ada ? r.id : 0 })
+            : '<button type="button" class="kartu-thumb" data-unggah-ke="' + r.id + '" title="Klik gambar di atas untuk menempel link Google Drive surat">' + App.thumb('', '') + '</button>';
         const aksi = [];
         if (!ok) aksi.push('<button class="btn sm primary" data-setuju="' + r.id + '">ACC</button>', '<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>');
         else aksi.push('<button class="btn sm" data-batal="' + r.id + '">Batalkan ACC</button>');
@@ -113,14 +114,14 @@
 
     // pilih: 'k:ID' (surat keluar) / 'm:ID' (surat masuk) agar langsung terpilih; ganti: disposisi yang filenya ditambah/diganti
     async function bukaUnggah(pilih, ganti) {
-        tetapSurat = null; $('u_file').value = ''; $('u_info').style.display = 'none';
+        tetapSurat = null; $('u_link').value = ''; $('u_info').style.display = 'none';
         if (ganti) {
             tetapSurat = ganti.surat_id ? 'k:' + ganti.surat_id : 'm:' + ganti.surat_masuk_id;
             $('u_sumber').innerHTML = '<option value="' + tetapSurat + '">' + esc(labelSurat(ganti) + ' — ' + ganti.hal) + '</option>';
             $('u_sumber').disabled = true;
-            $('uJudul').textContent = ganti.file_nama ? 'Ganti file surat' : 'Unggah file surat';
+            $('u_link').value = ganti.link_drive || ''; $('uJudul').textContent = (ganti.file_nama || ganti.link_drive) ? 'Ganti link surat' : 'Link surat';
         } else {
-            $('u_sumber').disabled = false; $('uJudul').textContent = 'Unggah surat';
+            $('u_sumber').disabled = false; $('uJudul').textContent = 'Link surat';
             await muatSumber();
             if (pilih) { $('u_sumber').value = pilih; infoUnggah(); }
         }
@@ -131,17 +132,17 @@
 
     $('unggahForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const v = $('u_sumber').value, file = $('u_file').files[0];
-        const salah = !v ? 'Pilih surat yang akan diunggah.' : !file ? 'Pilih file surat (PDF, JPG, atau PNG).' : App.cekFile(file);
+        const v = $('u_sumber').value, link = $('u_link').value.trim();
+        const salah = !v ? 'Pilih surat yang akan diunggah.' : !App.driveId(link) || !/^https:\/\/(drive|docs)\.google\.com\//i.test(link) ? 'Tempel link Google Drive surat (https://drive.google.com/...).' : '';
         if (salah) { toast(salah, true); return; }
         const [t, id] = v.split(':');
         const fd = new FormData();
-        fd.append('aksi', 'unggah'); fd.append(t === 'k' ? 'surat_id' : 'surat_masuk_id', id); fd.append('file', file);
+        fd.append('aksi', 'unggah'); fd.append(t === 'k' ? 'surat_id' : 'surat_masuk_id', id); fd.append('link', link);
         const btn = $('uSimpan'); btn.disabled = true;
         try {
             const d = await api(API, fd);
             dlgU.close();
-            toast(d.baru ? 'Surat diunggah. Disposisi ' + d.no_disposisi + ' menunggu ACC.' : 'File surat disimpan.');
+            toast(d.baru ? 'Link surat disimpan. Disposisi ' + d.no_disposisi + ' menunggu ACC.' : 'Link surat disimpan.');
             muat();
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
@@ -189,6 +190,10 @@
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         if (b.dataset.unggahPilih) { bukaUnggah(b.dataset.unggahPilih); return; }
+        if (b.dataset.pilih) {
+            const rr = baris.find((x) => +x.id === +b.dataset.pilih); if (!rr) return;
+            App.pilihBukaGanti(rr.link_drive || API + '?aksi=file&id=' + rr.id, () => bukaUnggah(null, rr)); return;
+        }
         const id = +(b.dataset.unggahKe || b.dataset.ubah || b.dataset.setuju || b.dataset.batal || b.dataset.hapus);
         const r = baris.find((x) => +x.id === id); if (!r) return;
         try {

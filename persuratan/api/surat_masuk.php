@@ -86,7 +86,7 @@ function baca_form(array $in): array
 const ACC_SQL = '(SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1)';
 
 const KOLOM = 's.id, s.nomor_agenda, s.nomor_surat_asal, s.tanggal_surat, s.tanggal_terima, s.jenis_pengirim, s.pengirim, s.perihal, s.sifat, s.tujuan, s.status,
-               s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, (s.file_arsip <> \'\') AS ada_file, s.dari_surat_id,
+               s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, s.link_drive, (s.file_arsip <> \'\' OR s.link_drive <> \'\') AS ada_file, s.dari_surat_id,
                (SELECT d.id FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS disposisi_id,
                (SELECT d.no_disposisi FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS no_disposisi,
                (SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS status_disposisi,
@@ -161,6 +161,7 @@ try {
             $tahun = (int) substr($d['tanggal_terima'], 0, 4);
             $bulan = (int) substr($d['tanggal_terima'], 5, 2);
             $berkas = simpan_unggahan();
+            if (($link = link_drive_bersih($_POST['link'] ?? '')) === null) keluar(['error' => 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'], 422);
             for ($coba = 0; $coba < 5; $coba++) {
                 $s = $pdo->prepare('SELECT COALESCE(MAX(urut), 0) FROM surat_masuk WHERE tahun = ? AND bulan = ?');
                 $s->execute([$tahun, $bulan]);
@@ -168,9 +169,9 @@ try {
                 $agenda = sprintf('%03d/AGD/%s/%d', $urut, bulan_romawi($bulan), $tahun);
                 try {
                     $pdo->prepare('INSERT INTO surat_masuk (tahun, bulan, urut, nomor_agenda, nomor_surat_asal, tanggal_surat, tanggal_terima, jenis_pengirim,
-                            pengirim, perihal, sifat, tujuan, status, file_arsip, file_nama) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                            pengirim, perihal, sifat, tujuan, status, file_arsip, file_nama, link_drive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
                         ->execute([$tahun, $bulan, $urut, $agenda, $d['nomor_surat_asal'], $d['tanggal_surat'], $d['tanggal_terima'], $d['jenis_pengirim'],
-                            $d['pengirim'], $d['perihal'], $d['sifat'], $d['tujuan'], 'diterima', $berkas[0] ?? '', $berkas[1] ?? '']);
+                            $d['pengirim'], $d['perihal'], $d['sifat'], $d['tujuan'], 'diterima', $berkas[0] ?? '', $berkas[1] ?? '', $link]);
                     keluar(['ok' => true, 'id' => (int) $pdo->lastInsertId(), 'nomor_agenda' => $agenda], 201);
                 } catch (PDOException $e) {
                     if ($e->getCode() !== '23000') { if ($berkas) hapus_file($berkas[0]); throw $e; }
@@ -185,13 +186,15 @@ try {
             if (!$lama) keluar(['error' => 'Surat masuk tidak ditemukan.'], 404);
             [$d, $err] = baca_form($_POST);
             if ($err) keluar(['error' => $err], 422);
-            $file = $lama['file_arsip']; $nama = $lama['file_nama'];
-            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($file); $file = ''; $nama = ''; }
-            if ($berkas = simpan_unggahan()) { hapus_file($file); [$file, $nama] = $berkas; }
+            $file = $lama['file_arsip']; $nama = $lama['file_nama']; $link = $lama['link_drive'];
+            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($file); $file = ''; $nama = ''; $link = ''; }
+            if (($lb = link_drive_bersih($_POST['link'] ?? '')) === null) keluar(['error' => 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'], 422);
+            if ($lb !== '') { hapus_file($file); $file = ''; $nama = ''; $link = $lb; }
+            if ($berkas = simpan_unggahan()) { hapus_file($file); [$file, $nama] = $berkas; $link = ''; }
             $pdo->prepare('UPDATE surat_masuk SET nomor_surat_asal = ?, tanggal_surat = ?, tanggal_terima = ?, jenis_pengirim = ?, pengirim = ?, perihal = ?, sifat = ?,
-                    tujuan = ?, status = ?, file_arsip = ?, file_nama = ? WHERE id = ?')
+                    tujuan = ?, status = ?, file_arsip = ?, file_nama = ?, link_drive = ? WHERE id = ?')
                 ->execute([$d['nomor_surat_asal'], $d['tanggal_surat'], $d['tanggal_terima'], $d['jenis_pengirim'], $d['pengirim'], $d['perihal'], $d['sifat'],
-                    $d['tujuan'], $d['status'], $file, $nama, $id]);
+                    $d['tujuan'], $d['status'], $file, $nama, $link, $id]);
             keluar(['ok' => true, 'nomor_agenda' => $lama['nomor_agenda']]);
 
         case 'hapus':
@@ -219,12 +222,14 @@ try {
             $lokasi = teks($_POST['lokasi_arsip'] ?? '', 150);
             $ket = teks($_POST['keterangan_arsip'] ?? '', 255);
             $tgl = tanggal_valid($_POST['tanggal_arsip'] ?? '') ?: date('Y-m-d');
-            $file = $r['file_arsip']; $nama = $r['file_nama'];
-            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($file); $file = ''; $nama = ''; }
-            if ($berkas = simpan_unggahan()) { hapus_file($file); [$file, $nama] = $berkas; }
-            if ($lokasi === '' && $file === '') keluar(['error' => 'Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).'], 422);
-            $pdo->prepare('UPDATE surat_masuk SET status_arsip = \'diarsipkan\', tanggal_arsip = ?, lokasi_arsip = ?, keterangan_arsip = ?, file_arsip = ?, file_nama = ? WHERE id = ?')
-                ->execute([$tgl, $lokasi, $ket, $file, $nama, $id]);
+            $file = $r['file_arsip']; $nama = $r['file_nama']; $link = $r['link_drive'];
+            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($file); $file = ''; $nama = ''; $link = ''; }
+            if (($lb = link_drive_bersih($_POST['link'] ?? '')) === null) keluar(['error' => 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'], 422);
+            if ($lb !== '') { hapus_file($file); $file = ''; $nama = ''; $link = $lb; }
+            if ($berkas = simpan_unggahan()) { hapus_file($file); [$file, $nama] = $berkas; $link = ''; }
+            if ($lokasi === '' && $file === '' && $link === '') keluar(['error' => 'Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).'], 422);
+            $pdo->prepare('UPDATE surat_masuk SET status_arsip = \'diarsipkan\', tanggal_arsip = ?, lokasi_arsip = ?, keterangan_arsip = ?, file_arsip = ?, file_nama = ?, link_drive = ? WHERE id = ?')
+                ->execute([$tgl, $lokasi, $ket, $file, $nama, $link, $id]);
             keluar(['ok' => true]);
 
         case 'arsip_batal':

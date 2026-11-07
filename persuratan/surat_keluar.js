@@ -31,14 +31,12 @@
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
             const aksi = [];
-            if (r.ada_file) aksi.push('<button class="btn sm" data-unggah="' + r.id + '">Ganti file</button>');   // belum ada file: klik pratinjau untuk mengunggah
             // Arsipkan hanya bila file surat sudah diunggah
             if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
             aksi.push('<button class="btn sm merah-garis" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                thumb: r.ada_file ? App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, true)
-                    : '<button type="button" class="kartu-thumb" data-unggah="' + r.id + '" title="Klik gambar di atas untuk mengunggah file surat">' + App.thumb('', '') + '</button>',
+                thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama, ganti: r.ada_file ? r.id : 0, unggah: r.ada_file ? 0 : r.id }),
                 sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
                 status: (r.jalur === 'keluar' ? '<span class="badge">Tanpa ACC</span>' : '<span class="badge ok">Sudah di-ACC</span>') +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
@@ -53,23 +51,21 @@
 
     const ubahTahap = (id, tahap, tambahan) => api(API, Object.assign({ aksi: 'tahap', id, tahap }, tambahan || {}));
 
-    // Unggah file surat langsung dari kartu
-    const pilih = document.createElement('input');
-    pilih.type = 'file'; pilih.accept = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png'; pilih.hidden = true;
-    document.body.appendChild(pilih);
-    let idUnggah = 0;
-    pilih.addEventListener('change', async () => {
-        const f = pilih.files[0]; pilih.value = '';
-        if (!f) return;
-        const salah = App.cekFile(f); if (salah) { toast(salah, true); return; }
-        const fd = new FormData(); fd.append('aksi', 'unggah'); fd.append('id', idUnggah); fd.append('file', f);
-        try { await api('api/arsip.php', fd); toast('File surat diunggah'); muat(); }
+    // Simpan link Google Drive surat
+    async function simpanLink(r) {
+        const link = await App.mintaLink('Link Google Drive surat ' + r.nomor_surat, r.link_drive || '');
+        if (!link) return;
+        try { const fd = new FormData(); fd.append('aksi', 'unggah'); fd.append('id', r.id); fd.append('link', link); await api('api/arsip.php', fd); toast('Link surat disimpan'); muat(); }
         catch (e) { toast(e.message, true); }
-    });
+    }
 
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
-        if (b.dataset.unggah) { idUnggah = +b.dataset.unggah; pilih.click(); return; }
+        if (b.dataset.unggah) { const r = baris.find((x) => +x.id === +b.dataset.unggah); if (r) simpanLink(r); return; }
+        if (b.dataset.pilih) {
+            const r = baris.find((x) => +x.id === +b.dataset.pilih); if (!r) return;
+            App.pilihBukaGanti(r.link_drive || 'api/arsip.php?aksi=file&id=' + r.id, () => simpanLink(r)); return;
+        }
         if (b.dataset.hapus) {
             const h = baris.find((x) => +x.id === +b.dataset.hapus); if (!h) return;
             if (!confirm('Hapus surat ' + h.nomor_surat + '? Surat dan filenya dihapus, nomornya tidak terpakai.')) return;

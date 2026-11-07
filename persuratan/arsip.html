@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div class="alur-info">
-                Setiap kotak adalah surat bernomor. Klik <b>Arsipkan</b> untuk mengisi lokasi arsip dan menambah/mengganti file surat. Surat Keluar dan Surat Masuk (yang sudah di-ACC di
+                Setiap kotak adalah surat bernomor. Klik <b>Arsipkan</b> untuk mengisi lokasi arsip dan menempel/mengganti link Drive surat. Surat Keluar dan Surat Masuk (yang sudah di-ACC di
                 <b>Disposisi</b>) diarsipkan di sini <span class="chip bad">belum diarsipkan</span> → <span class="chip ok">diarsipkan</span>.
             </div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
@@ -151,13 +151,13 @@
                     <input type="text" id="dlgKet" maxlength="255" placeholder="Catatan tambahan">
                 </div>
                 <div class="field">
-                    <label for="dlgFile">File surat <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
+                    <label for="dlgFile">Link Google Drive surat <span class="opt">(akses "Siapa saja yang memiliki link")</span></label>
                     <div class="file-now" id="fileNow" style="display:none">
-                        <span>File saat ini: <b id="fileNowNama"></b> <a href="#" id="fileNowLihat" target="_blank" rel="noopener" class="muted">(lihat)</a></span>
+                        <span>Surat saat ini: <b id="fileNowNama"></b> <a href="#" id="fileNowLihat" target="_blank" rel="noopener" class="muted">(lihat)</a></span>
                         <label><input type="checkbox" id="dlgHapusFile"> Hapus file ini</label>
                     </div>
-                    <input type="file" id="dlgFile" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
-                    <span class="help">Mengunggah file baru akan menggantikan file lama.</span>
+                    <input type="url" id="dlgFile" placeholder="https://drive.google.com/file/d/... (opsional)">
+                    <span class="help">Link baru akan menggantikan file/link lama.</span>
                 </div>
             </div>
             <div class="modal-foot">
@@ -172,9 +172,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
     <script src="profil.js?v=1"></script>
-    <script src="arsip.js?v=99"></script>
+    <script src="arsip.js?v=100"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

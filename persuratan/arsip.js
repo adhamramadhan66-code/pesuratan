@@ -44,12 +44,12 @@
         const url = API + '?aksi=file&id=' + r.id;
         // Pratinjau file: klik membuka file. Tanpa file: klik membuka dialog untuk mengunggah dan mengarsipkan.
         const thumb = r.ada_file
-            ? '<a class="kartu-thumb" href="' + url + '" target="_blank" rel="noopener" title="Buka file surat">' + App.thumb(url, r.file_nama) + '</a>'
-            : '<button type="button" class="kartu-thumb" data-arsip="' + r.id + '" title="Unggah file dan arsipkan">' + App.thumb('', '') + '</button>';
+            ? App.thumbSurat({ ada: true, link: r.link_drive, url, nama: r.file_nama })
+            : '<button type="button" class="kartu-thumb" data-arsip="' + r.id + '" title="Tempel link Drive dan arsipkan">' + App.thumb('', '') + '</button>';
         const aksi = sudah
             ? ['<button class="btn sm" data-arsip="' + r.id + '">Ubah</button>', '<button class="btn sm danger" data-batal="' + r.id + '">Batalkan</button>']
             : ['<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>'];
-        if (r.ada_file) aksi.push('<a class="btn sm" href="' + url + '&unduh=1">Unduh</a>');
+        if (r.ada_file) aksi.push(r.link_drive ? '<a class="btn sm" href="' + esc(r.link_drive) + '" target="_blank" rel="noopener">Buka</a>' : '<a class="btn sm" href="' + url + '&unduh=1">Unduh</a>');
         const lokasi = sudah ? (r.lokasi_arsip ? esc(r.lokasi_arsip) : 'Hanya file digital') + ' · ' + esc(tglIndo(r.tanggal_arsip)) : esc(tglIndo(r.tanggal_surat));
         return App.kartuHtml({
             kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat), thumb,
@@ -89,8 +89,8 @@
         $('dlgHapusFile').checked = false;
         $('fileNow').style.display = r && r.ada_file ? '' : 'none';
         if (r && r.ada_file) {
-            $('fileNowNama').textContent = r.file_nama;
-            $('fileNowLihat').href = API + '?aksi=file&id=' + r.id;
+            $('fileNowNama').textContent = r.link_drive ? 'Link Google Drive' : r.file_nama;
+            $('fileNowLihat').href = r.link_drive || API + '?aksi=file&id=' + r.id;
         }
     }
 
@@ -117,12 +117,11 @@
     $('dlgForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         if (!aktif) return;
-        const file = $('dlgFile').files[0];
-        const galatFile = App.cekFile(file);
-        if (galatFile) { toast(galatFile, true); return; }
+        const file = $('dlgFile').value.trim();
+        if (file && (!App.driveId(file) || !/^https:\/\/(drive|docs)\.google\.com\//i.test(file))) { toast('Link harus dari Google Drive (https://drive.google.com/...).', true); return; }
         const adaFileLama = aktif.ada_file && !$('dlgHapusFile').checked;
         if (!$('dlgLokasi').value.trim() && !file && !adaFileLama) {
-            toast('Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).', true); $('dlgLokasi').focus(); return;
+            toast('Isi lokasi arsip fisik atau tempel link Drive surat (minimal salah satu).', true); $('dlgLokasi').focus(); return;
         }
         const fd = new FormData();
         fd.append('aksi', 'simpan'); fd.append('id', aktif.id);
@@ -130,7 +129,7 @@
         fd.append('lokasi_arsip', $('dlgLokasi').value);
         fd.append('keterangan_arsip', $('dlgKet').value);
         if ($('dlgHapusFile').checked) fd.append('hapus_file', '1');
-        if (file) fd.append('file', file);
+        if (file) fd.append('link', file);
         const btn = $('dlgSimpan'); btn.disabled = true;
         try { await api(API, fd); dlg.close(); toast('Surat ' + aktif.nomor_surat + ' diarsipkan'); muat(); }
         catch (e) { toast(e.message, true); }

@@ -35,7 +35,7 @@
             if (!r.disposisi_id) aksi.push('<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
             return App.kartuHtml({
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
-                thumb: App.thumbFile(API + '?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: API + '?aksi=file&id=' + r.id, nama: r.file_nama }),
                 sub: [esc(r.perihal), esc(r.pengirim) + ' · ' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + ' · ' + esc(NAMA_SIFAT[r.sifat] || r.sifat)],
                 status: '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Sudah di-ACC' : 'Belum di-ACC') + '</span>' +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
@@ -56,32 +56,28 @@
         $('m_terima').value = r.tanggal_terima || hariIni(); $('m_tgl').value = r.tanggal_surat || ''; $('m_asal').value = r.nomor_surat_asal || '';
         document.querySelectorAll('input[name="m_jenis"]').forEach((c) => { c.checked = c.value === (r.jenis_pengirim || 'eksternal'); });
         $('m_pengirim').value = r.pengirim || ''; $('m_perihal').value = r.perihal || ''; $('m_tujuan').value = r.tujuan || '';
-        $('m_sifat').value = r.sifat || 'biasa'; $('m_file').value = ''; $('m_hapusFile').checked = false;
+        $('m_sifat').value = r.sifat || 'biasa'; $('m_link').value = ''; $('m_hapusFile').checked = false;
         $('fileNowM').style.display = r.ada_file ? '' : 'none';
-        if (r.ada_file) { $('fileNowNamaM').textContent = r.file_nama; $('fileNowLihatM').href = API + '?aksi=file&id=' + r.id; }
+        if (r.ada_file) { $('fileNowNamaM').textContent = r.link_drive ? 'Link Google Drive' : r.file_nama; $('fileNowLihatM').href = r.link_drive || API + '?aksi=file&id=' + r.id; }
     }
     $('dlgBatal').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
 
-    function cekFile(f) {
-        if (!f) return true;
-        if (!/\.(pdf|jpe?g|png)$/i.test(f.name)) { toast('Format file harus PDF, JPG, atau PNG.', true); return false; }
-        if (f.size > MAKS) { toast('Ukuran file maksimal 10 MB.', true); return false; }
-        return true;
-    }
+    const linkOk = (v) => !v || (!!App.driveId(v) && /^https:\/\/(drive|docs)\.google\.com\//i.test(v));
+    const GALAT_LINK = 'Link harus dari Google Drive (https://drive.google.com/...).';
 
     $('smForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const salah = !$('m_terima').value ? 'Isi tanggal terima.' : !$('m_pengirim').value.trim() ? 'Isi pengirim.' : !$('m_perihal').value.trim() ? 'Isi perihal.' : '';
         if (salah) { toast(salah, true); return; }
-        const file = $('m_file').files[0]; if (!cekFile(file)) return;
+        const file = $('m_link').value.trim(); if (!linkOk(file)) { toast(GALAT_LINK, true); return; }
         const fd = new FormData();
         fd.append('aksi', editId ? 'ubah' : 'tambah'); if (editId) fd.append('id', editId);
         [['tanggal_terima', 'm_terima'], ['tanggal_surat', 'm_tgl'], ['nomor_surat_asal', 'm_asal'], ['pengirim', 'm_pengirim'], ['perihal', 'm_perihal'],
          ['tujuan', 'm_tujuan'], ['sifat', 'm_sifat']].forEach(([k, id]) => fd.append(k, $(id).value));
         fd.append('jenis_pengirim', jenisDipilih());
         if ($('m_hapusFile').checked) fd.append('hapus_file', '1');
-        if (file) fd.append('file', file);
+        if (file) fd.append('link', file);
         const btn = $('dlgSimpan'); btn.disabled = true;
         try {
             const d = await api(API, fd); dlg.close();
@@ -97,22 +93,22 @@
         aktif = r; $('arNomor').textContent = r.nomor_agenda; $('arPerihal').textContent = r.perihal;
         $('arJudul').textContent = r.status_arsip === 'diarsipkan' ? 'Ubah data arsip' : 'Arsipkan surat masuk';
         $('a_tgl').value = r.tanggal_arsip || hariIni(); $('a_lokasi').value = r.lokasi_arsip || ''; $('a_ket').value = r.keterangan_arsip || '';
-        $('a_file').value = ''; $('a_hapusFile').checked = false;
+        $('a_link').value = ''; $('a_hapusFile').checked = false;
         $('fileNowA').style.display = r.ada_file ? '' : 'none';
-        if (r.ada_file) { $('fileNowNamaA').textContent = r.file_nama; $('fileNowLihatA').href = API + '?aksi=file&id=' + r.id; }
+        if (r.ada_file) { $('fileNowNamaA').textContent = r.link_drive ? 'Link Google Drive' : r.file_nama; $('fileNowLihatA').href = r.link_drive || API + '?aksi=file&id=' + r.id; }
         dlgA.showModal(); dlgA.scrollTop = 0;
     }
     $('arBatal').addEventListener('click', () => dlgA.close());
     dlgA.addEventListener('click', (e) => { if (e.target === dlgA) dlgA.close(); });
     $('arsipForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        const file = $('a_file').files[0]; if (!cekFile(file)) return;
+        const file = $('a_link').value.trim(); if (!linkOk(file)) { toast(GALAT_LINK, true); return; }
         const adaFile = aktif.ada_file && !$('a_hapusFile').checked;
-        if (!$('a_lokasi').value.trim() && !file && !adaFile) { toast('Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).', true); $('a_lokasi').focus(); return; }
+        if (!$('a_lokasi').value.trim() && !file && !adaFile) { toast('Isi lokasi arsip fisik atau tempel link Drive surat (minimal salah satu).', true); $('a_lokasi').focus(); return; }
         const fd = new FormData();
         fd.append('aksi', 'arsip_simpan'); fd.append('id', aktif.id); fd.append('tanggal_arsip', $('a_tgl').value);
         fd.append('lokasi_arsip', $('a_lokasi').value); fd.append('keterangan_arsip', $('a_ket').value);
-        if ($('a_hapusFile').checked) fd.append('hapus_file', '1'); if (file) fd.append('file', file);
+        if ($('a_hapusFile').checked) fd.append('hapus_file', '1'); if (file) fd.append('link', file);
         const btn = $('arSimpan'); btn.disabled = true;
         try { await api(API, fd); dlgA.close(); toast('Surat masuk ' + aktif.nomor_agenda + ' diarsipkan'); muat(); }
         catch (e) { toast(e.message, true); }

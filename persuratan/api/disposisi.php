@@ -166,7 +166,9 @@ const KOLOM = 'd.id, d.surat_id, d.surat_masuk_id,
                d.no_disposisi, d.tanggal_terima, d.sifat, d.hal, d.kode_jenis, d.unit_kode, d.kode_tujuan, d.untuk, d.pemohon,
                d.tujuan_disposisi, d.isi, d.status, d.tanggal_setuju, d.disetujui_oleh,
                COALESCE((SELECT s.file_nama FROM surat s WHERE s.id = d.surat_id),
-                        (SELECT m.file_nama FROM surat_masuk m WHERE m.id = d.surat_masuk_id), \'\') AS file_nama';
+                        (SELECT m.file_nama FROM surat_masuk m WHERE m.id = d.surat_masuk_id), \'\') AS file_nama,
+               COALESCE((SELECT s.link_drive FROM surat s WHERE s.id = d.surat_id),
+                        (SELECT m.link_drive FROM surat_masuk m WHERE m.id = d.surat_masuk_id), \'\') AS link_drive';
 
 function ambil(PDO $pdo, int $id): ?array
 {
@@ -229,8 +231,10 @@ function unggah_surat(PDO $pdo): void
     }
     if ($lama && $lama['status'] === 'disetujui') keluar(['error' => 'Disposisi surat ini sudah di-ACC. Batalkan ACC terlebih dahulu bila ingin mengganti file.'], 409);
 
-    $berkas = simpan_unggahan();
-    if (!$berkas) keluar(['error' => 'Pilih file surat (PDF, JPG, atau PNG) yang akan diunggah.'], 422);
+    $link = link_drive_bersih($_POST['link'] ?? '');
+    if ($link === null) keluar(['error' => 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'], 422);
+    $berkas = $link === '' ? simpan_unggahan() : null;
+    if (!$berkas && $link === '') keluar(['error' => 'Tempel link Google Drive surat.'], 422);
 
     try {
         $no = null;
@@ -240,12 +244,12 @@ function unggah_surat(PDO $pdo): void
             $d += ['tanggal_terima' => date('Y-m-d'), 'tujuan_disposisi' => '', 'isi' => ''];
             [$id, $no] = sisip_disposisi($pdo, $d);
         }
-        $pdo->prepare("UPDATE $tabel SET file_arsip = ?, file_nama = ? WHERE id = ?")->execute([$berkas[0], $berkas[1], $kid]);
+        $pdo->prepare("UPDATE $tabel SET file_arsip = ?, file_nama = ?, link_drive = ? WHERE id = ?")->execute([$berkas[0] ?? '', $berkas[1] ?? '', $link, $kid]);
     } catch (RuntimeException $e) {
-        hapus_file($berkas[0]);
+        if ($berkas) hapus_file($berkas[0]);
         keluar(['error' => $e->getMessage()], 409);
     } catch (Throwable $e) {
-        hapus_file($berkas[0]);
+        if ($berkas) hapus_file($berkas[0]);
         throw $e;
     }
     hapus_file($s['file_arsip']);          // buang file lama bila diganti
@@ -284,10 +288,10 @@ function catat_surat_masuk_otomatis(PDO $pdo, array $dsp): ?string
         $agenda = sprintf('%03d/AGD/%s/%d', $urut, bulan_romawi($bulan), $tahun);
         try {
             $pdo->prepare('INSERT INTO surat_masuk (tahun, bulan, urut, nomor_agenda, nomor_surat_asal, tanggal_surat, tanggal_terima, jenis_pengirim,
-                    pengirim, perihal, sifat, tujuan, status, file_arsip, file_nama, dari_surat_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, \'internal\', ?, ?, ?, ?, \'didisposisikan\', ?, ?, ?)')
+                    pengirim, perihal, sifat, tujuan, status, file_arsip, file_nama, dari_surat_id, link_drive)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, \'internal\', ?, ?, ?, ?, \'didisposisikan\', ?, ?, ?, ?)')
                 ->execute([$tahun, $bulan, $urut, $agenda, $s['nomor_surat'], $s['tanggal_surat'], $hariIni,
-                    $pengirim, $s['perihal'], $sifat, $dsp['tujuan_disposisi'], $file, $nama, $s['id']]);
+                    $pengirim, $s['perihal'], $sifat, $dsp['tujuan_disposisi'], $file, $nama, $s['id'], (string) $s['link_drive']]);
             return $agenda;
         } catch (PDOException $e) {
             if ($e->getCode() !== '23000') { hapus_file($file); throw $e; }

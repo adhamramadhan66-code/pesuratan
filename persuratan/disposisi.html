@@ -178,8 +178,9 @@
                     <select id="u_sumber"><option value="">Pilih surat…</option></select>
                     <div class="sumber-info" id="u_info" style="display:none"></div>
                     <span class="help">Surat keluar muncul setelah dinomori di menu Penomoran.</span></div>
-                <div class="field"><label for="u_file">File surat <span class="req">*</span> <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
-                    <input type="file" id="u_file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+                <div class="field"><label for="u_link">Link Google Drive surat <span class="req">*</span></label>
+                    <input type="url" id="u_link" placeholder="https://drive.google.com/file/d/...">
+                    <span class="help">Unggah surat ke Google Drive, bagikan dengan akses "Siapa saja yang memiliki link", lalu tempel linknya di sini.</span></div>
             </div>
             <div class="modal-foot">
                 <button type="button" class="btn" id="uBatal">Batal</button>
@@ -203,9 +204,9 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
     <script src="profil.js?v=1"></script>
-    <script src="disposisi.js?v=102"></script>
+    <script src="disposisi.js?v=103"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

@@ -79,7 +79,7 @@ try {
 
         $sql = 'SELECT s.id, s.nomor_surat, s.tanggal_surat, s.perihal, s.untuk, s.jenis_ttd, s.pejabat_ttd, s.pembuat_surat,
                        s.jenis_kode, COALESCE(j.nama, s.jenis_kode) AS jenis_nama, s.status_arsip, s.tanggal_arsip,
-                       s.lokasi_arsip, s.keterangan_arsip, s.file_nama, (s.file_arsip <> \'\') AS ada_file
+                       s.lokasi_arsip, s.keterangan_arsip, s.file_nama, s.link_drive, (s.file_arsip <> \'\' OR s.link_drive <> \'\') AS ada_file
                 FROM surat s LEFT JOIN jenis_surat j ON j.kode = s.jenis_kode' . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY s.tanggal_surat DESC, s.id DESC LIMIT 500';
         $s = $pdo->prepare($sql);
         $s->execute($par);
@@ -113,8 +113,10 @@ try {
             $tgl = DateTime::createFromFormat('Y-m-d', (string) ($_POST['tanggal_arsip'] ?? ''));
             $tglArsip = ($tgl && $tgl->format('Y-m-d') === $_POST['tanggal_arsip']) ? $_POST['tanggal_arsip'] : date('Y-m-d');
 
-            $fileBaru = $surat['file_arsip']; $namaBaru = $surat['file_nama'];
-            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($fileBaru); $fileBaru = ''; $namaBaru = ''; }
+            $fileBaru = $surat['file_arsip']; $namaBaru = $surat['file_nama']; $linkBaru = $surat['link_drive'];
+            if (($_POST['hapus_file'] ?? '') === '1') { hapus_file($fileBaru); $fileBaru = ''; $namaBaru = ''; $linkBaru = ''; }
+            if (($lb = link_drive_bersih($_POST['link'] ?? '')) === null) json_keluar(['error' => 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'], 422);
+            if ($lb !== '') { hapus_file($fileBaru); $fileBaru = ''; $namaBaru = ''; $linkBaru = $lb; }
 
             $up = $_FILES['file'] ?? null;
             if ($up && $up['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -132,14 +134,21 @@ try {
                 $namaBaru = teks(basename((string) $up['name']), 200);
             }
 
-            if ($lokasi === '' && $fileBaru === '') json_keluar(['error' => 'Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).'], 422);
+            if ($lokasi === '' && $fileBaru === '' && $linkBaru === '') json_keluar(['error' => 'Isi lokasi arsip fisik atau unggah file scan (minimal salah satu).'], 422);
 
-            $pdo->prepare('UPDATE surat SET status_arsip = \'diarsipkan\', tanggal_arsip = ?, lokasi_arsip = ?, keterangan_arsip = ?, file_arsip = ?, file_nama = ? WHERE id = ?')
-                ->execute([$tglArsip, $lokasi, $ket, $fileBaru, $namaBaru, $id]);
+            $pdo->prepare('UPDATE surat SET status_arsip = \'diarsipkan\', tanggal_arsip = ?, lokasi_arsip = ?, keterangan_arsip = ?, file_arsip = ?, file_nama = ?, link_drive = ? WHERE id = ?')
+                ->execute([$tglArsip, $lokasi, $ket, $fileBaru, $namaBaru, $linkBaru, $id]);
             json_keluar(['ok' => true]);
 
         case 'unggah': {
-            // Hanya mengunggah/mengganti file surat (dari kartu di Surat Keluar); status arsip tidak berubah.
+            // Hanya mengisi/mengganti link surat (dari kartu di Surat Keluar); status arsip tidak berubah.
+            if (array_key_exists('link', $_POST)) {
+                $lb = link_drive_bersih($_POST['link']);
+                if ($lb === null || $lb === '') json_keluar(['error' => 'Tempel link Google Drive surat (https://drive.google.com/...).'], 422);
+                hapus_file($surat['file_arsip']);
+                $pdo->prepare('UPDATE surat SET link_drive = ?, file_arsip = \'\', file_nama = \'\' WHERE id = ?')->execute([$lb, $id]);
+                json_keluar(['ok' => true]);
+            }
             $up = $_FILES['file'] ?? null;
             if (!$up || $up['error'] === UPLOAD_ERR_NO_FILE) json_keluar(['error' => 'Pilih file surat (PDF/JPG/PNG).'], 422);
             if ($up['error'] === UPLOAD_ERR_INI_SIZE || $up['error'] === UPLOAD_ERR_FORM_SIZE) json_keluar(['error' => 'Ukuran file melebihi batas server (upload_max_filesize di php.ini).'], 413);

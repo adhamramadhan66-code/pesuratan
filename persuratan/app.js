@@ -143,6 +143,72 @@
             : '<div class="kartu-thumb kosong">' + thumb('', '') + '</div>';
     }
 
+
+    // ---------- Link Google Drive (pengganti unggah file) ----------
+    // Ambil ID file dari tautan Drive (/file/d/ID/ atau ?id=ID)
+    function driveId(link) {
+        const m = String(link || '').match(/\/d\/([A-Za-z0-9_-]{10,})/) || String(link || '').match(/[?&]id=([A-Za-z0-9_-]{10,})/);
+        return m ? m[1] : '';
+    }
+    // Pratinjau dari link Drive: gambar mini dari Drive, bila gagal tampil ikon dokumen
+    function thumbLink(link) {
+        const id = driveId(link);
+        const ikon = '<span class="kartu-isi">' + IKON.file + '<small>Surat (Drive)</small></span>';
+        if (!id) return ikon;
+        return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&amp;sz=w600" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML=this.dataset.ikon" data-ikon="' + esc(ikon) + '">';
+    }
+    // Pratinjau yang bisa diklik. Bila ada file/link: klik membuka (atau, jika `ganti` diisi, menawarkan Buka/Ganti).
+    // o: {url (file lama), nama, link, ada, ganti (id surat, opsional), unggah (id surat, opsional)}
+    function thumbSurat(o) {
+        const url = o.link || o.url;
+        if (!o.ada) {
+            return o.unggah
+                ? '<button type="button" class="kartu-thumb" data-unggah="' + o.unggah + '" title="Klik gambar di atas untuk menempel link Google Drive surat">' + thumb('', '') + '</button>'
+                : '<div class="kartu-thumb kosong">' + thumb('', '') + '</div>';
+        }
+        const isi = o.link ? thumbLink(o.link) : thumb(o.url, o.nama);
+        if (o.ganti) return '<button type="button" class="kartu-thumb" data-pilih="' + o.ganti + '" title="Klik untuk membuka atau mengganti file surat">' + isi + '</button>';
+        return '<a class="kartu-thumb" href="' + esc(url) + '" target="_blank" rel="noopener" title="Buka file surat">' + isi + '</a>';
+    }
+    function dlgDinamis(html) {
+        const d = document.createElement('dialog');
+        d.className = 'modal'; d.innerHTML = html;
+        document.body.appendChild(d);
+        d.addEventListener('close', () => d.remove());
+        d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+        d.showModal();
+        return d;
+    }
+    // Popup pilihan untuk file yang sudah ada: Buka atau Ganti
+    function pilihBukaGanti(url, onGanti) {
+        const d = dlgDinamis('<div class="modal-head"><h3>File surat</h3></div><div class="modal-body"><p>Surat sudah memiliki file. Mau dibuka atau diganti?</p></div>' +
+            '<div class="modal-foot aksi"><button type="button" class="btn" data-x="batal">Batal</button><button type="button" class="btn" data-x="ganti">Ganti</button><button type="button" class="btn primary" data-x="buka">Buka</button></div>');
+        d.addEventListener('click', (e) => {
+            const x = e.target.closest('button'); if (!x) return;
+            if (x.dataset.x === 'buka') window.open(url, '_blank', 'noopener');
+            d.close();
+            if (x.dataset.x === 'ganti') onGanti();
+        });
+    }
+    // Dialog tempel link Drive. Mengembalikan Promise<string|null>
+    function mintaLink(judul, awal) {
+        return new Promise((selesai) => {
+            let hasil = null;
+            const d = dlgDinamis('<form method="dialog"><div class="modal-head"><h3>' + esc(judul || 'Link Google Drive surat') + '</h3></div><div class="modal-body">' +
+                '<div class="field full"><label for="dl_link">Link Google Drive</label><input type="url" id="dl_link" placeholder="https://drive.google.com/file/d/..." value="' + esc(awal || '') + '" required></div>' +
+                '<p class="detail-petunjuk">Unggah surat ke Google Drive, klik kanan &rarr; Bagikan &rarr; ubah akses menjadi <b>"Siapa saja yang memiliki link"</b>, lalu salin dan tempel link di sini agar suratnya bisa tampil.</p></div>' +
+                '<div class="modal-foot aksi"><button type="button" class="btn" data-x="batal">Batal</button><button type="submit" class="btn primary">Simpan</button></div></form>');
+            const inp = d.querySelector('#dl_link'); inp.focus();
+            d.querySelector('[data-x=batal]').addEventListener('click', () => d.close());
+            d.querySelector('form').addEventListener('submit', (e) => {
+                e.preventDefault(); const v = inp.value.trim();
+                if (!driveId(v) || !/^https:\/\/(drive|docs)\.google\.com\//i.test(v)) { toast('Link harus dari Google Drive (https://drive.google.com/...).', true); return; }
+                hasil = v; d.close();
+            });
+            d.addEventListener('close', () => selesai(hasil));
+        });
+    }
+
     // Validasi file unggahan di sisi peramban (server tetap memeriksa ulang). Mengembalikan pesan galat atau ''.
     const MAKS_FILE = 10 * 1024 * 1024;
     function cekFile(f) {
@@ -162,5 +228,5 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile };
+    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile, driveId, thumbLink, thumbSurat, pilihBukaGanti, mintaLink };
 })();

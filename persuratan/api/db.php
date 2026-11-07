@@ -84,6 +84,7 @@ function buat_tabel(PDO $pdo): void
         keterangan_arsip VARCHAR(255) NOT NULL DEFAULT \'\',
         file_arsip       VARCHAR(80)  NOT NULL DEFAULT \'\',
         file_nama        VARCHAR(200) NOT NULL DEFAULT \'\',
+        link_drive       VARCHAR(500) NOT NULL DEFAULT \'\',
         tahap            VARCHAR(16)  NOT NULL DEFAULT \'bernomor\',
         jalur            VARCHAR(10)  NOT NULL DEFAULT \'disposisi\',
         tanggal_kirim    DATE NULL,
@@ -172,6 +173,7 @@ CREATE TABLE IF NOT EXISTS surat_masuk (
     keterangan_arsip VARCHAR(255) NOT NULL DEFAULT '',
     file_arsip       VARCHAR(80)  NOT NULL DEFAULT '',
     file_nama        VARCHAR(200) NOT NULL DEFAULT '',
+    link_drive       VARCHAR(500) NOT NULL DEFAULT '',
     dari_surat_id    INT NULL,
     dibuat_pada      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_agenda (tahun, bulan, urut),
@@ -189,6 +191,12 @@ SQL);
     // Jalur surat dipilih di Penomoran: 'disposisi' (lewat Disposisi) atau 'keluar' (langsung ke Surat Keluar).
     if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'jalur'")->fetch()) {
         $pdo->exec('ALTER TABLE surat ADD COLUMN jalur VARCHAR(10) NOT NULL DEFAULT \'disposisi\' AFTER tahap');
+    }
+    // Surat disimpan sebagai link Google Drive (bukan unggah file ke server). File unggahan lama tetap bisa dibuka.
+    foreach (['surat', 'surat_masuk'] as $t) {
+        if (!$pdo->query("SHOW COLUMNS FROM $t LIKE 'link_drive'")->fetch()) {
+            $pdo->exec("ALTER TABLE $t ADD COLUMN link_drive VARCHAR(500) NOT NULL DEFAULT '' AFTER file_nama");
+        }
     }
     if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_masuk_id'")->fetch()) {
         $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_masuk_id INT NULL AFTER surat_id');
@@ -217,6 +225,19 @@ function isi_data_master(PDO $pdo): void
         $s = $pdo->prepare('INSERT INTO unit (kode, nama, urutan) VALUES (?, ?, ?)');
         foreach ($master['unit'] as $i => [$kode, $nama]) $s->execute([$kode, $nama, $i + 1]);
     }
+}
+
+/**
+ * Rapikan link Google Drive/Docs. '' bila kosong, null bila bukan tautan drive.google.com / docs.google.com (https).
+ */
+function link_drive_bersih($v): ?string
+{
+    $v = trim((string) $v);
+    if ($v === '') return '';
+    if (strlen($v) > 500) return null;
+    $p = parse_url($v);
+    if (!$p || strtolower($p['scheme'] ?? '') !== 'https' || !in_array(strtolower($p['host'] ?? ''), ['drive.google.com', 'docs.google.com'], true)) return null;
+    return $v;
 }
 
 /** Angka bulan -> romawi (1 => I ... 12 => XII), sesuai Panduan poin 5. */
