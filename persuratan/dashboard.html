@@ -189,11 +189,10 @@
             const kartuJenis = (j) => '<a class="jenis-card" draggable="false" href="arsip.html?q=' + encodeURIComponent('/' + j.kode + '/') + '">' +
                 '<span class="jk">' + esc(j.kode) + '</span><span class="jn">' + esc(j.nama) + '</span><span class="jc"><b>' + j.n + '</b> surat</span></a>';
             function tampilJenis(daftar) {
-                const dibuat = daftar.filter((j) => j.n > 0);
-                const tanda = JSON.stringify(dibuat);
+                const tanda = JSON.stringify(daftar);
                 if (tanda === ttd) return;
                 ttd = tanda;
-                grid.innerHTML = dibuat.length ? dibuat.map(kartuJenis).join('') : '<p class="galeri-kosong">Belum ada surat yang dibuat.</p>';
+                grid.innerHTML = daftar.length ? daftar.map(kartuJenis).join('') : '<p class="galeri-kosong">Belum ada jenis surat.</p>';   // semua jenis, termasuk yang 0 surat
                 const atas = daftar.slice(0, 8);   // jenis yang sudah dipakai di depan, sisanya mengisi sampai 8 kotak
                 trek.innerHTML = atas.length ? '<div class="jenis-set">' + atas.map(kartuJenis).join('') + '</div>' : '<p class="galeri-kosong">Belum ada jenis surat.</p>';
                 trek.scrollLeft = 0; posisi = 0;
