@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=14">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -80,10 +80,6 @@
                 <h2>Dashboard</h2>
             </div>
             <div class="header-right">
-                <form class="search-box" id="searchForm">
-                    <i data-lucide="search" class="icon-search"></i>
-                    <input type="text" id="searchInput" placeholder="Cari nomor / perihal surat..." aria-label="Cari surat">
-                </form>
                 <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
                     <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
                     <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -143,7 +139,10 @@
                 </div>
             </div>
             <div class="toolbar terbaru-filter" id="filterTerbaru">
-                <input type="text" id="tbQ" placeholder="Cari nomor, perihal, tujuan, pembuat…" aria-label="Cari surat terbaru">
+                <form class="search-box" id="tbCari" role="search">
+                    <i data-lucide="search" class="icon-search"></i>
+                    <input type="text" id="tbQ" placeholder="Cari nomor / perihal surat…" aria-label="Cari surat">
+                </form>
                 <select id="tbJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
                 <select id="tbUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
                 <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
@@ -280,6 +279,7 @@
                     }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
             }
+            $('tbCari').addEventListener('submit', (ev) => { ev.preventDefault(); muatTerbaru(); });
             let tmTerbaru;
             $('tbQ').addEventListener('input', () => { clearTimeout(tmTerbaru); tmTerbaru = setTimeout(muatTerbaru, 300); });
             Object.values(FILTER).filter((id) => id !== 'tbQ').forEach((id) => $(id).addEventListener('change', muatTerbaru));
@@ -322,13 +322,6 @@
                     toast(e.message, true);
                     $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>';
                 }
-            });
-
-            // Kotak cari di header -> halaman Pengarsipan
-            $('searchForm').addEventListener('submit', (ev) => {
-                ev.preventDefault();
-                const q = $('searchInput').value.trim();
-                window.location.href = 'arsip.html' + (q ? '?q=' + encodeURIComponent(q) : '');
             });
         })();
     </script>

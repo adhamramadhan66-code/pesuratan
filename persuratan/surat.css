@@ -293,3 +293,5 @@ dialog.modal.lebar { width: min(860px, calc(100vw - 2rem)); }
 .terbaru-filter { padding: 0 1.25rem 1rem; }
 .terbaru-filter input[type=text] { flex: 1 1 260px; min-width: 200px; }
 .terbaru-filter select { flex: 0 1 auto; max-width: 100%; }
+.terbaru-filter .search-box { flex: 1 1 260px; min-width: 200px; }
+.terbaru-filter .search-box input { width: 100%; }
