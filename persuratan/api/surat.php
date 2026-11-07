@@ -134,8 +134,8 @@ try {
                      . ' ORDER BY tanggal_surat DESC, id DESC LIMIT ' . $limit;
                 $s = $pdo->prepare($sql);
                 $s->execute($par);
-                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(tahap = \'terkirim\'), 0) AS terkirim, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
-                                 . ($hanyaAcc ? ' WHERE ' . $sudahAcc : ''))->fetch();
+                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(jalur = \'disposisi\' AND ' . $sudahAcc . '), 0) AS acc, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat'
+                                 . ($hanyaAcc ? ' WHERE (jalur = \'keluar\' OR ' . $sudahAcc . ')' : ''))->fetch();
                 $thn = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat' => $s->fetchAll(), 'ringkas' => array_map('intval', $r), 'daftar_tahun' => $thn]);
 

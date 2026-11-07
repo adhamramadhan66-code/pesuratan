@@ -83,6 +83,8 @@ function baca_form(array $in): array
     return [$d, null];
 }
 
+const ACC_SQL = '(SELECT d.status FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1)';
+
 const KOLOM = 's.id, s.nomor_agenda, s.nomor_surat_asal, s.tanggal_surat, s.tanggal_terima, s.jenis_pengirim, s.pengirim, s.perihal, s.sifat, s.tujuan, s.status,
                s.status_arsip, s.tanggal_arsip, s.lokasi_arsip, s.keterangan_arsip, s.file_nama, (s.file_arsip <> \'\') AS ada_file, s.dari_surat_id,
                (SELECT d.id FROM disposisi d WHERE d.surat_masuk_id = s.id OR (s.dari_surat_id IS NOT NULL AND d.surat_id = s.dari_surat_id) ORDER BY d.id LIMIT 1) AS disposisi_id,
@@ -120,7 +122,8 @@ try {
 
             case 'daftar':
                 $where = []; $par = [];
-                if (in_array($_GET['status'] ?? '', STATUS_BOLEH, true)) { $where[] = 's.status = ?'; $par[] = $_GET['status']; }
+                if (($_GET['acc'] ?? '') === 'sudah') $where[] = ACC_SQL . ' = \'disetujui\'';
+                if (($_GET['acc'] ?? '') === 'belum') $where[] = '(' . ACC_SQL . ' IS NULL OR ' . ACC_SQL . ' <> \'disetujui\')';
                 if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $where[] = 's.status_arsip = ?'; $par[] = $_GET['arsip']; }
                 if (in_array($_GET['jenis'] ?? '', JENIS_PENGIRIM, true)) { $where[] = 's.jenis_pengirim = ?'; $par[] = $_GET['jenis']; }
                 if (in_array($_GET['sifat'] ?? '', SIFAT_BOLEH, true)) { $where[] = 's.sifat = ?'; $par[] = $_GET['sifat']; }
@@ -137,7 +140,7 @@ try {
                 $baris = $s->fetchAll();
                 foreach ($baris as &$b) $b['ada_file'] = (bool) $b['ada_file'];
                 unset($b);
-                $r = $pdo->query('SELECT COUNT(*) AS total, COALESCE(SUM(status = \'ditindaklanjuti\'), 0) AS selesai, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat_masuk')->fetch();
+                $r = $pdo->query('SELECT COUNT(*) AS total, (SELECT COUNT(*) FROM surat_masuk s WHERE ' . ACC_SQL . ' = \'disetujui\') AS selesai, COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan FROM surat_masuk')->fetch();
                 $tahun = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat_masuk ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat_masuk' => $baris, 'total' => (int) $r['total'], 'ditindaklanjuti' => (int) $r['selesai'], 'diarsipkan' => (int) $r['diarsipkan'], 'daftar_tahun' => $tahun]);
 

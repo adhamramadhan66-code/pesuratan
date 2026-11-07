@@ -3,14 +3,13 @@
     const { $, esc, tglIndo, hariIni, api, toast, BULAN } = App;
     const API = 'api/surat_masuk.php';
     const MAKS = 10 * 1024 * 1024;
-    const NAMA_STATUS = { diterima: 'Diterima', didisposisikan: 'Didisposisikan', ditindaklanjuti: 'Ditindaklanjuti' };
     const NAMA_SIFAT = { biasa: 'Biasa', penting: 'Penting', segera: 'Segera', rahasia: 'Rahasia' };
 
     let baris = [], arsip = '', editId = null, aktif = null;
 
     // ---------- Daftar ----------
     async function muat() {
-        const p = new URLSearchParams({ aksi: 'daftar', arsip, status: $('fStatus').value, jenis: $('fJenis').value, sifat: $('fSifat').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
+        const p = new URLSearchParams({ aksi: 'daftar', arsip, acc: $('fAcc').value, jenis: $('fJenis').value, sifat: $('fSifat').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
         try {
             const d = await api(API + '?' + p);
             baris = d.surat_masuk;
@@ -30,11 +29,7 @@
         if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat masuk. Surat internal muncul di sini otomatis setelah di-ACC di menu Disposisi.</p>'; return; }
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
-            const dsp = r.disposisi_id
-                ? '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">Disposisi ' + (r.status_disposisi === 'disetujui' ? 'disetujui' : 'belum disetujui') + '</span>'
-                : '';
             const aksi = ['<button class="btn sm" data-ubah="' + r.id + '">Ubah</button>'];
-            if (r.status !== 'ditindaklanjuti') aksi.push('<button class="btn sm" data-tindak="' + r.id + '">Tandai ditindaklanjuti</button>');
             aksi.push(sudah ? '<button class="btn sm" data-arsip="' + r.id + '">Ubah arsip</button><button class="btn sm danger" data-batal="' + r.id + '">Batalkan arsip</button>'
                             : '<button class="btn sm primary" data-arsip="' + r.id + '">Arsipkan</button>');
             if (!r.disposisi_id) aksi.push('<a class="btn sm" href="disposisi.html?unggah=m:' + r.id + '">Unggah di Disposisi</a>', '<button class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>');
@@ -42,7 +37,7 @@
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_agenda, judul: esc(r.nomor_agenda),
                 thumb: App.thumbFile(API + '?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
                 sub: [esc(r.perihal), esc(r.pengirim) + ' · ' + (r.jenis_pengirim === 'internal' ? 'Internal' : 'Eksternal') + ' · ' + esc(NAMA_SIFAT[r.sifat] || r.sifat)],
-                status: '<span class="badge st-' + esc(r.status) + '">' + esc(NAMA_STATUS[r.status] || r.status) + '</span>' + dsp +
+                status: '<span class="badge ' + (r.status_disposisi === 'disetujui' ? 'ok' : 'warn') + '">' + (r.status_disposisi === 'disetujui' ? 'Sudah di-ACC' : 'Belum di-ACC') + '</span>' +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
                 aksi: aksi.join(''),
             });
@@ -51,7 +46,7 @@
 
     document.querySelectorAll('#segArsip input').forEach((r) => r.addEventListener('change', () => { arsip = r.value; muat(); }));
     let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
-    ['fStatus', 'fJenis', 'fSifat', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
+    ['fAcc', 'fJenis', 'fSifat', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
 
     // ---------- Form catat / ubah ----------
     const dlg = $('dlgForm');
@@ -61,8 +56,7 @@
         $('m_terima').value = r.tanggal_terima || hariIni(); $('m_tgl').value = r.tanggal_surat || ''; $('m_asal').value = r.nomor_surat_asal || '';
         document.querySelectorAll('input[name="m_jenis"]').forEach((c) => { c.checked = c.value === (r.jenis_pengirim || 'eksternal'); });
         $('m_pengirim').value = r.pengirim || ''; $('m_perihal').value = r.perihal || ''; $('m_tujuan').value = r.tujuan || '';
-        $('m_sifat').value = r.sifat || 'biasa'; $('m_status').value = r.status || 'diterima'; $('m_file').value = ''; $('m_hapusFile').checked = false;
-        $('boxStatus').style.display = r.id ? '' : 'none';
+        $('m_sifat').value = r.sifat || 'biasa'; $('m_file').value = ''; $('m_hapusFile').checked = false;
         $('fileNowM').style.display = r.ada_file ? '' : 'none';
         if (r.ada_file) { $('fileNowNamaM').textContent = r.file_nama; $('fileNowLihatM').href = API + '?aksi=file&id=' + r.id; }
     }
@@ -84,7 +78,7 @@
         const fd = new FormData();
         fd.append('aksi', editId ? 'ubah' : 'tambah'); if (editId) fd.append('id', editId);
         [['tanggal_terima', 'm_terima'], ['tanggal_surat', 'm_tgl'], ['nomor_surat_asal', 'm_asal'], ['pengirim', 'm_pengirim'], ['perihal', 'm_perihal'],
-         ['tujuan', 'm_tujuan'], ['sifat', 'm_sifat'], ['status', 'm_status']].forEach(([k, id]) => fd.append(k, $(id).value));
+         ['tujuan', 'm_tujuan'], ['sifat', 'm_sifat']].forEach(([k, id]) => fd.append(k, $(id).value));
         fd.append('jenis_pengirim', jenisDipilih());
         if ($('m_hapusFile').checked) fd.append('hapus_file', '1');
         if (file) fd.append('file', file);
@@ -133,7 +127,6 @@
         const r = baris.find((x) => +x.id === id); if (!r) return;
         try {
             if (b.dataset.ubah) { editId = id; $('dlgJudul').textContent = 'Ubah surat masuk ' + r.nomor_agenda; isiForm(r); dlg.showModal(); dlg.scrollTop = 0; }
-            else if (b.dataset.tindak) { await kirim({ aksi: 'status', id, status: 'ditindaklanjuti' }); toast(r.nomor_agenda + ' ditandai ditindaklanjuti'); muat(); }
             else if (b.dataset.arsip) bukaArsip(r);
             else if (b.dataset.batal) {
                 if (!confirm('Batalkan pengarsipan surat masuk ' + r.nomor_agenda + '? Lokasi dan tanggal arsip dihapus; file scan tetap disimpan.')) return;

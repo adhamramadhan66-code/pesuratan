@@ -97,9 +97,9 @@
                 <div class="progress"><i id="sBar" style="width:0"></i></div>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Sudah terkirim</p>
+                <p class="kpi-title">Sudah di-ACC</p>
                 <h3 class="kpi-value" id="sKirim">0</h3>
-                <p class="kpi-trend positive">Tahap 4 selesai</p>
+                <p class="kpi-trend positive">Disetujui lewat Disposisi</p>
             </div>
             <div class="kpi-card">
                 <p class="kpi-title">Belum diarsipkan</p>
@@ -113,10 +113,9 @@
                 <div><h3>Alur surat keluar</h3></div>
             </div>
             <div class="alur-info"><ol class="langkah">
-                <li><b>1</b> Draf &amp; nomor <small>Konsep disusun, nomor diberikan di Penomoran</small></li>
-                <li><b>2</b> Verifikasi &amp; persetujuan <small>Diperiksa dan disetujui atasan (lihat Disposisi)</small></li>
-                <li><b>3</b> Tanda tangan &amp; cap <small>Ditandatangani pejabat, diberi cap atau TTD elektronik</small></li>
-                <li><b>4</b> Pengiriman &amp; pengarsipan <small>Dikirim ke tujuan, salinannya diarsipkan</small></li>
+                <li><b>1</b> Penomoran <small>Nomor surat diambil di menu Penomoran</small></li>
+                <li><b>2</b> ACC <small>Surat dari Disposisi disetujui; pilihan "Surat Keluar" langsung masuk ke sini</small></li>
+                <li><b>3</b> Unggah &amp; arsip <small>File surat diunggah, lalu diarsipkan</small></li>
             </ol></div>
             <div class="panel-head" style="border-top:1px solid var(--border-color)">
                 <div class="seg" id="segArsip" role="radiogroup" aria-label="Filter status arsip">
@@ -126,7 +125,6 @@
                 </div>
                 <div class="toolbar">
                     <input type="text" id="q" placeholder="Cari nomor, perihal, penerima…" aria-label="Cari surat keluar">
-                    <select id="fTahap" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="bernomor">Bernomor</option><option value="diperiksa">Diperiksa</option><option value="ditandatangani">Ditandatangani</option><option value="terkirim">Terkirim</option></select>
                     <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
                     <select id="fBulan" aria-label="Bulan"></select>
                 </div>
@@ -152,7 +150,7 @@
 
     <script src="app.js?v=6"></script>
     <script src="profil.js?v=1"></script>
-    <script src="surat_keluar.js?v=100"></script>
+    <script src="surat_keluar.js?v=101"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

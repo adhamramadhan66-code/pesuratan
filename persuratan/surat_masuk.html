@@ -97,9 +97,9 @@
                 <div class="progress"><i id="sBar" style="width:0"></i></div>
             </div>
             <div class="kpi-card">
-                <p class="kpi-title">Sudah ditindaklanjuti</p>
+                <p class="kpi-title">Sudah di-ACC</p>
                 <h3 class="kpi-value" id="sTindak">0</h3>
-                <p class="kpi-trend positive">Tahap 3 selesai</p>
+                <p class="kpi-trend positive">Disposisi disetujui</p>
             </div>
             <div class="kpi-card">
                 <p class="kpi-title">Belum diarsipkan</p>
@@ -113,9 +113,9 @@
                 <div><h3>Alur surat masuk</h3></div>
             </div>
             <div class="alur-info"><ol class="langkah">
-                <li><b>1</b> Penerimaan &amp; pencatatan <small>Surat diterima TU/sekretariat dan dicatat</small></li>
-                <li><b>2</b> Disposisi <small>Diteruskan ke pimpinan untuk arahan</small></li>
-                <li><b>3</b> Tindak lanjut <small>Diserahkan ke unit terkait</small></li>
+                <li><b>1</b> Dicatat <small>Surat masuk dicatat; surat internal otomatis dari Disposisi</small></li>
+                <li><b>2</b> ACC <small>Disposisi disetujui di menu Disposisi</small></li>
+                <li><b>3</b> Arsip <small>File surat diunggah lalu diarsipkan</small></li>
             </ol></div>
             <div class="panel-head" style="border-top:1px solid var(--border-color)">
                 <div class="seg" id="segArsip" role="radiogroup" aria-label="Filter status arsip">
@@ -125,7 +125,7 @@
                 </div>
                 <div class="toolbar">
                     <input type="text" id="q" placeholder="Cari agenda, pengirim, perihal…" aria-label="Cari surat masuk">
-                    <select id="fStatus" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="diterima">Diterima</option><option value="didisposisikan">Didisposisikan</option><option value="ditindaklanjuti">Ditindaklanjuti</option></select>
+                    <select id="fAcc" aria-label="Status ACC"><option value="">Semua status</option><option value="sudah">Sudah di-ACC</option><option value="belum">Belum di-ACC</option></select>
                     <select id="fSifat" aria-label="Sifat surat"><option value="">Semua sifat</option><option value="penting">Penting</option><option value="segera">Segera</option><option value="rahasia">Rahasia</option><option value="biasa">Biasa</option></select>
                     <select id="fJenis" aria-label="Jenis pengirim"><option value="">Semua pengirim</option><option value="eksternal">Eksternal</option><option value="internal">Internal</option></select>
                     <select id="fTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
@@ -154,8 +154,6 @@
                     <div class="field"><label for="m_tujuan">Ditujukan kepada <span class="opt">(unit atau pejabat)</span></label><input type="text" id="m_tujuan" maxlength="150" placeholder="Contoh: Rektor"></div>
                     <div class="field"><label for="m_sifat">Sifat</label>
                         <select id="m_sifat"><option value="biasa">Biasa</option><option value="penting">Penting</option><option value="segera">Segera</option><option value="rahasia">Rahasia</option></select></div>
-                    <div class="field" id="boxStatus" style="display:none"><label for="m_status">Tahap</label>
-                        <select id="m_status"><option value="diterima">Diterima</option><option value="didisposisikan">Didisposisikan</option><option value="ditindaklanjuti">Ditindaklanjuti</option></select></div>
                     <div class="field full"><label for="m_file">File scan surat <span class="opt">(PDF / JPG / PNG, maks. 10 MB)</span></label>
                         <div class="file-now" id="fileNowM" style="display:none">
                             <span>File saat ini: <b id="fileNowNamaM"></b> <a href="#" id="fileNowLihatM" target="_blank" rel="noopener" class="muted">(lihat)</a></span>
@@ -194,7 +192,7 @@
 
     <script src="app.js?v=6"></script>
     <script src="profil.js?v=1"></script>
-    <script src="surat_masuk.js?v=99x"></script>
+    <script src="surat_masuk.js?v=101"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

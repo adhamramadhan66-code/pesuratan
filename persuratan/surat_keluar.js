@@ -9,14 +9,14 @@
     let baris = [], arsip = '', aktif = null;
 
     async function muat() {
-        const p = new URLSearchParams({ aksi: 'daftar', arsip, tahap: $('fTahap').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 500, acc: 1 });
+        const p = new URLSearchParams({ aksi: 'daftar', arsip, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value, limit: 500, acc: 1 });
         try {
             const d = await api(API + '?' + p);
             baris = d.surat;
             const r = d.ringkas;
-            $('sTotal').textContent = r.total; $('sKirim').textContent = r.terkirim; $('sBelum').textContent = r.total - r.diarsipkan;
-            $('sPersen').textContent = r.total ? Math.round((r.terkirim / r.total) * 100) + '% sudah terkirim' : 'Belum ada surat keluar';
-            $('sBar').style.width = (r.total ? (r.terkirim / r.total) * 100 : 0) + '%';
+            $('sTotal').textContent = r.total; $('sKirim').textContent = r.acc; $('sBelum').textContent = r.total - r.diarsipkan;
+            $('sPersen').textContent = r.total ? Math.round(((r.total - r.diarsipkan) / r.total) * 100) + '% belum diarsipkan' : 'Belum ada surat keluar';
+            $('sBar').style.width = (r.total ? (r.diarsipkan / r.total) * 100 : 0) + '%';
             const sel = $('fTahun'), cur = sel.value;
             if (sel.options.length - 1 !== d.daftar_tahun.length) {
                 sel.innerHTML = '<option value="">Semua tahun</option>' + d.daftar_tahun.map((t) => '<option value="' + t + '">' + t + '</option>').join('');
@@ -26,19 +26,11 @@
         } catch (e) { $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
     }
 
-    function langkah(t) {
-        const i = TAHAP.indexOf(t);
-        return '<span class="stp" title="Bernomor → Diperiksa → Ditandatangani → Terkirim">' + TAHAP.map((x, k) => '<i class="' + (k < i ? 'sudah' : k === i ? 'kini' : '') + '"></i>').join('') + '</span>';
-    }
-
     function render() {
         if (!baris.length) { $('galeri').innerHTML = '<p class="galeri-kosong">Belum ada surat keluar. Surat muncul di sini bila dipilih "Surat Keluar" di Penomoran, atau setelah di-ACC di menu Disposisi.</p>'; return; }
         $('galeri').innerHTML = baris.map((r) => {
             const sudah = r.status_arsip === 'diarsipkan';
-            const i = TAHAP.indexOf(r.tahap);
             const aksi = [];
-            if (KE_DEPAN[r.tahap]) aksi.push('<button class="btn sm primary" data-maju="' + r.id + '">' + KE_DEPAN[r.tahap] + '</button>');
-            if (i > 0) aksi.push('<button class="btn sm" data-mundur="' + r.id + '">Mundurkan</button>');
             aksi.push('<button class="btn sm" data-unggah="' + r.id + '">' + (r.ada_file ? 'Ganti file' : '+ Unggah file') + '</button>');
             // Arsipkan hanya bila file surat sudah diunggah
             if (r.ada_file || sudah) aksi.push('<a class="btn sm" href="arsip.html?q=' + encodeURIComponent(r.nomor_surat) + '">' + (sudah ? 'Lihat arsip' : 'Arsipkan') + '</a>');
@@ -47,7 +39,7 @@
                 kelas: sudah ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
                 thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
                 sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                status: '<span class="badge st-' + esc(r.tahap) + '">' + esc(NAMA[r.tahap] || r.tahap) + '</span>' + langkah(r.tahap) +
+                status: (r.jalur === 'keluar' ? '<span class="badge">Tanpa ACC</span>' : '<span class="badge ok">Sudah di-ACC</span>') +
                     '<span class="badge ' + (sudah ? 'ok' : 'warn') + '">' + (sudah ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
                 aksi: aksi.join(''),
             });
@@ -56,7 +48,7 @@
 
     document.querySelectorAll('#segArsip input').forEach((r) => r.addEventListener('change', () => { arsip = r.value; muat(); }));
     let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
-    ['fTahap', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
+    ['fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
 
     const ubahTahap = (id, tahap, tambahan) => api(API, Object.assign({ aksi: 'tahap', id, tahap }, tambahan || {}));
 
