@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=16">
+    <link rel="stylesheet" href="surat.css?v=13">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -137,10 +137,21 @@
         <!-- TABLE -->
         <div class="table-card" data-dash>
             <div class="table-header">
-                <h3>Surat terbaru pada rentang ini</h3>
+                <div><h3>Surat terbaru</h3><span class="muted" id="terbaruInfo" style="font-size:.8125rem"></span></div>
                 <div class="table-actions">
                     <a class="btn sm" href="arsip.html">Lihat semua</a>
                 </div>
+            </div>
+            <div class="toolbar terbaru-filter" id="filterTerbaru">
+                <input type="text" id="tbQ" placeholder="Cari nomor, perihal, tujuan, pembuat…" aria-label="Cari surat terbaru">
+                <select id="tbJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
+                <select id="tbUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
+                <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
+                <select id="tbJalur" aria-label="Surat masuk atau keluar"><option value="">Surat Masuk &amp; Keluar</option><option value="disposisi">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
+                <select id="tbTahap" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="bernomor">Bernomor</option><option value="diperiksa">Diperiksa</option><option value="ditandatangani">Ditandatangani</option><option value="terkirim">Terkirim</option></select>
+                <select id="tbArsip" aria-label="Status arsip"><option value="">Semua status arsip</option><option value="belum">Belum diarsipkan</option><option value="diarsipkan">Diarsipkan</option></select>
+                <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
+                <button type="button" class="btn sm" id="tbReset">Reset filter</button>
             </div>
             <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </div>
@@ -245,6 +256,39 @@
             });
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
+            // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
+            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', jalur: 'tbJalur', tahap: 'tbTahap', arsip: 'tbArsip', urut: 'tbUrut' };
+            let tungguTerbaru = 0;
+            async function muatTerbaru() {
+                if (!rentangIni) return;
+                const my = ++tungguTerbaru;
+                const p = new URLSearchParams({ aksi: 'terbaru', dari: rentangIni.dari, sampai: rentangIni.sampai, limit: 12 });
+                Object.entries(FILTER).forEach(([k, id]) => { const v = $(id).value.trim(); if (v) p.set(k, v); });
+                try {
+                    const d = await api('api/surat.php?' + p);
+                    if (my !== tungguTerbaru) return;
+                    const aktif = Object.values(FILTER).some((id) => $(id).value);
+                    $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (aktif ? ' (difilter)' : '');
+                    $('galeri').innerHTML = d.surat.length ? d.surat.map((r) => {
+                        const sdh = r.status_arsip === 'diarsipkan', keluar = r.jalur === 'keluar';
+                        return App.kartuHtml({
+                            kelas: sdh ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
+                            thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                            sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + (keluar ? 'Surat Keluar' : 'Surat Masuk')],
+                            status: '<span class="badge ' + (sdh ? 'ok' : 'warn') + '">' + (sdh ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+                        });
+                    }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
+                } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+            }
+            let tmTerbaru;
+            $('tbQ').addEventListener('input', () => { clearTimeout(tmTerbaru); tmTerbaru = setTimeout(muatTerbaru, 300); });
+            Object.values(FILTER).filter((id) => id !== 'tbQ').forEach((id) => $(id).addEventListener('change', muatTerbaru));
+            $('tbReset').addEventListener('click', () => { Object.values(FILTER).forEach((id) => { $(id).value = ''; }); muatTerbaru(); });
+            api('api/surat.php?aksi=opsi').then((o) => {
+                $('tbJenis').insertAdjacentHTML('beforeend', o.jenis.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
+                $('tbUnit').insertAdjacentHTML('beforeend', o.unit.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
+            }).catch(() => {});
+
             document.addEventListener('rentang', async (ev) => {
                 const { dari, sampai, mode } = ev.detail;
                 rentangIni = ev.detail;
@@ -272,12 +316,7 @@
                     }
                     isiFilterJenis(d.per_jenis || []);
 
-                    $('galeri').innerHTML = d.terbaru.length ? d.terbaru.map((r) => App.kartuHtml({
-                        kelas: r.status_arsip === 'diarsipkan' ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                        thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
-                        sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal')],
-                        status: '<span class="badge ' + (r.status_arsip === 'diarsipkan' ? 'ok' : 'warn') + '">' + (r.status_arsip === 'diarsipkan' ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
-                    })).join('') : '<p class="galeri-kosong">Tidak ada surat pada rentang tanggal ini.</p>';
+                    muatTerbaru();
                 } catch (e) {
                     terakhir = '';
                     toast(e.message, true);

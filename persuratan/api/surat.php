@@ -139,6 +139,29 @@ try {
                 $thn = array_map('intval', $pdo->query('SELECT DISTINCT tahun FROM surat ORDER BY tahun DESC')->fetchAll(PDO::FETCH_COLUMN));
                 keluar(['surat' => $s->fetchAll(), 'ringkas' => array_map('intval', $r), 'daftar_tahun' => $thn]);
 
+            case 'terbaru':
+                // Surat terbaru pada rentang kalender, dengan filter lengkap (dipakai kotak "Surat terbaru" di dashboard).
+                $dari   = tanggal_valid($_GET['dari'] ?? '')   ?? date('Y-m-01');
+                $sampai = tanggal_valid($_GET['sampai'] ?? '') ?? date('Y-m-t');
+                $w = ['tanggal_surat BETWEEN ? AND ?']; $p = [$dari, $sampai];
+                if (($q = teks($_GET['q'] ?? '', 80)) !== '') {
+                    $w[] = '(nomor_surat LIKE ? OR perihal LIKE ? OR untuk LIKE ? OR pembuat_surat LIKE ?)';
+                    array_push($p, "%$q%", "%$q%", "%$q%", "%$q%");
+                }
+                if (($v = (string) ($_GET['jenis'] ?? '')) !== '') { $w[] = 'jenis_kode = ?'; $p[] = $v; }
+                if (($v = (string) ($_GET['unit'] ?? '')) !== '') { $w[] = 'unit_kode = ?'; $p[] = $v; }
+                if (in_array($_GET['tujuan'] ?? '', ['A', 'B'], true)) { $w[] = 'kode_tujuan = ?'; $p[] = $_GET['tujuan']; }
+                if (in_array($_GET['jalur'] ?? '', ['disposisi', 'keluar'], true)) { $w[] = 'jalur = ?'; $p[] = $_GET['jalur']; }
+                if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $w[] = 'status_arsip = ?'; $p[] = $_GET['arsip']; }
+                if (in_array($_GET['tahap'] ?? '', TAHAP_BOLEH, true)) { $w[] = 'tahap = ?'; $p[] = $_GET['tahap']; }
+                $urut = ($_GET['urut'] ?? '') === 'lama' ? 'ASC' : 'DESC';
+                $batas = max(1, min(50, (int) ($_GET['limit'] ?? 12)));
+                $s = $pdo->prepare('SELECT ' . KOLOM_LIST . ' FROM surat WHERE ' . implode(' AND ', $w) . " ORDER BY tanggal_surat $urut, id $urut LIMIT $batas");
+                $s->execute($p);
+                $c = $pdo->prepare('SELECT COUNT(*) FROM surat WHERE ' . implode(' AND ', $w));
+                $c->execute($p);
+                keluar(['surat' => $s->fetchAll(), 'total' => (int) $c->fetchColumn()]);
+
             case 'statistik':
                 $dari   = tanggal_valid($_GET['dari'] ?? '')   ?? date('Y-m-01');
                 $sampai = tanggal_valid($_GET['sampai'] ?? '') ?? date('Y-m-t');

@@ -288,3 +288,8 @@ dialog.modal.lebar { width: min(860px, calc(100vw - 2rem)); }
 .chart-sub { margin: -.9rem 0 .5rem; font-size: .8rem; color: var(--text-muted); }
 .grafik-filter { display: flex; align-items: center; gap: .5rem; font-size: .85rem; color: var(--text-muted); }
 .grafik-filter select { max-width: 14rem; }
+
+/* Filter "Surat terbaru" di dashboard */
+.terbaru-filter { padding: 0 1.25rem 1rem; }
+.terbaru-filter input[type=text] { flex: 1 1 260px; min-width: 200px; }
+.terbaru-filter select { flex: 0 1 auto; max-width: 100%; }
