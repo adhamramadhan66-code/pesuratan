@@ -159,7 +159,12 @@ try {
                 $s = $pdo->prepare('SELECT ' . KOLOM_LIST . ' FROM surat WHERE tanggal_surat BETWEEN ? AND ?
                                     ORDER BY tanggal_surat DESC, id DESC LIMIT 8');
                 $s->execute([$dari, $sampai]);
-                keluar(['total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan), 'terbaru' => $s->fetchAll()]);
+                // Jumlah surat per jenis (seluruh waktu) untuk kotak Jenis surat di dashboard; yang terbanyak di depan.
+                $perJenis = $pdo->query('SELECT j.kode, j.nama, COUNT(s.id) AS n FROM jenis_surat j LEFT JOIN surat s ON s.jenis_kode = j.kode
+                                         GROUP BY j.kode, j.nama ORDER BY n DESC, j.nama')->fetchAll();
+                foreach ($perJenis as &$pj) $pj['n'] = (int) $pj['n'];
+                unset($pj);
+                keluar(['per_jenis' => $perJenis, 'total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan), 'terbaru' => $s->fetchAll()]);
 
             default:
                 keluar(['error' => 'Aksi tidak dikenal.'], 400);

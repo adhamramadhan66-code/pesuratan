@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=12">
+    <link rel="stylesheet" href="surat.css?v=13">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -94,7 +94,7 @@
         </header>
 
         <!-- FILTERS -->
-        <div class="filters">
+        <div class="filters" data-dash>
             <div class="filter-group">
                 <button type="button" data-period="day">Day</button>
                 <button type="button" data-period="week">Week</button>
@@ -123,32 +123,18 @@
             </div>
         </div>
 
-        <!-- KPI CARDS (mengikuti rentang tanggal di atas) -->
-        <div class="kpi-grid">
-            <div class="kpi-card dark">
-                <p class="kpi-title">Total surat keluar</p>
-                <h3 class="kpi-value" id="kTotal">0</h3>
-                <p class="kpi-trend" id="kRentang">&nbsp;</p>
+        <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
+        <section class="jenis-sec" id="jenisSec" aria-label="Jenis surat">
+            <div class="jenis-head">
+                <h3>Jenis surat</h3>
+                <button type="button" class="btn sm" id="btnJenisSemua">Lihat semua</button>
             </div>
-            <div class="kpi-card">
-                <p class="kpi-title">Surat internal (A)</p>
-                <h3 class="kpi-value" id="kInternal">0</h3>
-                <p class="kpi-trend" id="kInternalPct">&nbsp;</p>
-            </div>
-            <div class="kpi-card">
-                <p class="kpi-title">Surat eksternal (B)</p>
-                <h3 class="kpi-value" id="kEksternal">0</h3>
-                <p class="kpi-trend" id="kEksternalPct">&nbsp;</p>
-            </div>
-            <div class="kpi-card">
-                <p class="kpi-title">Sudah diarsipkan</p>
-                <h3 class="kpi-value" id="kArsip">0</h3>
-                <p class="kpi-trend" id="kArsipPct">&nbsp;</p>
-            </div>
-        </div>
+            <div class="jenis-track" id="jenisTrack" aria-label="Jenis surat yang sudah dibuat"></div>
+            <div class="jenis-grid" id="jenisGrid" hidden></div>
+        </section>
 
         <!-- CHARTS AREA -->
-        <div class="charts-grid">
+        <div class="charts-grid" data-dash>
             <div class="chart-card main-chart">
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
@@ -172,7 +158,7 @@
         </div>
 
         <!-- TABLE -->
-        <div class="table-card">
+        <div class="table-card" data-dash>
             <div class="table-header">
                 <h3>Surat terbaru pada rentang ini</h3>
                 <div class="table-actions">
@@ -196,6 +182,63 @@
             const { $, esc, tglIndo, api, toast } = App;
             const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             let terakhir = '';
+
+            // ---------- Jenis surat: carousel otomatis + seret, atau kotak-kotak (Lihat semua) ----------
+            const trek = $('jenisTrack'), grid = $('jenisGrid'), tombol = $('btnJenisSemua');
+            let semuaMode = false, ttd = '', geserAktif = true, tahan = false;
+            const kartuJenis = (j) => '<a class="jenis-card" draggable="false" href="arsip.html?q=' + encodeURIComponent('/' + j.kode + '/') + '">' +
+                '<span class="jk">' + esc(j.kode) + '</span><span class="jn">' + esc(j.nama) + '</span><span class="jc"><b>' + j.n + '</b> surat</span></a>';
+            function tampilJenis(daftar) {
+                const dibuat = daftar.filter((j) => j.n > 0);
+                const tanda = JSON.stringify(dibuat);
+                if (tanda === ttd) return;
+                ttd = tanda;
+                grid.innerHTML = dibuat.length ? dibuat.map(kartuJenis).join('') : '<p class="galeri-kosong">Belum ada surat yang dibuat.</p>';
+                const atas = dibuat.slice(0, 8);
+                trek.innerHTML = atas.length ? '<div class="jenis-set">' + atas.map(kartuJenis).join('') + '</div>' : '<p class="galeri-kosong">Belum ada surat yang dibuat.</p>';
+                trek.scrollLeft = 0;
+                const set = trek.querySelector('.jenis-set');
+                if (set && set.scrollWidth > trek.clientWidth) trek.appendChild(set.cloneNode(true));   // salinan agar putarannya mulus
+            }
+            // geser otomatis (berhenti saat kursor di atasnya / sedang diseret / pengguna memilih mengurangi gerakan)
+            const kurangiGerak = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let posisi = 0;
+            function gerak() {
+                const sets = trek.querySelectorAll('.jenis-set');
+                if (geserAktif && !tahan && !semuaMode && !kurangiGerak && sets.length === 2) {
+                    posisi += 0.6;
+                    const setengah = sets[1].offsetLeft - sets[0].offsetLeft;
+                    if (posisi >= setengah) posisi -= setengah;
+                    trek.scrollLeft = posisi;
+                } else posisi = trek.scrollLeft;
+                requestAnimationFrame(gerak);
+            }
+            requestAnimationFrame(gerak);
+            trek.addEventListener('mouseenter', () => { tahan = true; });
+            trek.addEventListener('mouseleave', () => { tahan = false; });
+            trek.addEventListener('touchstart', () => { tahan = true; }, { passive: true });
+            trek.addEventListener('touchend', () => { setTimeout(() => { tahan = false; }, 1500); });
+            // seret dengan kursor
+            let seret = null, bergerak = false;
+            trek.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; seret = { x: e.clientX, kiri: trek.scrollLeft }; bergerak = false; trek.classList.add('menyeret'); });
+            window.addEventListener('pointermove', (e) => {
+                if (!seret) return;
+                const dx = e.clientX - seret.x;
+                if (Math.abs(dx) > 4) bergerak = true;
+                let p = seret.kiri - dx;
+                const sets = trek.querySelectorAll('.jenis-set');
+                if (sets.length === 2) { const h = sets[1].offsetLeft - sets[0].offsetLeft; p = ((p % h) + h) % h; seret.kiri = p + dx; }
+                trek.scrollLeft = p; posisi = p;
+            });
+            window.addEventListener('pointerup', () => { seret = null; trek.classList.remove('menyeret'); });
+            trek.addEventListener('click', (e) => { if (bergerak) { e.preventDefault(); bergerak = false; } }, true);
+            tombol.addEventListener('click', () => {
+                semuaMode = !semuaMode;
+                document.querySelectorAll('[data-dash]').forEach((el) => { el.hidden = semuaMode; });
+                trek.hidden = semuaMode; grid.hidden = !semuaMode;
+                tombol.textContent = semuaMode ? 'Kembali ke dashboard' : 'Lihat semua';
+                $('jenisSec').classList.toggle('semua', semuaMode);
+            });
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
             document.addEventListener('rentang', async (ev) => {
@@ -206,11 +249,7 @@
                     const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai);
                     if (dari + sampai !== terakhir) return;             // sudah ada permintaan yang lebih baru
                     const t = d.total;
-                    $('kTotal').textContent = t.total;
-                    $('kRentang').textContent = dari === sampai ? tglIndo(dari) : tglIndo(dari) + ' – ' + tglIndo(sampai);
-                    $('kInternal').textContent = t.internal;   $('kInternalPct').textContent = pct(t.internal, t.total) + ' dari total';
-                    $('kEksternal').textContent = t.eksternal; $('kEksternalPct').textContent = pct(t.eksternal, t.total) + ' dari total';
-                    $('kArsip').textContent = t.diarsipkan;    $('kArsipPct').textContent = pct(t.diarsipkan, t.total) + ' dari total';
+                    tampilJenis(d.per_jenis || []);
 
                     // grafik batang per bulan (bulan yang masuk rentang disorot)
                     const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
