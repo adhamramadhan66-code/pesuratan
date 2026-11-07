@@ -107,7 +107,7 @@ function baca_form(PDO $pdo, array $in, bool $baru): array
         'tujuan_disposisi' => teks($in['tujuan_disposisi'] ?? '', 100),
         'isi'              => nomor_isi($in['isi'] ?? []),
     ];
-    $sifat = array_values(array_intersect(SIFAT_BOLEH, array_map('strval', (array) ($in['sifat'] ?? []))));
+    $sifat = array_slice(array_values(array_intersect(SIFAT_BOLEH, array_map('strval', (array) ($in['sifat'] ?? [])))), 0, 1);   // satu sifat saja
     $d['sifat'] = implode(',', $sifat);
 
     if (!$d['tanggal_terima'])         return [null, null, 'Tanggal disposisi tidak valid.'];

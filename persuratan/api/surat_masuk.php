@@ -123,6 +123,7 @@ try {
                 if (in_array($_GET['status'] ?? '', STATUS_BOLEH, true)) { $where[] = 's.status = ?'; $par[] = $_GET['status']; }
                 if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $where[] = 's.status_arsip = ?'; $par[] = $_GET['arsip']; }
                 if (in_array($_GET['jenis'] ?? '', JENIS_PENGIRIM, true)) { $where[] = 's.jenis_pengirim = ?'; $par[] = $_GET['jenis']; }
+                if (in_array($_GET['sifat'] ?? '', SIFAT_BOLEH, true)) { $where[] = 's.sifat = ?'; $par[] = $_GET['sifat']; }
                 if (($q = teks($_GET['q'] ?? '', 80)) !== '') {
                     $where[] = '(s.nomor_agenda LIKE ? OR s.nomor_surat_asal LIKE ? OR s.pengirim LIKE ? OR s.perihal LIKE ? OR s.tujuan LIKE ? OR s.lokasi_arsip LIKE ?)';
                     array_push($par, ...array_fill(0, 6, "%$q%"));

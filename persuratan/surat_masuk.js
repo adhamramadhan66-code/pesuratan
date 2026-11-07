@@ -10,7 +10,7 @@
 
     // ---------- Daftar ----------
     async function muat() {
-        const p = new URLSearchParams({ aksi: 'daftar', arsip, status: $('fStatus').value, jenis: $('fJenis').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
+        const p = new URLSearchParams({ aksi: 'daftar', arsip, status: $('fStatus').value, jenis: $('fJenis').value, sifat: $('fSifat').value, q: $('q').value.trim(), tahun: $('fTahun').value, bulan: $('fBulan').value });
         try {
             const d = await api(API + '?' + p);
             baris = d.surat_masuk;
@@ -51,7 +51,7 @@
 
     document.querySelectorAll('#segArsip input').forEach((r) => r.addEventListener('change', () => { arsip = r.value; muat(); }));
     let tm; $('q').addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(muat, 300); });
-    ['fStatus', 'fJenis', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
+    ['fStatus', 'fJenis', 'fSifat', 'fTahun', 'fBulan'].forEach((id) => $(id).addEventListener('change', muat));
 
     // ---------- Form catat / ubah ----------
     const dlg = $('dlgForm');

@@ -148,12 +148,12 @@
                         <span class="help">Pejabat atau unit yang harus menerima dan menyetujui surat ini.</span></div>
                     <div class="field"><label for="d_tanggal">Tanggal disposisi <span class="req">*</span></label><input type="date" id="d_tanggal"></div>
                     <div class="field"><label for="d_pemohon">Pemohon <span class="req">*</span></label><input type="text" id="d_pemohon" maxlength="100" placeholder="Nama yang memohon penyaluran"></div>
-                    <div class="field full"><span class="lbl">Sifat <span class="req">*</span></span>
+                    <div class="field full"><span class="lbl">Sifat <span class="req">*</span> <span class="opt">(pilih salah satu)</span></span>
                         <div class="chips" id="fSifat">
-                            <label><input type="checkbox" value="penting"><span>Penting</span></label>
-                            <label><input type="checkbox" value="segera"><span>Segera</span></label>
-                            <label><input type="checkbox" value="rahasia"><span>Rahasia</span></label>
-                            <label><input type="checkbox" value="biasa"><span>Biasa</span></label>
+                            <label><input type="radio" name="sifat" value="penting"><span>Penting</span></label>
+                            <label><input type="radio" name="sifat" value="segera"><span>Segera</span></label>
+                            <label><input type="radio" name="sifat" value="rahasia"><span>Rahasia</span></label>
+                            <label><input type="radio" name="sifat" value="biasa"><span>Biasa</span></label>
                         </div></div>
                     <div class="field full"><label for="d_hal">Hal (perihal) <span class="req">*</span></label>
                         <textarea id="d_hal" maxlength="255" placeholder="Terisi otomatis dari surat yang dipilih"></textarea></div>
@@ -205,7 +205,7 @@
 
     <script src="app.js?v=3"></script>
     <script src="profil.js?v=1"></script>
-    <script src="disposisi.js?v=9"></script>
+    <script src="disposisi.js?v=9x"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

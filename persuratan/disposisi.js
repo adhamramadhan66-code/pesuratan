@@ -151,7 +151,8 @@
     function isiForm(r) {
         r = r || {};
         const sf = csv(r.sifat), isi = csv(r.isi);
-        document.querySelectorAll('#fSifat input').forEach((c) => { c.checked = sf.includes(c.value); });
+        const sf1 = SIFAT.some(([k]) => k === sf[0]) ? sf[0] : 'biasa';   // hanya satu sifat
+        document.querySelectorAll('#fSifat input').forEach((c) => { c.checked = c.value === sf1; });
         $('d_tanggal').value = r.tanggal_terima || hariIni();
         $('d_hal').value = r.hal || ''; $('d_pemohon').value = r.pemohon || ''; $('d_tujuan').value = r.tujuan_disposisi || '';
     }
