@@ -319,6 +319,18 @@ function tarik_surat_masuk_otomatis(PDO $pdo, int $suratId): ?bool
     return true;
 }
 
+/** Hapus surat bernomor (k) atau surat masuk (m) beserta filenya. */
+function hapus_induk(PDO $pdo, string $t, int $id): void
+{
+    if (!$id) return;
+    $tabel = $t === 'k' ? 'surat' : 'surat_masuk';
+    $r = satu_baris($pdo, "SELECT file_arsip FROM $tabel WHERE id = ?", [$id]);
+    if (!$r) return;
+    if ($t === 'k') tarik_surat_masuk_otomatis($pdo, $id);
+    $pdo->prepare("DELETE FROM $tabel WHERE id = ?")->execute([$id]);
+    hapus_file((string) $r['file_arsip']);
+}
+
 try {
     $pdo = db();
     $metode = $_SERVER['REQUEST_METHOD'];
@@ -455,7 +467,15 @@ try {
             $tarik = tarik_surat_masuk_otomatis($pdo, (int) $d['surat_id']);
             $pdo->prepare('DELETE FROM disposisi_alur WHERE disposisi_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM disposisi WHERE id = ?')->execute([$id]);
+            hapus_induk($pdo, $d['surat_id'] ? 'k' : 'm', (int) ($d['surat_id'] ?: $d['surat_masuk_id']));   // satu kotak: surat ikut terhapus
             keluar(['ok' => true, 'surat_masuk_dihapus' => $tarik]);
+
+        case 'hapus_surat':   // kotak "belum diunggah": surat bernomor / surat masuk tanpa disposisi
+            $t = ($in['t'] ?? '') === 'm' ? 'm' : 'k'; $sid = (int) ($in['id'] ?? 0);
+            $kolom = $t === 'k' ? 'surat_id' : 'surat_masuk_id';
+            if (satu_baris($pdo, "SELECT id FROM disposisi WHERE $kolom = ?", [$sid])) keluar(['error' => 'Surat ini sudah punya disposisi. Hapus lewat kotak disposisinya.'], 409);
+            hapus_induk($pdo, $t, $sid);
+            keluar(['ok' => true]);
 
         case 'setujui':
             $id = (int) ($in['id'] ?? 0);

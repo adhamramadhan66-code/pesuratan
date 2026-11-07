@@ -43,6 +43,7 @@
             thumb: '<button type="button" class="kartu-thumb" data-unggah-pilih="' + kode + '" title="Klik gambar di atas untuk menempel link Google Drive surat">' + App.thumb('', '') + '</button>',
             sub: [esc(s.perihal), (t === 'k' ? 'Surat keluar' : 'Dari ' + esc(s.pengirim))],
             status: '<span class="badge">Belum diunggah</span>',
+            aksi: '<button class="btn sm danger" data-hapus-surat="' + kode + '">Hapus</button>',
         });
     }
 
@@ -190,6 +191,12 @@
     $('galeri').addEventListener('click', async (ev) => {
         const b = ev.target.closest('button'); if (!b) return;
         if (b.dataset.unggahPilih) { bukaUnggah(b.dataset.unggahPilih); return; }
+        if (b.dataset.hapusSurat) {
+            const [t, sid] = b.dataset.hapusSurat.split(':');
+            if (!confirm('Hapus kotak surat ini? Surat dan nomornya ikut terhapus.')) return;
+            try { await api(API, { aksi: 'hapus_surat', t, id: +sid }); toast('Surat dihapus'); muat(); } catch (e) { toast(e.message, true); }
+            return;
+        }
         if (b.dataset.pilih) {
             const rr = baris.find((x) => +x.id === +b.dataset.pilih); if (!rr) return;
             App.pilihBukaGanti(rr.link_drive || API + '?aksi=file&id=' + rr.id, () => bukaUnggah(null, rr)); return;
@@ -214,7 +221,7 @@
                     d.surat_masuk_dihapus === false ? '; Surat Masuk otomatisnya dipertahankan karena sudah diproses/diarsipkan' : '') + '.');
                 muat();
             } else if (b.dataset.hapus) {
-                if (!confirm('Hapus disposisi ' + r.no_disposisi + '? Suratnya tidak ikut terhapus.')) return;
+                if (!confirm('Hapus kotak ' + labelSurat(r) + '? Disposisi dan suratnya ikut terhapus.')) return;
                 await api(API, { aksi: 'hapus', id }); toast('Disposisi dihapus'); muat();
             }
         } catch (e) { toast(e.message, true); }
