@@ -16,7 +16,7 @@
     </script>
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=15">
+    <link rel="stylesheet" href="surat.css?v=16">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -108,23 +108,29 @@
             <div class="chart-card main-chart">
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
-                    <select id="fGrafikJenis" class="grafik-filter" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select>
+                    <label class="grafik-filter toolbar">Jenis: <select id="fGrafikJenis" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select></label>
                 </div>
+                <p class="chart-sub" id="chartSub"></p>
                 <div class="bars" id="bars" aria-label="Grafik jumlah surat per bulan"></div>
             </div>
             <div class="chart-card side-chart">
+                <div class="seg cal-tab" id="calTab" role="radiogroup" aria-label="Tampilkan menurut">
+                    <label><input type="radio" name="calmode" value="day"><span>Hari</span></label>
+                    <label><input type="radio" name="calmode" value="month" checked><span>Bulan</span></label>
+                    <label><input type="radio" name="calmode" value="year"><span>Tahun</span></label>
+                </div>
                 <div class="calendar-header">
-                    <h3 class="cal-judul"><button type="button" class="cal-pilih" id="calBulan" title="Klik: tampilkan per bulan"></button> <button type="button" class="cal-pilih" id="calTahun" title="Klik: tampilkan per tahun"></button></h3>
+                    <h3 id="calTitle" class="cal-judul"></h3>
                     <div class="calendar-nav">
-                        <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Bulan sebelumnya"><i data-lucide="chevron-left"></i></button>
-                        <button type="button" class="cal-nav-btn" id="calNext" aria-label="Bulan berikutnya"><i data-lucide="chevron-right"></i></button>
+                        <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Sebelumnya"><i data-lucide="chevron-left"></i></button>
+                        <button type="button" class="cal-nav-btn" id="calNext" aria-label="Berikutnya"><i data-lucide="chevron-right"></i></button>
                     </div>
                 </div>
                 <div class="mini-calendar">
-                    <div class="mini-days"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+                    <div class="mini-days" id="miniDays"><div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div></div>
                     <div class="mini-dates" id="miniDates"></div>
                 </div>
-                <p class="cal-hint">Klik <b>tanggal</b> = per hari · klik <b>nama bulan</b> = per bulan · klik <b>tahun</b> = per tahun. Kotak jenis surat dan grafik mengikuti pilihan ini.</p>
+                <p class="cal-hint" id="calInfo"></p>
             </div>
         </div>
 
@@ -256,10 +262,12 @@
                     if (mode === 'year') {
                         const maks = Math.max(1, ...d.per_bulan);
                         $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
+                        $('chartSub').textContent = 'Jumlah surat setiap bulan pada tahun ' + d.tahun;
                         gambarGrafik(BLN, d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
                     } else {
                         const m = +dari.slice(5, 7) - 1, maks = Math.max(1, ...d.per_hari);
                         $('chartJudul').textContent = 'Surat per hari — ' + BLN_PENUH[m] + ' ' + y;
+                        $('chartSub').textContent = mode === 'day' ? 'Jumlah surat setiap hari · tanggal ' + ev.detail.label + ' disorot' : 'Jumlah surat setiap hari pada ' + BLN_PENUH[m] + ' ' + y;
                         gambarGrafik(d.per_hari.map((_, i) => String(i + 1)), d.per_hari, maks, (i) => new Date(y, m, i + 1) >= awal && new Date(y, m, i + 1) <= akhir);
                     }
                     isiFilterJenis(d.per_jenis || []);
@@ -285,7 +293,7 @@
             });
         })();
     </script>
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

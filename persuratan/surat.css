@@ -275,3 +275,16 @@ dialog.modal.lebar { width: min(860px, calc(100vw - 2rem)); }
 .bars.padat .v { font-size: .55rem; }
 .bars.padat .m { font-size: .55rem; }
 .bars.padat .bar-col .b { max-width: 14px; }
+
+/* Kalender bertab */
+.cal-tab { display: flex; width: 100%; margin-bottom: 1rem; }
+.cal-tab label { flex: 1; }
+.cal-tab span { text-align: center; }
+.cal-judul { font-size: 1.1rem; }
+.mini-dates.mode-month, .mini-dates.mode-year { grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.mini-dates.mode-month button, .mini-dates.mode-year button { height: 3.4rem; font-size: .95rem; }
+.mini-dates .today:not(.selected) { border-color: var(--green); color: var(--green); }
+.cal-hint { color: var(--text-main); }
+.chart-sub { margin: -.9rem 0 .5rem; font-size: .8rem; color: var(--text-muted); }
+.grafik-filter { display: flex; align-items: center; gap: .5rem; font-size: .85rem; color: var(--text-muted); }
+.grafik-filter select { max-width: 14rem; }
