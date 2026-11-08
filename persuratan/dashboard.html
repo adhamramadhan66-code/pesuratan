@@ -148,7 +148,6 @@
                 <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
                 <select id="tbJalur" aria-label="Surat masuk atau keluar"><option value="">Surat Masuk &amp; Keluar</option><option value="disposisi">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
                 <select id="tbTahap" aria-label="Tahap surat"><option value="">Semua tahap</option><option value="bernomor">Bernomor</option><option value="diperiksa">Diperiksa</option><option value="ditandatangani">Ditandatangani</option><option value="terkirim">Terkirim</option></select>
-                <select id="tbArsip" aria-label="Status arsip"><option value="">Semua status arsip</option><option value="belum">Belum diarsipkan</option><option value="diarsipkan">Diarsipkan</option></select>
                 <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
                 <button type="button" class="btn sm" id="tbReset">Reset filter</button>
             </div>
@@ -256,7 +255,7 @@
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
             // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
-            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', jalur: 'tbJalur', tahap: 'tbTahap', arsip: 'tbArsip', urut: 'tbUrut' };
+            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', jalur: 'tbJalur', tahap: 'tbTahap', urut: 'tbUrut' };
             let tungguTerbaru = 0;
             async function muatTerbaru() {
                 if (!rentangIni) return;
@@ -272,9 +271,9 @@
                         const sdh = r.status_arsip === 'diarsipkan', keluar = r.jalur === 'keluar';
                         return App.kartuHtml({
                             kelas: sdh ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
-                            thumb: App.thumbFile('api/arsip.php?aksi=file&id=' + r.id, r.file_nama, r.ada_file),
+                            thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama }),
                             sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + (keluar ? 'Surat Keluar' : 'Surat Masuk')],
-                            status: '<span class="badge ' + (sdh ? 'ok' : 'warn') + '">' + (sdh ? 'Diarsipkan' : 'Belum diarsipkan') + '</span>',
+                            status: '<span class="badge ' + (sdh ? 'ok' : 'warn') + '">' + 'Diarsipkan' + '</span>',
                         });
                     }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }

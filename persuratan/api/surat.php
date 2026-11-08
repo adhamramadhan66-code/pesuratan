@@ -152,7 +152,7 @@ try {
                 if (($v = (string) ($_GET['unit'] ?? '')) !== '') { $w[] = 'unit_kode = ?'; $p[] = $v; }
                 if (in_array($_GET['tujuan'] ?? '', ['A', 'B'], true)) { $w[] = 'kode_tujuan = ?'; $p[] = $_GET['tujuan']; }
                 if (in_array($_GET['jalur'] ?? '', ['disposisi', 'keluar'], true)) { $w[] = 'jalur = ?'; $p[] = $_GET['jalur']; }
-                if (in_array($_GET['arsip'] ?? '', ['belum', 'diarsipkan'], true)) { $w[] = 'status_arsip = ?'; $p[] = $_GET['arsip']; }
+                $w[] = 'status_arsip = \'diarsipkan\'';   // dashboard hanya menampilkan surat yang sudah diarsipkan
                 if (in_array($_GET['tahap'] ?? '', TAHAP_BOLEH, true)) { $w[] = 'tahap = ?'; $p[] = $_GET['tahap']; }
                 $urut = ($_GET['urut'] ?? '') === 'lama' ? 'ASC' : 'DESC';
                 $batas = max(1, min(50, (int) ($_GET['limit'] ?? 12)));
@@ -169,25 +169,25 @@ try {
                         COALESCE(SUM(kode_tujuan = \'A\'), 0) AS internal,
                         COALESCE(SUM(kode_tujuan = \'B\'), 0) AS eksternal,
                         COALESCE(SUM(status_arsip = \'diarsipkan\'), 0) AS diarsipkan
-                    FROM surat WHERE tanggal_surat BETWEEN ? AND ?');
+                    FROM surat WHERE status_arsip = \'diarsipkan\' AND tanggal_surat BETWEEN ? AND ?');
                 $s->execute([$dari, $sampai]);
                 $tot = array_map('intval', $s->fetch());
 
                 $tahun = (int) substr($dari, 0, 4);
                 // Grafik bisa disaring per jenis surat (parameter jenis = kode jenis).
                 $jenisGrafik = (string) ($_GET['jenis'] ?? '');
-                $s = $pdo->prepare('SELECT bulan, COUNT(*) AS n FROM surat WHERE tahun = ?' . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY bulan');
+                $s = $pdo->prepare('SELECT bulan, COUNT(*) AS n FROM surat WHERE status_arsip = \'diarsipkan\' AND tahun = ?' . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY bulan');
                 $s->execute($jenisGrafik !== '' ? [$tahun, $jenisGrafik] : [$tahun]);
                 $perBulan = array_fill(1, 12, 0);
                 foreach ($s->fetchAll() as $r) $perBulan[(int) $r['bulan']] = (int) $r['n'];
 
-                $s = $pdo->prepare('SELECT ' . KOLOM_LIST . ' FROM surat WHERE tanggal_surat BETWEEN ? AND ?
+                $s = $pdo->prepare('SELECT ' . KOLOM_LIST . ' FROM surat WHERE status_arsip = \'diarsipkan\' AND tanggal_surat BETWEEN ? AND ?
                                     ORDER BY tanggal_surat DESC, id DESC LIMIT 8');
                 $s->execute([$dari, $sampai]);
                 // Jumlah surat per jenis (seluruh waktu) untuk kotak Jenis surat di dashboard; yang terbanyak di depan.
                 // Jumlah per jenis mengikuti rentang tanggal yang dipilih di kalender.
                 $q = $pdo->prepare('SELECT j.kode, j.nama, COUNT(s.id) AS n FROM jenis_surat j
-                                    LEFT JOIN surat s ON s.jenis_kode = j.kode AND s.tanggal_surat BETWEEN ? AND ?
+                                    LEFT JOIN surat s ON s.jenis_kode = j.kode AND s.status_arsip = \'diarsipkan\' AND s.tanggal_surat BETWEEN ? AND ?
                                     GROUP BY j.kode, j.nama ORDER BY n DESC, j.nama');
                 $q->execute([$dari, $sampai]);
                 $perJenis = $q->fetchAll();
@@ -195,7 +195,7 @@ try {
                 // Per hari pada bulan dari tanggal awal (untuk grafik saat kalender memilih hari/bulan).
                 $awalBulan = substr($dari, 0, 7) . '-01';
                 $akhirBulan = date('Y-m-t', strtotime($awalBulan));
-                $q = $pdo->prepare('SELECT DAY(tanggal_surat) AS h, COUNT(*) AS n FROM surat WHERE tanggal_surat BETWEEN ? AND ?'
+                $q = $pdo->prepare('SELECT DAY(tanggal_surat) AS h, COUNT(*) AS n FROM surat WHERE status_arsip = \'diarsipkan\' AND tanggal_surat BETWEEN ? AND ?'
                                    . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY h');
                 $q->execute($jenisGrafik !== '' ? [$awalBulan, $akhirBulan, $jenisGrafik] : [$awalBulan, $akhirBulan]);
                 $perHari = array_fill(1, (int) date('t', strtotime($awalBulan)), 0);
