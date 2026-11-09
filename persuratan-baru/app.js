@@ -4,22 +4,19 @@
     const SESSION_KEY = 'kampuslyCurrentUser';
     const $ = (id) => document.getElementById(id);
 
-    // ---------- Sesi login (prototipe, sama seperti sebelumnya) ----------
-    function cekSesi() {
+    // ---------- Sesi login (prototipe) ----------
+    // Halaman boleh dibuka tanpa login. Popup login (login-modal.js) muncul saat pengunjung
+    // menekan sesuatu. Di sini hanya menampilkan nama bila sudah login.
+    function bacaSesi() {
         try {
             const u = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-            if (!u || u.email !== 'admin@tsu.ac.id') { window.location.replace('index.html'); return null; }
-            return u;
-        } catch (e) { window.location.replace('index.html'); return null; }
+            return u && u.email === 'admin@tsu.ac.id' ? u : null;
+        } catch (e) { return null; }
     }
-    const user = cekSesi();
+    const user = bacaSesi();
     if (user && $('currentUserLabel')) $('currentUserLabel').textContent = user.name || user.email;
-    window.addEventListener('pageshow', cekSesi);
-    if ($('logoutBtn')) $('logoutBtn').addEventListener('click', (ev) => {
-        ev.preventDefault();
-        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
-        window.location.replace('index.html?logout=1');
-    });
+    // Bila sesi hilang saat kembali lewat tombol Back (cache halaman), muat ulang agar status benar.
+    window.addEventListener('pageshow', (e) => { if (e.persisted && !!bacaSesi() !== !!user) window.location.reload(); });
 
     // ---------- Tema gelap/terang ----------
     const root = document.documentElement, tbtn = $('themeToggle');

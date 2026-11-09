@@ -11,6 +11,10 @@ Folder ini berisi dua menu yang dibawa dari folder "persuratan":
 Tombol Pengaturan dan Log out tidak lagi di sidebar. Keduanya ada di popup foto profil
 (pojok kanan atas), bersama Edit Foto, Tambah Foto, Kamera, dan Hapus Foto.
 
+Login       : tidak ada halaman login di awal. Dashboard langsung terbuka. Begitu pengunjung
+              menekan tombol, tautan, atau isian apa pun (kecuali tombol tema dan buka/tutup
+              sidebar), muncul popup login berlatar putih. Setelah login, halaman dimuat ulang
+              atau langsung membuka tautan yang tadi ditekan. Keluar ada di popup foto profil.
 Akun demo   : admin@tsu.ac.id / tsu12345
 Menjalankan : sama seperti folder lama (Laragon, atau jalankan.bat). Folder api/ dan
               database.sql sama dengan folder lama, jadi database "persuratan" dipakai bersama.

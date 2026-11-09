@@ -167,7 +167,7 @@
             toast('Halaman pengaturan belum tersedia.');
         } else if (a === 'out') {
             try { sessionStorage.removeItem('kampuslyCurrentUser'); } catch (err) {}
-            window.location.replace('index.html?logout=1');
+            window.location.replace('dashboard.html');
         } else if (a === 'del') {
             if (!confirm('Hapus foto profil dan kembali ke foto bawaan?')) return;
             setPhoto(''); apply(); toast('Foto profil dihapus');
