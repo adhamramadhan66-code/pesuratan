@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=18">
+    <link rel="stylesheet" href="surat.css?v=19">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -46,11 +46,19 @@
                     <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
                 </button>
                 <span id="currentUserLabel" class="user-label">Tamu</span>
-                <img src="https://i.pravatar.cc/150?img=32" alt="Profil" class="profile-img">
+                <img src="avatar-default.jpg" alt="Profil" class="profile-img">
             </div>
         </header>
 
         <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
+        <!-- VIDEO (di atas dashboard). File: "vidssave.com MINI COMPRO TSU 1080P.mp4" di folder ini. -->
+        <section class="video-sec" id="videoSec" aria-label="Video profil TSU">
+            <video autoplay loop muted playsinline controls preload="metadata">
+                <source src="vidssave.com%20MINI%20COMPRO%20TSU%201080P.mp4" type="video/mp4">
+            </video>
+            <div class="video-kosong">Video belum tersedia. Taruh file <b>&nbsp;vidssave.com MINI COMPRO TSU 1080P.mp4&nbsp;</b> di folder ini.</div>
+        </section>
+
         <section class="jenis-sec" id="jenisSec" aria-label="Jenis surat">
             <div class="jenis-head">
                 <h3>Jenis surat <span class="jenis-rentang" id="jenisRentang"></span></h3>
@@ -97,9 +105,16 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
+    <script>
+        // Bila file video tidak ada, tampilkan keterangan (bukan kotak hitam kosong)
+        (function () {
+            const sec = document.getElementById('videoSec');
+            sec.querySelector('source').addEventListener('error', () => sec.classList.add('gagal'));
+        })();
+    </script>
     <script src="app.js?v=8"></script>
     <script src="login-modal.js?v=1"></script>
-    <script src="profil.js?v=1"></script>
+    <script src="profil.js?v=2"></script>
     <script>
         // Statistik dashboard: dimuat ulang setiap rentang tanggal berubah (event "rentang" di bawah halaman).
         (function () {

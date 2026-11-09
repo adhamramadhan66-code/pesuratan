@@ -7,10 +7,11 @@
     if (!avatar) return;
 
     let email = 'admin';
-    try { email = (JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || '{}').email) || 'admin'; } catch (e) {}
+    let hasSession = false;
+    try { const u = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null'); if (u && u.email) { email = u.email; hasSession = true; } } catch (e) {}
     const KEY = 'profilePhoto:' + email;
     const DEFAULT_SRC = avatar.getAttribute('src');
-    const getPhoto = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+    const getPhoto = () => { if (!hasSession) return ''; try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
     const setPhoto = (v) => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); return true; } catch (e) { return false; } };
 
     const svg = (d) => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
