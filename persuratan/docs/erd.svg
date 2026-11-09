@@ -1,177 +1,200 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="106.0 356.0 5894.0 2258.0" width="5894.0" height="2258.0" font-family="Open Sans, Segoe UI, Arial, sans-serif"><rect x="106.0" y="356.0" width="5894.0" height="2258.0" fill="#fff"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="445.8,576.0 364.4,471.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="514.2,576.0 595.6,471.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="416.4,1044.0 259.0,1153.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="480.0,1044.0 480.0,1146.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="543.6,1044.0 697.9,1150.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1636.9,756.0 865.7,455.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1682.2,756.0 1243.5,471.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1727.4,756.0 1582.3,473.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1772.6,756.0 1917.8,473.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1817.8,756.0 2255.7,472.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1863.1,756.0 2619.0,461.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1676.7,844.0 1201.1,1129.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1725.6,844.0 1568.6,1126.5"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1774.4,844.0 1931.3,1126.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1823.3,844.0 2297.7,1128.6"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3652.2,756.0 2989.3,457.7"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3701.1,756.0 3386.4,472.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3750.0,756.0 3750.0,474.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3798.9,756.0 4118.9,468.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3847.8,756.0 4491.9,466.2"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3669.3,844.0 3148.6,1128.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3723.1,844.0 3550.1,1127.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3776.9,844.0 3949.4,1126.3"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3830.7,844.0 4352.2,1128.5"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5463.3,756.0 5224.1,468.9"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5500.0,756.0 5500.0,474.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5536.7,756.0 5773.2,472.1"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5463.3,844.0 5227.4,1127.1"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5500.0,844.0 5500.0,1126.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5536.7,844.0 5773.6,1128.3"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1687.5,2006.0 1343.3,1763.5"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1653.2,2006.0 1375.5,1879.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1610.0,2021.4 1395.7,1977.5"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1610.0,2056.4 1400.3,2065.9"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1610.0,2091.4 1402.2,2152.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1677.4,2094.0 1134.5,2423.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1713.7,2094.0 1446.5,2417.8"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1750.0,2094.0 1750.0,2416.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1786.3,2094.0 2052.7,2416.9"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1822.6,2094.0 2358.1,2418.6"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="620.0,620.0 1067.0,620.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1254.8,643.6 1635.0,763.7"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="595.0,1000.0 1033.0,1000.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1264.6,970.3 1635.0,840.4"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1865.0,800.0 2637.0,800.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="2863.0,800.0 3630.0,800.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1750.0,844.0 1750.0,1450.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1750.0,1590.0 1750.0,2006.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3750.0,1550.0 3750.0,844.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3870.0,800.0 4487.0,800.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="4713.0,800.0 5330.0,800.0"/>
-<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1890.0,2050.0 3750.0,2050.0 3750.0,1690.0"/>
-<rect x="340.0" y="576.0" width="280" height="88" rx="10" fill="#2d3e50"/>
-<text x="480" y="631" fill="#fff" font-size="32" text-anchor="middle">jenis_surat</text>
-<rect x="365.0" y="956.0" width="230" height="88" rx="10" fill="#2d3e50"/>
-<text x="480" y="1011" fill="#fff" font-size="32" text-anchor="middle">unit</text>
-<rect x="1635.0" y="756.0" width="230" height="88" rx="10" fill="#2d3e50"/>
-<text x="1750" y="811" fill="#fff" font-size="32" text-anchor="middle">surat</text>
-<rect x="3630.0" y="756.0" width="240" height="88" rx="10" fill="#2d3e50"/>
-<text x="3750" y="811" fill="#fff" font-size="32" text-anchor="middle">disposisi</text>
-<rect x="5330.0" y="756.0" width="340" height="88" rx="10" fill="#2d3e50"/>
-<text x="5500" y="811" fill="#fff" font-size="32" text-anchor="middle">disposisi_alur</text>
-<rect x="1610.0" y="2006.0" width="280" height="88" rx="10" fill="#2d3e50"/>
-<text x="1750" y="2061" fill="#fff" font-size="32" text-anchor="middle">surat_masuk</text>
-<ellipse cx="340.0" cy="440" rx="64.0" ry="34.0" fill="#2d3e50"/>
-<text x="340.0" y="451" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">kode</text>
-<ellipse cx="620.0" cy="440" rx="64.0" ry="34.0" fill="#2d3e50"/>
-<text x="620.0" y="451" fill="#fff" font-size="32" text-anchor="middle">nama</text>
-<ellipse cx="220.0" cy="1180" rx="64.0" ry="34.0" fill="#2d3e50"/>
-<text x="220.0" y="1191" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">kode</text>
-<ellipse cx="480.0" cy="1180" rx="64.0" ry="34.0" fill="#2d3e50"/>
-<text x="480.0" y="1191" fill="#fff" font-size="32" text-anchor="middle">nama</text>
-<ellipse cx="740.0" cy="1180" rx="82.0" ry="34.0" fill="#2d3e50"/>
-<text x="740.0" y="1191" fill="#fff" font-size="32" text-anchor="middle">urutan</text>
-<ellipse cx="825.0" cy="440" rx="46.0" ry="34.0" fill="#2d3e50"/>
-<text x="825.0" y="451" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
-<ellipse cx="1195.0" cy="440" rx="127.0" ry="34.0" fill="#2d3e50"/>
-<text x="1195.0" y="451" fill="#fff" font-size="32" text-anchor="middle">nomor_surat</text>
-<ellipse cx="1565.0" cy="440" rx="145.0" ry="34.0" fill="#2d3e50"/>
-<text x="1565.0" y="451" fill="#fff" font-size="32" text-anchor="middle">tanggal_surat</text>
-<ellipse cx="1935.0" cy="440" rx="91.0" ry="34.0" fill="#2d3e50"/>
-<text x="1935.0" y="451" fill="#fff" font-size="32" text-anchor="middle">perihal</text>
-<ellipse cx="2305.0" cy="440" rx="145.0" ry="34.0" fill="#2d3e50"/>
-<text x="2305.0" y="451" fill="#fff" font-size="32" text-anchor="middle">pembuat_surat</text>
-<ellipse cx="2675.0" cy="440" rx="73.0" ry="34.0" fill="#2d3e50"/>
-<text x="2675.0" y="451" fill="#fff" font-size="32" text-anchor="middle">jalur</text>
-<ellipse cx="1150.0" cy="1160" rx="118.0" ry="34.0" fill="#2d3e50"/>
-<text x="1150.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">jenis_kode</text>
-<ellipse cx="1550.0" cy="1160" rx="109.0" ry="34.0" fill="#2d3e50"/>
-<text x="1550.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">unit_kode</text>
-<ellipse cx="1950.0" cy="1160" rx="118.0" ry="34.0" fill="#2d3e50"/>
-<text x="1950.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">acc_keluar</text>
-<ellipse cx="2350.0" cy="1160" rx="136.0" ry="34.0" fill="#2d3e50"/>
-<text x="2350.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">status_arsip</text>
-<ellipse cx="2950.0" cy="440" rx="46.0" ry="34.0" fill="#2d3e50"/>
-<text x="2950.0" y="451" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
-<ellipse cx="3350.0" cy="440" rx="136.0" ry="34.0" fill="#2d3e50"/>
-<text x="3350.0" y="451" fill="#fff" font-size="32" text-anchor="middle">no_disposisi</text>
-<ellipse cx="3750.0" cy="440" rx="154.0" ry="34.0" fill="#2d3e50"/>
-<text x="3750.0" y="451" fill="#fff" font-size="32" text-anchor="middle">tanggal_terima</text>
-<ellipse cx="4150.0" cy="440" rx="55.0" ry="34.0" fill="#2d3e50"/>
-<text x="4150.0" y="451" fill="#fff" font-size="32" text-anchor="middle">hal</text>
-<ellipse cx="4550.0" cy="440" rx="91.0" ry="34.0" fill="#2d3e50"/>
-<text x="4550.0" y="451" fill="#fff" font-size="32" text-anchor="middle">pemohon</text>
-<ellipse cx="3090.0" cy="1160" rx="172.0" ry="34.0" fill="#2d3e50"/>
-<text x="3090.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">tujuan_disposisi</text>
-<ellipse cx="3530.0" cy="1160" rx="82.0" ry="34.0" fill="#2d3e50"/>
-<text x="3530.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">status</text>
-<ellipse cx="3970.0" cy="1160" rx="154.0" ry="34.0" fill="#2d3e50"/>
-<text x="3970.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">tanggal_setuju</text>
-<ellipse cx="4410.0" cy="1160" rx="154.0" ry="34.0" fill="#2d3e50"/>
-<text x="4410.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">disetujui_oleh</text>
-<ellipse cx="5200.0" cy="440" rx="46.0" ry="34.0" fill="#2d3e50"/>
-<text x="5200.0" y="451" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
-<ellipse cx="5500.0" cy="440" rx="82.0" ry="34.0" fill="#2d3e50"/>
-<text x="5500.0" y="451" fill="#fff" font-size="32" text-anchor="middle">urutan</text>
-<ellipse cx="5800.0" cy="440" rx="82.0" ry="34.0" fill="#2d3e50"/>
-<text x="5800.0" y="451" fill="#fff" font-size="32" text-anchor="middle">kepada</text>
-<ellipse cx="5200.0" cy="1160" rx="109.0" ry="34.0" fill="#2d3e50"/>
-<text x="5200.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">isi_nomor</text>
-<ellipse cx="5500.0" cy="1160" rx="64.0" ry="34.0" fill="#2d3e50"/>
-<text x="5500.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">dari</text>
-<ellipse cx="5800.0" cy="1160" rx="73.0" ry="34.0" fill="#2d3e50"/>
-<text x="5800.0" y="1171" fill="#fff" font-size="32" text-anchor="middle">paraf</text>
-<ellipse cx="1310" cy="1740" rx="46.0" ry="34.0" fill="#2d3e50"/>
-<text x="1310" y="1751" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
-<ellipse cx="1310" cy="1850" rx="136.0" ry="34.0" fill="#2d3e50"/>
-<text x="1310" y="1861" fill="#fff" font-size="32" text-anchor="middle">nomor_agenda</text>
-<ellipse cx="1310" cy="1960" rx="100.0" ry="34.0" fill="#2d3e50"/>
-<text x="1310" y="1971" fill="#fff" font-size="32" text-anchor="middle">pengirim</text>
-<ellipse cx="1310" cy="2070" rx="91.0" ry="34.0" fill="#2d3e50"/>
-<text x="1310" y="2081" fill="#fff" font-size="32" text-anchor="middle">perihal</text>
-<ellipse cx="1310" cy="2180" rx="154.0" ry="34.0" fill="#2d3e50"/>
-<text x="1310" y="2191" fill="#fff" font-size="32" text-anchor="middle">tanggal_terima</text>
-<ellipse cx="1090.0" cy="2450" rx="73.0" ry="34.0" fill="#2d3e50"/>
-<text x="1090.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">sifat</text>
-<ellipse cx="1420.0" cy="2450" rx="82.0" ry="34.0" fill="#2d3e50"/>
-<text x="1420.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">status</text>
-<ellipse cx="1750.0" cy="2450" rx="109.0" ry="34.0" fill="#2d3e50"/>
-<text x="1750.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">acc_masuk</text>
-<ellipse cx="2080.0" cy="2450" rx="118.0" ry="34.0" fill="#2d3e50"/>
-<text x="2080.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">link_drive</text>
-<ellipse cx="2410.0" cy="2450" rx="136.0" ry="34.0" fill="#2d3e50"/>
-<text x="2410.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">status_arsip</text>
-<polygon points="1180,550.0 1293.0,620 1180,690.0 1067.0,620" fill="#2d3e50"/>
-<text x="1180" y="631" fill="#fff" font-size="32" text-anchor="middle">memiliki</text>
-<polygon points="1180,930.0 1327.0,1000 1180,1070.0 1033.0,1000" fill="#2d3e50"/>
-<text x="1180" y="1011" fill="#fff" font-size="32" text-anchor="middle">berasal dari</text>
-<polygon points="2750,730.0 2863.0,800 2750,870.0 2637.0,800" fill="#2d3e50"/>
-<text x="2750" y="811" fill="#fff" font-size="32" text-anchor="middle">diproses</text>
-<polygon points="1750,1450.0 1855.0,1520 1750,1590.0 1645.0,1520" fill="#2d3e50"/>
-<text x="1750" y="1531" fill="#fff" font-size="32" text-anchor="middle">menjadi</text>
-<polygon points="3750,1550.0 3863.0,1620 3750,1690.0 3637.0,1620" fill="#2d3e50"/>
-<text x="3750" y="1631" fill="#fff" font-size="32" text-anchor="middle">diajukan</text>
-<polygon points="4600,730.0 4713.0,800 4600,870.0 4487.0,800" fill="#2d3e50"/>
-<text x="4600" y="811" fill="#fff" font-size="32" text-anchor="middle">memiliki</text>
-<rect x="646.0" y="598.0" width="44" height="42" fill="#fff"/><text x="668.0" y="631.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="1511.4813001149394" y="719.0993579310335" width="104" height="42" fill="#fff"/><text x="1563.4813001149394" y="752.0993579310335" font-size="32" fill="#3b3f45" text-anchor="middle">Many</text>
-<rect x="621.0" y="978.0" width="44" height="42" fill="#fff"/><text x="643.0" y="1011.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="1512.230001340034" y="843.1824556701636" width="104" height="42" fill="#fff"/><text x="1564.230001340034" y="876.1824556701636" font-size="32" fill="#3b3f45" text-anchor="middle">Many</text>
-<rect x="1891.0" y="778.0" width="44" height="42" fill="#fff"/><text x="1913.0" y="811.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="3560.0" y="778.0" width="44" height="42" fill="#fff"/><text x="3582.0" y="811.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="1728.0" y="870.0" width="44" height="42" fill="#fff"/><text x="1750.0" y="903.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="1728.0" y="1936.0" width="44" height="42" fill="#fff"/><text x="1750.0" y="1969.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="3728.0" y="870.0" width="44" height="42" fill="#fff"/><text x="3750.0" y="903.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="3896.0" y="778.0" width="44" height="42" fill="#fff"/><text x="3918.0" y="811.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="5203.0" y="778.0" width="104" height="42" fill="#fff"/><text x="5255.0" y="811.0" font-size="32" fill="#3b3f45" text-anchor="middle">Many</text>
-<rect x="1916.0" y="2028.0" width="44" height="42" fill="#fff"/><text x="1938.0" y="2061.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
-<rect x="4250.0" y="1570.0" width="1700" height="260" rx="14" fill="#eef2f7" stroke="#2d3e50" stroke-width="4"/><text x="4280.0" y="1620.0" font-size="34" font-weight="700" fill="#2d3e50">Alur Surat Keluar</text>
-<text x="4280.0" y="1675.0" font-size="30" fill="#2d3e50">Penomoran (pilih Surat Keluar)  →  Surat Keluar</text>
-<text x="4280.0" y="1723.0" font-size="30" fill="#2d3e50">(ACC langsung di Surat Keluar: surat.acc_keluar)  →  Pengarsipan</text>
-<rect x="4250.0" y="1890.0" width="1700" height="300" rx="14" fill="#eef2f7" stroke="#2d3e50" stroke-width="4"/><text x="4280.0" y="1940.0" font-size="34" font-weight="700" fill="#2d3e50">Alur Surat Masuk</text>
-<text x="4280.0" y="1995.0" font-size="30" fill="#2d3e50">Penomoran (pilih Surat Masuk)  →  Disposisi</text>
-<text x="4280.0" y="2043.0" font-size="30" fill="#2d3e50">(ACC di Disposisi: status = disetujui)  →  Surat Masuk</text>
-<text x="4280.0" y="2091.0" font-size="30" fill="#2d3e50">→  Pengarsipan</text>
-<text x="146.0" y="2569.0" font-size="28" fill="#555">ERD Persuratan TSU (notasi Chen) — atribut bergaris bawah = primary key. Kolom arsip lain (tanggal_arsip, lokasi_arsip, file_nama, dst.) dipersingkat.</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="66.0 366.0 6356.0 2664.0" width="6356.0" height="2664.0" font-family="Open Sans, Segoe UI, Arial, sans-serif"><rect x="66.0" y="366.0" width="6356.0" height="2664.0" fill="#fff"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="419.2,1056.0 332.3,931.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="480.8,1056.0 567.7,931.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="393.4,1794.0 216.1,1931.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="450.0,1794.0 450.0,1926.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="506.6,1794.0 681.4,1930.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1737.0,1381.0 1153.4,973.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1768.5,1381.0 1483.9,983.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1800.0,1381.0 1800.0,984.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1831.5,1381.0 2116.5,982.8"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1863.0,1381.0 2439.5,978.3"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1744.4,1469.0 1240.4,1868.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1781.5,1469.0 1614.2,1866.3"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1818.5,1469.0 1986.0,1866.6"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1855.6,1469.0 2358.8,1867.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3816.4,806.0 3177.5,469.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3858.2,806.0 3551.4,483.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3900.0,806.0 3900.0,484.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3941.8,806.0 4252.1,479.3"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3983.6,806.0 4607.3,477.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3827.4,894.0 3293.3,1217.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3875.8,894.0 3698.2,1216.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3924.2,894.0 4101.4,1216.2"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3972.6,894.0 4507.3,1218.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5545.6,806.0 5136.0,475.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5581.9,806.0 5449.0,483.8"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5618.1,806.0 5751.1,483.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5654.4,806.0 6056.8,480.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5530.7,894.0 5020.6,1217.9"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5576.9,894.0 5407.6,1216.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5623.1,894.0 5792.4,1216.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5669.3,894.0 6180.2,1218.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3824.0,1956.0 3176.2,1581.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3862.0,1956.0 3548.6,1593.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3900.0,1956.0 3900.0,1594.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3938.0,1956.0 4252.1,1592.4"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3976.0,1956.0 4614.2,1586.5"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3862.0,2044.0 3548.5,2407.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3900.0,2044.0 3900.0,2406.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3938.0,2044.0 4251.3,2406.8"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5524.6,1956.0 5036.1,1671.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5574.9,1956.0 5419.3,1683.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5625.1,1956.0 5780.8,1683.7"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5675.4,1956.0 6144.8,1682.2"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5580.4,2044.0 5415.0,2416.3"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5619.6,2044.0 5785.0,2416.2"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="590.0,1110.0 1048.7,1142.8"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1217.1,1178.4 1696.0,1381.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="565.0,1741.8 1022.2,1709.1"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1227.8,1667.1 1696.0,1469.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1884.2,1381.0 2838.7,882.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3013.0,850.0 3780.0,850.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="1884.2,1469.0 2841.1,1969.2"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="3005.0,2000.0 3750.0,2000.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="4020.0,850.0 4611.5,850.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="4888.5,850.0 5460.0,850.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="4050.0,2000.0 4620.0,2000.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="4880.0,2000.0 5460.0,2000.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5600.0,894.0 5600.0,1355.0"/>
+<polyline fill="none" stroke="#3b3f45" stroke-width="6" points="5600.0,1495.0 5600.0,1956.0"/>
+<rect x="310.0" y="1056.0" width="280" height="88" rx="10" fill="#2d3e50"/>
+<text x="450" y="1111" fill="#fff" font-size="32" text-anchor="middle">jenis_surat</text>
+<rect x="335.0" y="1706.0" width="230" height="88" rx="10" fill="#2d3e50"/>
+<text x="450" y="1761" fill="#fff" font-size="32" text-anchor="middle">unit</text>
+<rect x="1680.0" y="1381.0" width="240" height="88" rx="10" fill="#2d3e50"/>
+<text x="1800" y="1436" fill="#fff" font-size="32" text-anchor="middle">penomoran</text>
+<rect x="3780.0" y="806.0" width="240" height="88" rx="10" fill="#2d3e50"/>
+<text x="3900" y="861" fill="#fff" font-size="32" text-anchor="middle">disposisi</text>
+<rect x="5460.0" y="806.0" width="280" height="88" rx="10" fill="#2d3e50"/>
+<text x="5600" y="861" fill="#fff" font-size="32" text-anchor="middle">surat_masuk</text>
+<rect x="3750.0" y="1956.0" width="300" height="88" rx="10" fill="#2d3e50"/>
+<text x="3900" y="2011" fill="#fff" font-size="32" text-anchor="middle">surat_keluar</text>
+<rect x="5460.0" y="1956.0" width="280" height="88" rx="10" fill="#2d3e50"/>
+<text x="5600" y="2011" fill="#fff" font-size="32" text-anchor="middle">pengarsipan</text>
+<ellipse cx="310.0" cy="900" rx="64.0" ry="34.0" fill="#2d3e50"/>
+<text x="310.0" y="911" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">kode</text>
+<ellipse cx="590.0" cy="900" rx="64.0" ry="34.0" fill="#2d3e50"/>
+<text x="590.0" y="911" fill="#fff" font-size="32" text-anchor="middle">nama</text>
+<ellipse cx="180.0" cy="1960" rx="64.0" ry="34.0" fill="#2d3e50"/>
+<text x="180.0" y="1971" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">kode</text>
+<ellipse cx="450.0" cy="1960" rx="64.0" ry="34.0" fill="#2d3e50"/>
+<text x="450.0" y="1971" fill="#fff" font-size="32" text-anchor="middle">nama</text>
+<ellipse cx="720.0" cy="1960" rx="82.0" ry="34.0" fill="#2d3e50"/>
+<text x="720.0" y="1971" fill="#fff" font-size="32" text-anchor="middle">urutan</text>
+<ellipse cx="1120.0" cy="950" rx="46.0" ry="34.0" fill="#2d3e50"/>
+<text x="1120.0" y="961" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
+<ellipse cx="1460.0" cy="950" rx="127.0" ry="34.0" fill="#2d3e50"/>
+<text x="1460.0" y="961" fill="#fff" font-size="32" text-anchor="middle">nomor_surat</text>
+<ellipse cx="1800.0" cy="950" rx="145.0" ry="34.0" fill="#2d3e50"/>
+<text x="1800.0" y="961" fill="#fff" font-size="32" text-anchor="middle">tanggal_surat</text>
+<ellipse cx="2140.0" cy="950" rx="91.0" ry="34.0" fill="#2d3e50"/>
+<text x="2140.0" y="961" fill="#fff" font-size="32" text-anchor="middle">perihal</text>
+<ellipse cx="2480.0" cy="950" rx="73.0" ry="34.0" fill="#2d3e50"/>
+<text x="2480.0" y="961" fill="#fff" font-size="32" text-anchor="middle">jalur</text>
+<ellipse cx="1200.0" cy="1900" rx="118.0" ry="34.0" fill="#2d3e50"/>
+<text x="1200.0" y="1911" fill="#fff" font-size="32" text-anchor="middle">jenis_kode</text>
+<ellipse cx="1600.0" cy="1900" rx="109.0" ry="34.0" fill="#2d3e50"/>
+<text x="1600.0" y="1911" fill="#fff" font-size="32" text-anchor="middle">unit_kode</text>
+<ellipse cx="2000.0" cy="1900" rx="73.0" ry="34.0" fill="#2d3e50"/>
+<text x="2000.0" y="1911" fill="#fff" font-size="32" text-anchor="middle">untuk</text>
+<ellipse cx="2400.0" cy="1900" rx="145.0" ry="34.0" fill="#2d3e50"/>
+<text x="2400.0" y="1911" fill="#fff" font-size="32" text-anchor="middle">pembuat_surat</text>
+<ellipse cx="3140.0" cy="450" rx="46.0" ry="34.0" fill="#2d3e50"/>
+<text x="3140.0" y="461" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
+<ellipse cx="3520.0" cy="450" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="3520.0" y="461" fill="#fff" font-size="32" text-anchor="middle">no_disposisi</text>
+<ellipse cx="3900.0" cy="450" rx="154.0" ry="34.0" fill="#2d3e50"/>
+<text x="3900.0" y="461" fill="#fff" font-size="32" text-anchor="middle">tanggal_terima</text>
+<ellipse cx="4280.0" cy="450" rx="55.0" ry="34.0" fill="#2d3e50"/>
+<text x="4280.0" y="461" fill="#fff" font-size="32" text-anchor="middle">hal</text>
+<ellipse cx="4660.0" cy="450" rx="91.0" ry="34.0" fill="#2d3e50"/>
+<text x="4660.0" y="461" fill="#fff" font-size="32" text-anchor="middle">pemohon</text>
+<ellipse cx="3240.0" cy="1250" rx="172.0" ry="34.0" fill="#2d3e50"/>
+<text x="3240.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">tujuan_disposisi</text>
+<ellipse cx="3680.0" cy="1250" rx="82.0" ry="34.0" fill="#2d3e50"/>
+<text x="3680.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">status</text>
+<ellipse cx="4120.0" cy="1250" rx="154.0" ry="34.0" fill="#2d3e50"/>
+<text x="4120.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">tanggal_setuju</text>
+<ellipse cx="4560.0" cy="1250" rx="154.0" ry="34.0" fill="#2d3e50"/>
+<text x="4560.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">disetujui_oleh</text>
+<ellipse cx="5105.0" cy="450" rx="46.0" ry="34.0" fill="#2d3e50"/>
+<text x="5105.0" y="461" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
+<ellipse cx="5435.0" cy="450" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="5435.0" y="461" fill="#fff" font-size="32" text-anchor="middle">nomor_agenda</text>
+<ellipse cx="5765.0" cy="450" rx="100.0" ry="34.0" fill="#2d3e50"/>
+<text x="5765.0" y="461" fill="#fff" font-size="32" text-anchor="middle">pengirim</text>
+<ellipse cx="6095.0" cy="450" rx="91.0" ry="34.0" fill="#2d3e50"/>
+<text x="6095.0" y="461" fill="#fff" font-size="32" text-anchor="middle">perihal</text>
+<ellipse cx="4970.0" cy="1250" rx="154.0" ry="34.0" fill="#2d3e50"/>
+<text x="4970.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">tanggal_terima</text>
+<ellipse cx="5390.0" cy="1250" rx="118.0" ry="34.0" fill="#2d3e50"/>
+<text x="5390.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">link_drive</text>
+<ellipse cx="5810.0" cy="1250" rx="109.0" ry="34.0" fill="#2d3e50"/>
+<text x="5810.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">acc_masuk</text>
+<ellipse cx="6230.0" cy="1250" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="6230.0" y="1261" fill="#fff" font-size="32" text-anchor="middle">status_arsip</text>
+<ellipse cx="3140.0" cy="1560" rx="46.0" ry="34.0" fill="#2d3e50"/>
+<text x="3140.0" y="1571" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
+<ellipse cx="3520.0" cy="1560" rx="127.0" ry="34.0" fill="#2d3e50"/>
+<text x="3520.0" y="1571" fill="#fff" font-size="32" text-anchor="middle">nomor_surat</text>
+<ellipse cx="3900.0" cy="1560" rx="145.0" ry="34.0" fill="#2d3e50"/>
+<text x="3900.0" y="1571" fill="#fff" font-size="32" text-anchor="middle">tanggal_surat</text>
+<ellipse cx="4280.0" cy="1560" rx="91.0" ry="34.0" fill="#2d3e50"/>
+<text x="4280.0" y="1571" fill="#fff" font-size="32" text-anchor="middle">perihal</text>
+<ellipse cx="4660.0" cy="1560" rx="73.0" ry="34.0" fill="#2d3e50"/>
+<text x="4660.0" y="1571" fill="#fff" font-size="32" text-anchor="middle">untuk</text>
+<ellipse cx="3520.0" cy="2440" rx="118.0" ry="34.0" fill="#2d3e50"/>
+<text x="3520.0" y="2451" fill="#fff" font-size="32" text-anchor="middle">acc_keluar</text>
+<ellipse cx="3900.0" cy="2440" rx="118.0" ry="34.0" fill="#2d3e50"/>
+<text x="3900.0" y="2451" fill="#fff" font-size="32" text-anchor="middle">link_drive</text>
+<ellipse cx="4280.0" cy="2440" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="4280.0" y="2451" fill="#fff" font-size="32" text-anchor="middle">status_arsip</text>
+<ellipse cx="5000.0" cy="1650" rx="46.0" ry="34.0" fill="#2d3e50"/>
+<text x="5000.0" y="1661" fill="#fff" font-size="32" text-anchor="middle" text-decoration="underline">id</text>
+<ellipse cx="5400.0" cy="1650" rx="145.0" ry="34.0" fill="#2d3e50"/>
+<text x="5400.0" y="1661" fill="#fff" font-size="32" text-anchor="middle">tanggal_arsip</text>
+<ellipse cx="5800.0" cy="1650" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="5800.0" y="1661" fill="#fff" font-size="32" text-anchor="middle">lokasi_arsip</text>
+<ellipse cx="6200.0" cy="1650" rx="172.0" ry="34.0" fill="#2d3e50"/>
+<text x="6200.0" y="1661" fill="#fff" font-size="32" text-anchor="middle">keterangan_arsip</text>
+<ellipse cx="5400.0" cy="2450" rx="118.0" ry="34.0" fill="#2d3e50"/>
+<text x="5400.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">link_drive</text>
+<ellipse cx="5800.0" cy="2450" rx="136.0" ry="34.0" fill="#2d3e50"/>
+<text x="5800.0" y="2461" fill="#fff" font-size="32" text-anchor="middle">status_arsip</text>
+<polygon points="1150,1080.0 1263.0,1150 1150,1220.0 1037.0,1150" fill="#2d3e50"/>
+<text x="1150" y="1161" fill="#fff" font-size="32" text-anchor="middle">memiliki</text>
+<polygon points="1150,1630.0 1297.0,1700 1150,1770.0 1003.0,1700" fill="#2d3e50"/>
+<text x="1150" y="1711" fill="#fff" font-size="32" text-anchor="middle">berasal dari</text>
+<polygon points="2900,780.0 3013.0,850 2900,920.0 2787.0,850" fill="#2d3e50"/>
+<text x="2900" y="861" fill="#fff" font-size="32" text-anchor="middle">diajukan</text>
+<polygon points="2900,1930.0 3005.0,2000 2900,2070.0 2795.0,2000" fill="#2d3e50"/>
+<text x="2900" y="2011" fill="#fff" font-size="32" text-anchor="middle">menjadi</text>
+<polygon points="4750,780.0 4888.5,850 4750,920.0 4611.5,850" fill="#2d3e50"/>
+<text x="4750" y="861" fill="#fff" font-size="32" text-anchor="middle">di-ACC jadi</text>
+<polygon points="4750,1930.0 4880.0,2000 4750,2070.0 4620.0,2000" fill="#2d3e50"/>
+<text x="4750" y="2011" fill="#fff" font-size="32" text-anchor="middle">diarsipkan</text>
+<polygon points="5600,1355.0 5730.0,1425 5600,1495.0 5470.0,1425" fill="#2d3e50"/>
+<text x="5600" y="1436" fill="#fff" font-size="32" text-anchor="middle">diarsipkan</text>
+<rect x="615.8780175918753" y="1091.4198583994196" width="44" height="42" fill="#fff"/><text x="637.8780175918753" y="1124.4198583994196" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="1574.927456169858" y="1329.7770006872477" width="104" height="42" fill="#fff"/><text x="1626.927456169858" y="1362.7770006872477" font-size="32" fill="#3b3f45" text-anchor="middle">Many</text>
+<rect x="590.8780175918753" y="1716.3658558862946" width="44" height="42" fill="#fff"/><text x="612.8780175918753" y="1749.3658558862946" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="1574.927456169858" y="1476.2229993127523" width="104" height="42" fill="#fff"/><text x="1626.927456169858" y="1509.2229993127523" font-size="32" fill="#3b3f45" text-anchor="middle">Many</text>
+<rect x="1904.7127343536465" y="1336.763797951503" width="44" height="42" fill="#fff"/><text x="1926.7127343536465" y="1369.763797951503" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="3710.0" y="828.0" width="44" height="42" fill="#fff"/><text x="3732.0" y="861.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="1904.7127343536465" y="1469.236202048497" width="44" height="42" fill="#fff"/><text x="1926.7127343536465" y="1502.236202048497" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="3680.0" y="1978.0" width="44" height="42" fill="#fff"/><text x="3702.0" y="2011.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="4046.0" y="828.0" width="44" height="42" fill="#fff"/><text x="4068.0" y="861.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="5390.0" y="828.0" width="44" height="42" fill="#fff"/><text x="5412.0" y="861.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="4076.0" y="1978.0" width="44" height="42" fill="#fff"/><text x="4098.0" y="2011.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="5390.0" y="1978.0" width="44" height="42" fill="#fff"/><text x="5412.0" y="2011.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="5578.0" y="920.0" width="44" height="42" fill="#fff"/><text x="5600.0" y="953.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="5578.0" y="1886.0" width="44" height="42" fill="#fff"/><text x="5600.0" y="1919.0" font-size="32" fill="#3b3f45" text-anchor="middle">1</text>
+<rect x="300.0" y="2600.0" width="2400" height="300" rx="14" fill="#eef2f7" stroke="#2d3e50" stroke-width="4"/><text x="330.0" y="2650.0" font-size="34" font-weight="700" fill="#2d3e50">Alur Surat Keluar</text>
+<text x="330.0" y="2705.0" font-size="30" fill="#2d3e50">Penomoran (pilih Surat Keluar)  →  Surat Keluar</text>
+<text x="330.0" y="2753.0" font-size="30" fill="#2d3e50">(ACC langsung di Surat Keluar)  →  Pengarsipan</text>
+<text x="330.0" y="2801.0" font-size="30" fill="#2d3e50">Tidak melewati Disposisi.</text>
+<rect x="3000.0" y="2600.0" width="2800" height="300" rx="14" fill="#eef2f7" stroke="#2d3e50" stroke-width="4"/><text x="3030.0" y="2650.0" font-size="34" font-weight="700" fill="#2d3e50">Alur Surat Masuk</text>
+<text x="3030.0" y="2705.0" font-size="30" fill="#2d3e50">Penomoran (pilih Surat Masuk)  →  Disposisi</text>
+<text x="3030.0" y="2753.0" font-size="30" fill="#2d3e50">(ACC di Disposisi)  →  Surat Masuk  →  Pengarsipan</text>
+<text x="106.0" y="2985.0" font-size="28" fill="#555">ERD Persuratan TSU (notasi Chen), per menu — atribut bergaris bawah = primary key; atribut dipersingkat.</text></svg>
