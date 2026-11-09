@@ -2,9 +2,15 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=dashboard.html">
     <title>Persuratan TSU</title>
-    <script>window.location.replace('dashboard.html');</script>
+    <script>
+        // Buka dashboard di folder yang sama, juga bila alamat diketik tanpa garis miring di akhir.
+        (function () {
+            var p = location.pathname;
+            if (!/\/$/.test(p) && !/\.[a-z0-9]+$/i.test(p)) p += '/';
+            location.replace(p.replace(/[^\/]*$/, '') + 'dashboard.html' + location.search);
+        })();
+    </script>
 </head>
 <body><a href="dashboard.html">Buka Dashboard</a></body>
 </html>
