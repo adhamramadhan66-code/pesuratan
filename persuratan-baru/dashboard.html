@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=13">
-    <link rel="stylesheet" href="surat.css?v=19">
+    <link rel="stylesheet" href="surat.css?v=20">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -34,7 +34,7 @@
             </nav>
         </div>    </aside>
 
-    <main class="main-content">
+    <main class="main-content ada-video">
         <header class="header">
             <div>
                 <p class="page-sub">Persuratan</p>
@@ -53,7 +53,7 @@
         <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
         <!-- VIDEO (di atas dashboard). File: "vidssave.com MINI COMPRO TSU 1080P.mp4" di folder ini. -->
         <section class="video-sec" id="videoSec" aria-label="Video profil TSU">
-            <video autoplay loop muted playsinline controls preload="metadata">
+            <video id="heroVideo" autoplay loop muted playsinline disablepictureinpicture preload="auto" tabindex="-1">
                 <source src="vidssave.com%20MINI%20COMPRO%20TSU%201080P.mp4" type="video/mp4">
             </video>
             <div class="video-kosong">Video belum tersedia. Taruh file <b>&nbsp;vidssave.com MINI COMPRO TSU 1080P.mp4&nbsp;</b> di folder ini.</div>
@@ -106,10 +106,20 @@
     <div class="toast" id="toast" role="status"></div>
 
     <script>
-        // Bila file video tidak ada, tampilkan keterangan (bukan kotak hitam kosong)
+        // Video hero: jalan otomatis (tanpa suara), berulang. Bila file tidak ada, tampil keterangan.
         (function () {
             const sec = document.getElementById('videoSec');
-            sec.querySelector('source').addEventListener('error', () => sec.classList.add('gagal'));
+            const main = document.querySelector('main.main-content');
+            const v = document.getElementById('heroVideo');
+            v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
+            sec.querySelector('source').addEventListener('error', () => { sec.classList.add('gagal'); main.classList.remove('ada-video'); });
+            const mulai = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+            mulai();
+            v.addEventListener('canplay', mulai);
+            // Bila browser menahan autoplay, mulai pada interaksi pertama (klik/sentuh/gulir/tombol)
+            ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
+                window.addEventListener(ev, () => { if (v.paused) mulai(); }, { once: true, passive: true, capture: true }));
+            document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) mulai(); });
         })();
     </script>
     <script src="app.js?v=8"></script>

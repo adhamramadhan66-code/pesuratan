@@ -316,10 +316,25 @@ dialog.detail .kartu-thumb { aspect-ratio: 16 / 9; max-height: 15rem; }
 /* Dashboard: grafik satu kolom penuh di bawah Surat terbaru */
 .charts-grid.tunggal { grid-template-columns: 1fr; margin-top: 1.5rem; margin-bottom: 0; }
 
-/* Video di atas dashboard */
-.video-sec { position: relative; margin-bottom: 1.5rem; border-radius: 1rem; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--border-color); aspect-ratio: 16 / 6; max-height: 26rem; }
+/* Video hero di atas dashboard: penuh sampai tepi atas, memudar transparan ke arah kotak-kotak */
+.main-content { --hero-h: clamp(340px, 62vh, 640px); }
+.video-sec { position: absolute; top: 0; left: 0; right: 0; height: var(--hero-h); z-index: 0; overflow: hidden; background: transparent; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 38%, rgba(0,0,0,.55) 66%, transparent 97%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 38%, rgba(0,0,0,.55) 66%, transparent 97%); }
 .video-sec video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.video-sec .video-kosong { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 1rem; text-align: center; color: var(--text-muted); background: var(--card-bg); font-size: .875rem; }
-.video-sec.gagal video { display: none; }
-.video-sec.gagal .video-kosong { display: flex; }
-@media (max-width: 700px) { .video-sec { aspect-ratio: 16 / 9; } }
+.video-sec::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 38%); }
+.video-sec .video-kosong { display: none; }
+.main-content > .header { position: relative; z-index: 3; }
+.main-content.ada-video > .jenis-sec { position: relative; z-index: 2; margin-top: max(0px, calc(var(--hero-h) - 11.5rem)); }
+.main-content.ada-video > .header .page-sub,
+.main-content.ada-video > .header h2,
+.main-content.ada-video > .header .user-label,
+.main-content.ada-video > .header .profile-btn { color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.55); }
+/* Bila file video tidak ada: kembali ke kotak keterangan biasa */
+.video-sec.gagal { position: relative; height: auto; margin-bottom: 1.5rem; border-radius: 1rem; box-shadow: 0 0 0 1px var(--border-color); background: var(--card-bg); -webkit-mask-image: none; mask-image: none; pointer-events: auto; }
+.video-sec.gagal::after, .video-sec.gagal video { display: none; }
+.video-sec.gagal .video-kosong { display: flex; align-items: center; justify-content: center; padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: .875rem; }
+@media (max-width: 700px) {
+    .main-content { --hero-h: clamp(260px, 46vh, 420px); }
+    .main-content.ada-video > .jenis-sec { margin-top: max(0px, calc(var(--hero-h) - 9rem)); }
+}
