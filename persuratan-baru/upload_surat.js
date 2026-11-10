@@ -5,7 +5,7 @@
     const API = 'api/surat.php';
 
     const el = {
-        tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'),
+        judul: $('f_judul'), tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'), link: $('f_link'),
     };
     const radio = (name) => (document.querySelector('input[name="' + name + '"]:checked') || {}).value || '';
     const setRadio = (name, v) => document.querySelectorAll('input[name="' + name + '"]').forEach((r) => { r.checked = r.value === v; });
@@ -13,7 +13,6 @@
     let opsi = { jenis: [], unit: [], tahun: [] };
     let urut = null;            // nomor urut berikutnya pada bulan yang dipilih
     let editId = null, editNomor = '', editAsal = null;
-    let baris = [];             // data tabel yang sedang tampil
 
     const namaDari = (daftar, kode) => (daftar.find((x) => x.kode === kode) || {}).nama || '';
 
@@ -67,10 +66,10 @@
         $('btnSimpanTeks').textContent = 'Simpan & ambil nomor';
         $('formTitle').textContent = 'Data surat baru';
         kunci(false);
-        el.perihal.value = '';
+        el.judul.value = ''; el.perihal.value = ''; el.link.value = '';
         if (kosongkanSemua) {
             el.tanggal.value = hariIni(); el.jenis.value = ''; el.unit.value = '';
-            setRadio('tujuan', 'A'); setRadio('jalur', 'disposisi');
+            setRadio('tujuan', 'A');
         }
         bersihkanGalat();
         muatUrut(); pratinjau();
@@ -85,9 +84,9 @@
         $('btnBatal').style.display = '';
         $('btnSimpanTeks').textContent = 'Simpan perubahan';
         $('formTitle').textContent = 'Ubah data surat';
-        el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan); setRadio('jalur', r.jalur || 'disposisi');
+        el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
         el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
-        el.perihal.value = r.perihal;
+        el.judul.value = r.judul || ''; el.perihal.value = r.perihal; el.link.value = r.link_drive || '';
         kunci(false); bersihkanGalat(); urut = editAsal.nomor_urut; pratinjau();
         $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -95,19 +94,24 @@
     $('suratForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         bersihkanGalat();
-        const wajib = [['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal']];
+        const wajib = [['judul', 'judul surat'], ['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal']];
         for (const [k, nama] of wajib) {
             if (!el[k].value.trim()) { el[k].classList.add('bad'); el[k].focus(); toast('Isi ' + nama + ' terlebih dahulu.', true); return; }
         }
+        const link = el.link.value.trim();
+        if (link && !/^https:\/\/(drive|docs)\.google\.com\//i.test(link)) {
+            el.link.classList.add('bad'); el.link.focus();
+            toast('Link harus berupa tautan Google Drive (https://drive.google.com/...).', true); return;
+        }
         const data = {
             aksi: editId ? 'ubah' : 'tambah', id: editId,
-            tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jalur: radio('jalur'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
-            perihal: el.perihal.value,
+            judul: el.judul.value, tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
+            perihal: el.perihal.value, link_drive: link,
         };
         const btn = $('btnSimpan'); btn.disabled = true;
         try {
             const d = await api(API, data);
-            if (editId) { toast('Perubahan disimpan: ' + d.nomor_surat); keModeTambah(true); }
+            if (editId) { toast('Perubahan disimpan: ' + d.nomor_surat); setTimeout(() => { window.location.href = 'data_surat.html'; }, 700); return; }
             else {
                 $('hasilNomor').textContent = d.nomor_surat;
                 idBaru = d.id;
@@ -119,7 +123,7 @@
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
-    $('btnBatal').addEventListener('click', () => keModeTambah(true));
+    $('btnBatal').addEventListener('click', () => { if (editId) window.location.href = 'data_surat.html'; else keModeTambah(true); });
     $('btnReset').addEventListener('click', () => keModeTambah(true));
     el.tanggal.addEventListener('change', () => { urut = null; pratinjau(); muatUrut(); });
     [el.jenis, el.unit].forEach((e) => e.addEventListener('change', pratinjau));
@@ -150,5 +154,10 @@
             isiOpsi(el.unit, opsi.unit, 'Pilih unit pembuat…', (x) => x.nama + ' (' + x.kode + ')');
         } catch (e) { toast(e.message, true); }
         pratinjau(); muatUrut();
+        const idUbah = +new URLSearchParams(location.search).get('ubah');
+        if (idUbah) {
+            try { keModeUbah((await api(API + '?aksi=detail&id=' + idUbah)).surat); }
+            catch (e) { toast(e.message, true); }
+        }
     })();
 })();

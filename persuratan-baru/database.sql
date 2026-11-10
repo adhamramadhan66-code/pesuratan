@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS surat (
     jenis_kode       VARCHAR(10)  NOT NULL,
     unit_kode        VARCHAR(20)  NOT NULL,
     nomor_surat      VARCHAR(60)  NOT NULL,
+    judul            VARCHAR(255) NOT NULL DEFAULT '',
     tanggal_surat    DATE         NOT NULL,
     perihal          VARCHAR(255) NOT NULL,
     untuk            VARCHAR(255) NOT NULL DEFAULT '',
