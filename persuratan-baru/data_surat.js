@@ -7,7 +7,7 @@
     let baris = [], total = 0, tunggu = 0;
 
     function gambar() {
-        $('dsList').innerHTML = baris.length ? baris.map(App.kartuSurat).join('')
+        $('dsList').innerHTML = baris.length ? baris.map(App.kartuSuratDgnHapus).join('')
             : '<p class="galeri-kosong">' + (Object.values(FILTER).some((id) => $(id).value) ? 'Tidak ada surat yang cocok dengan filter.' : 'Belum ada surat yang diupload.') + '</p>';
         $('infoJumlah').textContent = total ? 'Menampilkan ' + baris.length + ' dari ' + total + ' surat' : 'Belum ada surat';
         $('dsLagi').hidden = baris.length >= total;

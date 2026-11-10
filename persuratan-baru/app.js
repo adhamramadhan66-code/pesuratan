@@ -240,60 +240,73 @@
         im.replaceWith(s);
     }, true);
 
-    function kartuSurat(r) {
+    function buatKartu(r, dgnHapus) {
         const judul = r.judul || r.perihal || r.nomor_surat;
         const desk = r.judul && r.perihal && r.perihal !== r.judul ? '<p class="dk-desk">' + esc(r.perihal) + '</p>' : '';
         const ada = !!+r.ada_file;
         const internal = r.kode_tujuan === 'A';
-        return '<article class="dk-card" tabindex="0" role="button" data-id="' + esc(r.id) + '" title="Klik untuk melihat pilihan surat" aria-label="' + esc('Pilih tindakan untuk surat ' + judul) + '">' +
+        return '<article class="dk-card" tabindex="0" role="button" data-id="' + esc(r.id) + '" title="Klik untuk memperbesar kartu" aria-label="' + esc('Perbesar kartu surat ' + judul) + '">' +
             '<div class="dk-info">' +
                 '<div class="dk-top"><span class="dk-nomor mono">' + esc(r.nomor_surat) + '</span>' +
-                    '<span class="badge ' + (internal ? 'ok' : '') + '">' + (internal ? 'Internal' : 'Eksternal') + '</span></div>' +
+                    '<span class="badge ' + (internal ? 'ok' : '') + '">' + (internal ? 'Internal' : 'Eksternal') + '</span>' +
+                '</div>' +
                 '<h3 class="dk-judul">' + esc(judul) + '</h3>' + desk +
                 '<dl class="dk-meta">' +
                     '<div><dt>Tanggal surat</dt><dd>' + esc(tglIndo(r.tanggal_surat)) + '</dd></div>' +
                     '<div><dt>Jenis surat</dt><dd>' + esc(r.jenis_nama || r.jenis_kode) + '</dd></div>' +
                     '<div><dt>Unit pembuat</dt><dd>' + esc(r.unit_nama || r.unit_kode) + '</dd></div>' +
                     '<div><dt>Link Drive</dt><dd><span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Tersedia' : 'Belum ada') + '</span></dd></div>' +
-                '</dl>' +
+                '</dl>' + (dgnHapus ? '<button type="button" class="dk-hapus" data-hapus="' + esc(r.id) + '" title="Hapus seluruh kartu ini" aria-label="' + esc('Hapus kartu surat ' + judul) + '">' + IKON_HAPUS + ' Hapus</button>' : '') +
             '</div>' +
             '<div class="dk-thumb">' + pratinjauA4(r) + '</div>' +
         '</article>';
     }
 
+    const IKON_HAPUS = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+    const kartuSurat = (r) => buatKartu(r, false);          // dashboard: hanya dibuka
+    const kartuSuratDgnHapus = (r) => buatKartu(r, true);   // Data Surat: ada tombol Hapus tersendiri
+
     // Pasang pendengar klik pada daftar kartu. opsi: { cari(id) -> baris data, selesai() -> muat ulang daftar }
     function pasangKartuSurat(wadah, opsi) {
-        const buka = (k) => {
-            const r = opsi.cari(k.dataset.id); if (!r) return;
-            if (!opsi.hanyaBuka) return menuSurat(r, opsi.selesai);
-            const url = urlSurat(r);                                 // dashboard: hanya bisa dibuka
-            if (url) window.open(url, '_blank', 'noopener'); else toast('Surat ini belum punya link Drive', true);
-        };
-        wadah.addEventListener('click', (e) => { const k = e.target.closest('.dk-card'); if (k) buka(k); });
+        const cari = (el) => opsi.cari(el.dataset.id || el.dataset.hapus);
+        const perbesar = (k) => { const r = cari(k); if (r) besarkanSurat(k, r, opsi); };
+        wadah.addEventListener('click', (e) => {
+            const h = e.target.closest('[data-hapus]');
+            if (h) { e.stopPropagation(); const r = cari(h); if (r) hapusSurat(r, opsi.selesai); return; }
+            const k = e.target.closest('.dk-card'); if (k) perbesar(k);
+        });
         wadah.addEventListener('keydown', (e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('dk-card')) { e.preventDefault(); buka(e.target); }
+            if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('dk-card')) { e.preventDefault(); perbesar(e.target); }
         });
     }
 
-    // Notifikasi pilihan setelah kartu diklik: Buka / Ganti / Hapus
-    function menuSurat(r, selesai) {
-        const judul = r.judul || r.perihal || r.nomor_surat, url = urlSurat(r);
-        const d = dlgDinamis('<div class="modal-head"><h3>' + esc(judul) + '</h3></div>' +
-            '<div class="modal-body"><p class="mono" style="margin:0">' + esc(r.nomor_surat) + '</p>' +
-            '<p style="margin:.6rem 0 0">Mau membuka, mengganti, atau menghapus surat ini?</p></div>' +
-            '<div class="modal-foot aksi">' +
-                '<button type="button" class="btn" data-x="batal">Batal</button>' +
-                '<button type="button" class="btn danger" data-x="hapus">Hapus</button>' +
-                '<button type="button" class="btn" data-x="ganti">Ganti</button>' +
-                '<button type="button" class="btn primary" data-x="buka"' + (url ? '' : ' disabled title="Surat ini belum punya link Drive"') + '>Buka</button>' +
-            '</div>');
+    // Kartu diklik -> kartu membesar (pratinjau A4 besar + keterangan), lalu pilih Buka (atau Ganti link di Data Surat)
+    function besarkanSurat(kartu, r, opsi) {
+        const judul = r.judul || r.perihal || r.nomor_surat, url = urlSurat(r), ada = !!+r.ada_file;
+        const desk = r.judul && r.perihal && r.perihal !== r.judul ? '<p class="dk-desk">' + esc(r.perihal) + '</p>' : '';
+        const d = dlgDinamis('<div class="dk-besar-isi">' +
+            '<button type="button" class="dk-tutup" data-x="batal" aria-label="Tutup">&times;</button>' +
+            '<div class="dk-info"><p class="dk-nomor mono" style="margin:0">' + esc(r.nomor_surat) + '</p>' +
+                '<h3 class="dk-judul">' + esc(judul) + '</h3>' + desk +
+                '<dl class="dk-meta">' +
+                    '<div><dt>Tanggal surat</dt><dd>' + esc(tglIndo(r.tanggal_surat)) + '</dd></div>' +
+                    '<div><dt>Jenis surat</dt><dd>' + esc(r.jenis_nama || r.jenis_kode) + '</dd></div>' +
+                    '<div><dt>Unit pembuat</dt><dd>' + esc(r.unit_nama || r.unit_kode) + '</dd></div>' +
+                    '<div><dt>Tujuan</dt><dd>' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + '</dd></div>' +
+                    '<div><dt>Link Drive</dt><dd><span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Tersedia' : 'Belum ada') + '</span></dd></div>' +
+                '</dl>' +
+                '<div class="dk-besar-aksi">' +
+                    (opsi.hanyaBuka ? '' : '<button type="button" class="btn" data-x="ganti">Ganti link</button>') +
+                    '<button type="button" class="btn primary" data-x="buka"' + (url ? '' : ' disabled title="Surat ini belum punya link Drive"') + '>Buka surat</button>' +
+                '</div></div>' +
+            '<div class="dk-thumb">' + pratinjauA4(r) + '</div></div>');
+        d.classList.add('dk-besar');
         d.addEventListener('click', (e) => {
             const x = e.target.closest('button[data-x]');
             if (!x || x.disabled) return;
             d.close();
             if (x.dataset.x === 'buka') window.open(url, '_blank', 'noopener');
-            else if (x.dataset.x === 'ganti') gantiSurat(r, selesai);
-            else if (x.dataset.x === 'hapus') hapusSurat(r, selesai);
+            else if (x.dataset.x === 'ganti') gantiSurat(r, opsi.selesai);
         });
     }
 
@@ -340,5 +353,5 @@
         tt = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile, driveId, thumbLink, thumbSurat, pilihBukaGanti, mintaLink, kartuSurat, pasangKartuSurat };
+    window.App = { $, esc, tglIndo, hariIni, api, toast, BULAN, IKON, thumb, cekFile, kartuHtml, thumbFile, driveId, thumbLink, thumbSurat, pilihBukaGanti, mintaLink, kartuSurat, kartuSuratDgnHapus, pasangKartuSurat };
 })();
