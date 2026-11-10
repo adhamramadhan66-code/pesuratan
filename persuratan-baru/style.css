@@ -368,8 +368,8 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
     border-right: 1px solid rgba(255, 255, 255, 0.14);
     color: #fff;
 }
-.sidebar .logo { background: #fff; border-radius: 0.85rem; height: auto; width: fit-content; max-width: 100%; margin: 0 auto 2rem; padding: 0.4rem 0.8rem; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); }
-.sidebar:not(.expanded) .logo { padding: 0.3rem 0.35rem; border-radius: 0.7rem; }
+.sidebar .logo { background: transparent; border-radius: 0; box-shadow: none; height: auto; width: 100%; margin: 0 0 2rem; padding: 0.25rem 0; }
+.sidebar .logo-img { filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35)); }
 .sidebar .nav-item { color: rgba(255, 255, 255, 0.82); }
 .sidebar .nav-item:hover { color: #fff; background-color: rgba(255, 255, 255, 0.14); }
 .sidebar .nav-item.active {
