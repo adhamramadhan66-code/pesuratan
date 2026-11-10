@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=24">
+    <link rel="stylesheet" href="surat.css?v=25">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +39,12 @@
             </nav>
         </div>    </aside>
 
-    <main class="main-content ada-video">
+    <main class="main-content ada-video" id="halUtama">
+        <form class="cari-atas" id="cariAtas" role="search" autocomplete="off">
+            <i data-lucide="search" class="icon-search"></i>
+            <input type="search" id="cariUtama" placeholder="Cari surat: judul, nomor, perihal…" aria-label="Cari surat">
+            <button type="button" class="cari-x" id="cariHapus" aria-label="Hapus pencarian" hidden>&times;</button>
+        </form>
         <header class="header">
             <div>
                 <p class="page-sub">Persuratan</p>
@@ -57,6 +62,12 @@
 
         <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
         <!-- VIDEO (di atas dashboard). File: "vidssave.com MINI COMPRO TSU 1080P.mp4" di folder ini. -->
+        <section class="hasil-cari" id="hasilCari" hidden aria-live="polite">
+            <div class="table-header"><div><h3>Hasil pencarian</h3><span class="muted" id="hasilInfo" style="font-size:.8125rem"></span></div></div>
+            <div class="dk-list" id="hasilList"></div>
+            <div class="hasil-lagi"><button type="button" class="btn" id="hasilLagi" hidden>Tampilkan lebih banyak</button></div>
+        </section>
+
         <section class="video-sec" id="videoSec" aria-label="Video profil TSU">
             <video id="heroVideo" autoplay loop muted playsinline disablepictureinpicture preload="auto" tabindex="-1">
                 <source src="vidssave.com%20MINI%20COMPRO%20TSU%201080P.mp4" type="video/mp4">
@@ -78,17 +89,6 @@
             <div class="table-header">
                 <div><h3>Surat terbaru</h3><span class="muted" id="terbaruInfo" style="font-size:.8125rem"></span></div>
             </div>
-            <div class="toolbar terbaru-filter" id="filterTerbaru">
-                <form class="search-box" id="tbCari" role="search">
-                    <i data-lucide="search" class="icon-search"></i>
-                    <input type="text" id="tbQ" placeholder="Cari judul / nomor / perihal…" aria-label="Cari surat">
-                </form>
-                <select id="tbJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
-                <select id="tbUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
-                <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
-                <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
-                <button type="button" class="btn sm" id="tbReset">Reset filter</button>
-            </div>
             <div class="dk-list" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </div>
         <!-- GRAFIK (di bawah Surat terbaru) -->
@@ -96,6 +96,11 @@
             <div class="chart-card main-chart">
                 <div class="chart-header">
                     <h3 id="chartJudul">Surat per bulan</h3>
+                    <div class="seg" id="segGrafik" role="group" aria-label="Periode grafik">
+                        <button type="button" data-m="hari">Hari</button><button type="button" data-m="bulan" class="on">Bulan</button><button type="button" data-m="tahun">Tahun</button>
+                    </div>
+                    <select id="grafikBulan" class="grafik-opsi" aria-label="Pilih bulan" hidden></select>
+                    <select id="grafikTahun" class="grafik-opsi" aria-label="Rentang tahun" hidden><option value="5">5 tahun</option><option value="10" selected>10 tahun</option></select>
                     <label class="grafik-filter toolbar">Jenis: <select id="fGrafikJenis" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select></label>
                 </div>
                 <p class="chart-sub" id="chartSub"></p>
@@ -126,7 +131,7 @@
             document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) mulai(); });
         })();
     </script>
-    <script src="app.js?v=12"></script>
+    <script src="app.js?v=13"></script>
     <script src="login-modal.js?v=3"></script>
     <script src="profil.js?v=2"></script>
     <script>
@@ -160,7 +165,6 @@
                 const sel = $('fGrafikJenis');
                 sel.insertAdjacentHTML('beforeend', daftar.slice().sort((x, y) => x.nama.localeCompare(y.nama)).map((j) => '<option value="' + esc(j.kode) + '">' + esc(j.nama) + ' (' + esc(j.kode) + ')</option>').join(''));
             }
-            $('fGrafikJenis').addEventListener('change', () => { if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); });
 
             // ---------- Jenis surat: carousel otomatis + seret, atau kotak-kotak (Lihat semua) ----------
             const trek = $('jenisTrack'), grid = $('jenisGrid'), tombol = $('btnJenisSemua');
@@ -224,73 +228,126 @@
                 if (!k) return;
                 e.preventDefault();
                 if (semuaMode) tombol.click();
-                $('tbJenis').value = k.dataset.kode;
-                if ($('tbJenis').value !== k.dataset.kode) $('tbJenis').value = '';
+                jenisPilih = jenisPilih === k.dataset.kode ? '' : k.dataset.kode;   // klik lagi = batal
+                document.querySelectorAll('.jenis-card[data-kode]').forEach((c) => c.classList.toggle('dipilih', !!jenisPilih && c.dataset.kode === jenisPilih));
                 muatTerbaru();
                 $('tabelTerbaru').scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
-            // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
-            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', urut: 'tbUrut' };
-            let tungguTerbaru = 0, baris = [];
+            // ---------- Surat terbaru (mengikuti kalender; tanpa filter — hanya bisa disaring dengan klik kotak jenis) ----------
+            let tungguTerbaru = 0, baris = [], jenisPilih = '';
             async function muatTerbaru() {
                 if (!rentangIni) return;
                 const my = ++tungguTerbaru;
                 const p = new URLSearchParams({ aksi: 'terbaru', dari: rentangIni.dari, sampai: rentangIni.sampai, limit: 12 });
-                Object.entries(FILTER).forEach(([k, id]) => { const v = $(id).value.trim(); if (v) p.set(k, v); });
+                if (jenisPilih) p.set('jenis', jenisPilih);
                 try {
                     const d = await api('api/surat.php?' + p);
                     if (my !== tungguTerbaru) return;
-                    const aktif = Object.values(FILTER).some((id) => $(id).value);
-                    $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (aktif ? ' (difilter)' : '');
+                    $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (jenisPilih ? ' · jenis ' + jenisPilih : '');
                     baris = d.surat;
-                    $('galeri').innerHTML = d.surat.length ? d.surat.map(App.kartuSurat).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
+                    $('galeri').innerHTML = d.surat.length ? d.surat.map(App.kartuSurat).join('') : '<p class="galeri-kosong">Tidak ada surat pada rentang tanggal ini.</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
             }
-            // Dashboard hanya untuk melihat: klik kartu -> surat dibuka (tidak bisa diganti/dihapus); setelah berubah, jenis surat, grafik, dan daftar dimuat ulang
-            App.pasangKartuSurat($('galeri'), {
-                hanyaBuka: true,
-                cari: (id) => baris.find((x) => String(x.id) === id),
-                selesai: () => { terakhir = ''; if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); },
+            const segarkan = () => { terakhir = ''; if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); muatGrafik(true); if (mencari) cari(true); };
+            // Dashboard hanya untuk melihat: klik kartu -> surat dibuka
+            App.pasangKartuSurat($('galeri'), { hanyaBuka: true, cari: (id) => baris.find((x) => String(x.id) === id), selesai: segarkan });
+
+            // ---------- Pencarian di atas video: saat diketik, dashboard berubah menjadi daftar surat yang cocok ----------
+            const utama = $('halUtama'), inp = $('cariUtama'), hapusX = $('cariHapus');
+            let mencari = false, hasil = [], hasilTotal = 0, tungguCari = 0, tmCari;
+            const videoOk = () => !$('videoSec').classList.contains('gagal');
+            async function cari(ulang) {
+                const q = inp.value.trim();
+                if (!q) { berhenti(); return; }
+                const my = ++tungguCari;
+                const off = ulang ? 0 : hasil.length;
+                try {
+                    const d = await api('api/surat.php?' + new URLSearchParams({ aksi: 'daftar', q, limit: 12, offset: off }));
+                    if (my !== tungguCari) return;
+                    hasil = off ? hasil.concat(d.surat) : d.surat; hasilTotal = d.total;
+                    $('hasilInfo').textContent = '“' + q + '” · ' + d.total + ' surat ditemukan';
+                    $('hasilList').innerHTML = hasil.length ? hasil.map(App.kartuSurat).join('') : '<p class="galeri-kosong">Tidak ada surat yang cocok dengan “' + esc(q) + '”.</p>';
+                    $('hasilLagi').hidden = hasil.length >= hasilTotal;
+                } catch (e) { toast(e.message, true); }
+            }
+            function mulaiCari() {
+                if (!mencari) { mencari = true; utama.classList.add('mencari'); utama.classList.remove('ada-video'); $('hasilCari').hidden = false; }
+                hapusX.hidden = false;
+            }
+            function berhenti() {
+                tungguCari++; mencari = false; hasil = [];
+                utama.classList.remove('mencari'); if (videoOk()) utama.classList.add('ada-video');
+                $('hasilCari').hidden = true; hapusX.hidden = true; $('hasilList').innerHTML = '';
+            }
+            inp.addEventListener('input', () => {
+                clearTimeout(tmCari);
+                if (!inp.value.trim()) { berhenti(); return; }
+                mulaiCari(); tmCari = setTimeout(() => cari(true), 300);
             });
-            $('tbCari').addEventListener('submit', (ev) => { ev.preventDefault(); muatTerbaru(); });
-            let tmTerbaru;
-            $('tbQ').addEventListener('input', () => { clearTimeout(tmTerbaru); tmTerbaru = setTimeout(muatTerbaru, 300); });
-            Object.values(FILTER).filter((id) => id !== 'tbQ').forEach((id) => $(id).addEventListener('change', muatTerbaru));
-            $('tbReset').addEventListener('click', () => { Object.values(FILTER).forEach((id) => { $(id).value = ''; }); muatTerbaru(); });
-            api('api/surat.php?aksi=opsi').then((o) => {
-                $('tbJenis').insertAdjacentHTML('beforeend', o.jenis.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
-                $('tbUnit').insertAdjacentHTML('beforeend', o.unit.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
-            }).catch(() => {});
+            $('cariAtas').addEventListener('submit', (ev) => { ev.preventDefault(); if (inp.value.trim()) { mulaiCari(); cari(true); } });
+            hapusX.addEventListener('click', () => { inp.value = ''; berhenti(); inp.focus(); });
+            inp.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { inp.value = ''; berhenti(); } });
+            $('hasilLagi').addEventListener('click', () => cari(false));
+            App.pasangKartuSurat($('hasilList'), { hanyaBuka: true, cari: (id) => hasil.find((x) => String(x.id) === id), selesai: segarkan });
+
+            // ---------- Grafik: Hari (tanggal 1..akhir bulan), Bulan (Jan–Des tahun ini), Tahun (5–10 tahun sampai sekarang) ----------
+            const sekarang = new Date(), thIni = sekarang.getFullYear();
+            let modeGrafik = 'bulan', bulanGrafik = sekarang.getMonth(), tungguGrafik = 0;
+            $('grafikBulan').innerHTML = BLN_PENUH.map((n, i) => '<option value="' + i + '"' + (i === bulanGrafik ? ' selected' : '') + '>' + n + ' ' + thIni + '</option>').join('');
+            const two = (n) => String(n).padStart(2, '0');
+            async function muatGrafik() {
+                const my = ++tungguGrafik, jenis = $('fGrafikJenis').value;
+                const dari = modeGrafik === 'hari' ? thIni + '-' + two(bulanGrafik + 1) + '-01' : thIni + '-01-01';
+                const sampai = modeGrafik === 'hari' ? thIni + '-' + two(bulanGrafik + 1) + '-' + two(new Date(thIni, bulanGrafik + 1, 0).getDate()) : thIni + '-12-31';
+                try {
+                    const d = await api('api/surat.php?' + new URLSearchParams({ aksi: 'statistik', dari, sampai, jenis, jumlah_tahun: $('grafikTahun').value }));
+                    if (my !== tungguGrafik) return;
+                    const maks = (a) => Math.max(1, ...a);
+                    if (modeGrafik === 'hari') {
+                        $('chartJudul').textContent = 'Surat per hari — ' + BLN_PENUH[bulanGrafik] + ' ' + thIni;
+                        $('chartSub').textContent = 'Jumlah surat setiap tanggal pada ' + BLN_PENUH[bulanGrafik] + ' ' + thIni;
+                        const hariIni = (bulanGrafik === sekarang.getMonth()) ? sekarang.getDate() : -1;
+                        gambarGrafik(d.per_hari.map((_, i) => String(i + 1)), d.per_hari, maks(d.per_hari), (i) => i + 1 === hariIni);
+                    } else if (modeGrafik === 'bulan') {
+                        $('chartJudul').textContent = 'Surat per bulan — ' + thIni;
+                        $('chartSub').textContent = 'Jumlah surat setiap bulan, Januari sampai Desember ' + thIni;
+                        gambarGrafik(BLN, d.per_bulan, maks(d.per_bulan), (i) => i === sekarang.getMonth());
+                    } else {
+                        const n = d.per_tahun.length;
+                        $('chartJudul').textContent = 'Surat per tahun — ' + d.label_tahun[0] + '–' + thIni;
+                        $('chartSub').textContent = 'Jumlah surat setiap tahun, ' + n + ' tahun terakhir sampai ' + thIni;
+                        gambarGrafik(d.label_tahun, d.per_tahun, maks(d.per_tahun), (i) => i === n - 1);
+                    }
+                    $('bars').setAttribute('aria-label', $('chartJudul').textContent);
+                    isiFilterJenis(d.per_jenis || []);
+                } catch (e) { toast(e.message, true); }
+            }
+            $('segGrafik').addEventListener('click', (e) => {
+                const b = e.target.closest('button[data-m]'); if (!b) return;
+                modeGrafik = b.dataset.m;
+                $('segGrafik').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+                $('grafikBulan').hidden = modeGrafik !== 'hari'; $('grafikTahun').hidden = modeGrafik !== 'tahun';
+                $('bars').innerHTML = '';   // jumlah kolom berbeda: bangun ulang
+                muatGrafik();
+            });
+            $('grafikBulan').addEventListener('change', () => { bulanGrafik = +$('grafikBulan').value; muatGrafik(); });
+            $('grafikTahun').addEventListener('change', () => { $('bars').innerHTML = ''; muatGrafik(); });
+            $('fGrafikJenis').addEventListener('change', muatGrafik);
+            muatGrafik();
 
             document.addEventListener('rentang', async (ev) => {
                 const { dari, sampai, mode } = ev.detail;
                 rentangIni = ev.detail;
-                const kunci = dari + sampai + mode + $('fGrafikJenis').value;
+                const kunci = dari + sampai + mode;
                 if (kunci === terakhir) return;
                 terakhir = kunci;
                 try {
-                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai + '&jenis=' + encodeURIComponent($('fGrafikJenis').value));
-                    if (kunci !== terakhir) return;             // sudah ada permintaan yang lebih baru
+                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai);
+                    if (kunci !== terakhir) return;
                     $('jenisRentang').textContent = '· ' + ev.detail.label;
                     tampilJenis(d.per_jenis || []);
-
-                    // Grafik mengikuti kalender: tahun -> per bulan; bulan/hari -> per hari pada bulan itu (hari terpilih disorot)
-                    const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
-                    if (mode === 'year') {
-                        const maks = Math.max(1, ...d.per_bulan);
-                        $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
-                        $('chartSub').textContent = 'Jumlah surat setiap bulan pada tahun ' + d.tahun;
-                        gambarGrafik(BLN, d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
-                    } else {
-                        const m = +dari.slice(5, 7) - 1, maks = Math.max(1, ...d.per_hari);
-                        $('chartJudul').textContent = 'Surat per hari — ' + BLN_PENUH[m] + ' ' + y;
-                        $('chartSub').textContent = mode === 'day' ? 'Jumlah surat setiap hari · tanggal ' + ev.detail.label + ' disorot' : 'Jumlah surat setiap hari pada ' + BLN_PENUH[m] + ' ' + y;
-                        gambarGrafik(d.per_hari.map((_, i) => String(i + 1)), d.per_hari, maks, (i) => new Date(y, m, i + 1) >= awal && new Date(y, m, i + 1) <= akhir);
-                    }
-                    isiFilterJenis(d.per_jenis || []);
-
                     muatTerbaru();
                 } catch (e) {
                     terakhir = '';

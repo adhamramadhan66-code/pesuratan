@@ -23,3 +23,9 @@ Akun demo    : admin@tsu.ac.id / tsu12345
 Menjalankan  : Laragon (Start All), lalu buka http://localhost/<folder repo>/persuratan-baru/
                atau jalankan jalankan.bat. Database "persuratan" dibuat otomatis. Database
                lama dari versi sebelumnya otomatis ditambah kolom "judul" (data tidak hilang).
+
+Dashboard (pembaruan):
+- Kotak pencarian di paling atas (di atas video). Saat diketik, dashboard berubah menjadi daftar surat yang cocok
+  (cari di semua tanggal); hapus teks / tombol x / tekan Esc untuk kembali.
+- Surat terbaru tanpa filter; klik kotak "Jenis surat" untuk menyaring (klik lagi untuk batal).
+- Grafik: Hari (tanggal 1..akhir bulan, pilih bulan), Bulan (Januari-Desember tahun ini), Tahun (5 atau 10 tahun sampai sekarang).

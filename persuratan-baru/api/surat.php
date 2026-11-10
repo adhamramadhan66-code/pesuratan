@@ -188,7 +188,18 @@ try {
                 foreach ($q->fetchAll() as $r) $perHari[(int) $r['h']] = (int) $r['n'];
                 foreach ($perJenis as &$pj) $pj['n'] = (int) $pj['n'];
                 unset($pj);
-                keluar(['per_hari' => array_values($perHari), 'per_jenis' => $perJenis, 'total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan)]);
+
+                // Per tahun: 5-10 tahun terakhir sampai tahun ini (parameter jumlah_tahun).
+                $jml = max(5, min(10, (int) ($_GET['jumlah_tahun'] ?? 10)));
+                $thIni = (int) date('Y');
+                $q = $pdo->prepare('SELECT tahun, COUNT(*) AS n FROM surat WHERE tahun BETWEEN ? AND ?'
+                                   . ($jenisGrafik !== '' ? ' AND jenis_kode = ?' : '') . ' GROUP BY tahun');
+                $q->execute($jenisGrafik !== '' ? [$thIni - $jml + 1, $thIni, $jenisGrafik] : [$thIni - $jml + 1, $thIni]);
+                $perTahun = [];
+                for ($y = $thIni - $jml + 1; $y <= $thIni; $y++) $perTahun[$y] = 0;
+                foreach ($q->fetchAll() as $r) $perTahun[(int) $r['tahun']] = (int) $r['n'];
+                keluar(['per_hari' => array_values($perHari), 'per_jenis' => $perJenis, 'total' => $tot, 'tahun' => $tahun, 'per_bulan' => array_values($perBulan),
+                        'per_tahun' => array_values($perTahun), 'label_tahun' => array_map('strval', array_keys($perTahun))]);
 
             default:
                 keluar(['error' => 'Aksi tidak dikenal.'], 400);
