@@ -63,8 +63,8 @@
         editId = null; editNomor = ''; editAsal = null;
         $('editBanner').classList.remove('show');
         $('btnBatal').style.display = 'none';
-        $('btnSimpanTeks').textContent = 'Simpan & ambil nomor';
-        $('formTitle').textContent = 'Data surat baru';
+        $('btnSimpanTeks').textContent = 'Unggah surat';
+        $('formTitle').textContent = 'Unggah surat baru';
         kunci(false);
         el.judul.value = ''; el.link.value = '';
         if (kosongkanSemua) {
@@ -82,8 +82,8 @@
         $('editBanner').classList.add('show');
         $('editBannerNo').textContent = r.nomor_surat;
         $('btnBatal').style.display = '';
-        $('btnSimpanTeks').textContent = 'Simpan perubahan';
-        $('formTitle').textContent = 'Ubah data surat';
+        $('btnSimpanTeks').textContent = 'Unggah perubahan';
+        $('formTitle').textContent = 'Ubah surat';
         el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
         el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
         el.judul.value = r.judul || r.perihal || ''; el.link.value = r.link_drive || '';
@@ -99,7 +99,8 @@
             if (!el[k].value.trim()) { el[k].classList.add('bad'); el[k].focus(); toast('Isi ' + nama + ' terlebih dahulu.', true); return; }
         }
         const link = el.link.value.trim();
-        if (link && !/^https:\/\/(drive|docs)\.google\.com\//i.test(link)) {
+        if (!link) { el.link.classList.add('bad'); el.link.focus(); toast('Link Google Drive wajib diisi.', true); return; }
+        if ( !/^https:\/\/(drive|docs)\.google\.com\//i.test(link)) {
             el.link.classList.add('bad'); el.link.focus();
             toast('Link harus berupa tautan Google Drive (https://drive.google.com/...).', true); return;
         }
@@ -111,18 +112,32 @@
         const btn = $('btnSimpan'); btn.disabled = true;
         try {
             const d = await api(API, data);
-            if (editId) { toast('Perubahan disimpan: ' + d.nomor_surat); setTimeout(() => { window.location.href = 'data_surat.html'; }, 700); return; }
+            if (editId) { sukses(d.nomor_surat, true); return; }
             else {
                 $('hasilNomor').textContent = d.nomor_surat;
                 idBaru = d.id;
                 $('hasilBox').style.display = '';
-                toast('Surat tersimpan dengan nomor ' + d.nomor_surat);
+                sukses(d.nomor_surat, false);
                 keModeTambah(true);
             }
             muatUrut();
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
+    // Animasi "berhasil diunggah": lingkaran + centang tergambar, kartu membesar halus
+    function sukses(nomor, ubah) {
+        $('suksesJudul').textContent = ubah ? 'Perubahan berhasil diunggah' : 'Surat berhasil diunggah';
+        $('suksesSub').textContent = ubah ? 'Data surat sudah diperbarui di Data Surat.' : 'Surat sudah tersimpan di Data Surat.';
+        $('suksesNomor').textContent = nomor;
+        $('suksesTutup').hidden = ubah;
+        const l = $('suksesLapis'); l.hidden = false;
+        l.classList.remove('jalan'); void l.offsetWidth; l.classList.add('jalan');
+        (ubah ? $('suksesData') : $('suksesTutup')).focus();
+    }
+    const tutupSukses = () => { $('suksesLapis').hidden = true; };
+    $('suksesTutup').addEventListener('click', tutupSukses);
+    $('suksesLapis').addEventListener('click', (e) => { if (e.target === $('suksesLapis') && !editId) tutupSukses(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('suksesLapis').hidden && !editId) tutupSukses(); });
     $('btnBatal').addEventListener('click', () => { if (editId) window.location.href = 'data_surat.html'; else keModeTambah(true); });
     $('btnReset').addEventListener('click', () => keModeTambah(true));
     el.tanggal.addEventListener('change', () => { urut = null; pratinjau(); muatUrut(); });

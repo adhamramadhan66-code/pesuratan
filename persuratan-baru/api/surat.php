@@ -55,9 +55,10 @@ function baca_form(PDO $pdo, array $in): array
     $d = ['judul' => teks($in['judul'] ?? ''), 'perihal' => teks($in['perihal'] ?? '')];
     if ($d['judul'] === '') return [null, 'Judul surat wajib diisi.'];
 
-    // Link Google Drive boleh kosong (bisa ditambahkan nanti lewat Ubah).
+    // Link Google Drive wajib diisi.
     $link = link_drive_bersih($in['link_drive'] ?? '');
     if ($link === null) return [null, 'Link harus berupa tautan Google Drive (https://drive.google.com/...).'];
+    if ($link === '') return [null, 'Link Google Drive wajib diisi.'];
     $d['link_drive'] = $link;
 
     $d['tanggal_surat'] = tanggal_valid($in['tanggal_surat'] ?? '');

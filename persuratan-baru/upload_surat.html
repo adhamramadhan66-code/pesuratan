@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Surat | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=24">
+    <link rel="stylesheet" href="surat.css?v=27">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
         <div class="two-col" id="formPanel">
             <section class="panel">
                 <div class="panel-head">
-                    <h3 id="formTitle">Surat baru</h3>
+                    <h3 id="formTitle">Unggah surat baru</h3>
                     <span class="muted" style="font-size:.8125rem">Nomor surat dibuat otomatis sesuai Panduan Persuratan</span>
                 </div>
                 <div class="panel-body">
@@ -94,13 +94,13 @@
                                 <select id="f_unit" required></select>
                             </div>
                             <div class="field full">
-                                <label for="f_link">Link Google Drive <span class="opt">(opsional)</span></label>
-                                <input type="text" id="f_link" inputmode="url" maxlength="500" placeholder="https://drive.google.com/file/d/..." autocomplete="off">
+                                <label for="f_link">Link Google Drive <span class="wajib" title="Wajib diisi">*</span></label>
+                                <input type="text" id="f_link" inputmode="url" required maxlength="500" placeholder="https://drive.google.com/file/d/..." autocomplete="off">
                                 <span class="help">Unggah surat ke Google Drive, klik kanan &rarr; Bagikan &rarr; ubah akses menjadi &quot;Siapa saja yang memiliki link&quot;, lalu tempel link-nya di sini.</span>
                             </div>
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn primary" id="btnSimpan"><i data-lucide="save"></i> <span id="btnSimpanTeks">Simpan &amp; ambil nomor</span></button>
+                            <button type="submit" class="btn primary" id="btnSimpan"><i data-lucide="upload"></i> <span id="btnSimpanTeks">Unggah surat</span></button>
                             <button type="button" class="btn" id="btnBatal" style="display:none">Batal ubah</button>
                             <button type="button" class="btn" id="btnReset">Kosongkan form</button>
                         </div>
@@ -126,7 +126,7 @@
                     </ul>
                     <div id="hasilBox" style="display:none">
                         <div class="nomor-box" style="margin-top:1rem">
-                            <div class="lbl">Nomor yang baru diambil</div>
+                            <div class="lbl">Nomor surat yang baru diunggah</div>
                             <div class="no mono" id="hasilNomor"></div>
                         </div>
                         <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
@@ -134,7 +134,7 @@
                         <button type="button" class="btn merah" id="btnBatalNomor" style="margin-top:.5rem"><i data-lucide="x"></i> Batal, tidak jadi diunggah</button>
                         <p class="nomor-note" id="catatanHasil">Surat sudah masuk ke menu Data Surat. Bila tidak jadi dipakai, klik Batal agar nomor ini dihapus.</p>
                     </div>
-                    <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat disimpan.</p>
+                    <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat surat diunggah.</p>
                 </div>
             </aside>
         </div>
@@ -148,7 +148,21 @@
     <script src="app.js?v=12"></script>
     <script src="login-modal.js?v=3"></script>
     <script src="profil.js?v=2"></script>
-    <script src="upload_surat.js?v=3"></script>
+    <div class="sukses-lapis" id="suksesLapis" hidden role="dialog" aria-modal="true" aria-labelledby="suksesJudul">
+        <div class="sukses-kartu">
+            <div class="sukses-ikon" aria-hidden="true">
+                <svg viewBox="0 0 52 52"><circle class="sk-lingkar" cx="26" cy="26" r="24" fill="none"/><path class="sk-centang" fill="none" d="M14 27l8 8 16-17"/></svg>
+            </div>
+            <h3 id="suksesJudul">Surat berhasil diunggah</h3>
+            <p class="sukses-sub" id="suksesSub">Surat sudah tersimpan di Data Surat.</p>
+            <div class="sukses-nomor mono" id="suksesNomor"></div>
+            <div class="sukses-aksi">
+                <a class="btn primary" href="data_surat.html" id="suksesData">Lihat di Data Surat</a>
+                <button type="button" class="btn" id="suksesTutup">Unggah surat lain</button>
+            </div>
+        </div>
+    </div>
+    <script src="upload_surat.js?v=4"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

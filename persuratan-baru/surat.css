@@ -418,3 +418,32 @@ dialog.dk-besar::backdrop { background: rgba(10, 25, 50, .55); backdrop-filter: 
 .step-bulan button:hover:not(:disabled) { background: var(--surface-3); }
 .step-bulan button:disabled { opacity: .35; cursor: default; }
 .step-bulan[hidden] { display: none; }
+
+/* Link Drive wajib */
+.field label .wajib { color: #e11d48; font-weight: 700; margin-left: .15rem; }
+
+/* Animasi "Surat berhasil diunggah" */
+.sukses-lapis { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(10, 20, 40, .55); backdrop-filter: blur(3px); }
+.sukses-lapis[hidden] { display: none; }
+.sukses-kartu { width: min(100%, 24rem); text-align: center; background: var(--card-bg); color: var(--text-main); border-radius: 1.25rem; padding: 2rem 1.5rem 1.5rem; box-shadow: 0 30px 70px -20px rgba(0,0,0,.55); }
+.sukses-kartu h3 { margin: .9rem 0 .25rem; font-size: 1.25rem; }
+.sukses-sub { margin: 0 0 1rem; color: var(--text-muted); font-size: .9rem; }
+.sukses-nomor { display: inline-block; padding: .55rem .9rem; border-radius: .6rem; background: var(--surface-3); font-weight: 600; font-size: .95rem; word-break: break-all; }
+.sukses-aksi { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.4rem; }
+.sukses-aksi .btn[hidden] { display: none; }
+.sukses-ikon { width: 5.5rem; height: 5.5rem; margin: 0 auto; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,.5); }
+.sukses-ikon svg { width: 100%; height: 100%; display: block; }
+.sk-lingkar { stroke: rgba(255,255,255,.35); stroke-width: 2; }
+.sk-centang { stroke: #fff; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; }
+.sukses-lapis.jalan { animation: sk-lapis .25s ease-out both; }
+.sukses-lapis.jalan .sukses-kartu { animation: sk-kartu .45s cubic-bezier(.2,1.2,.4,1) both; }
+.sukses-lapis.jalan .sukses-ikon { animation: sk-ikon .5s cubic-bezier(.2,1.4,.4,1) .15s both, sk-denyut 1.2s ease-out .7s 1; }
+.sukses-lapis.jalan .sk-centang { animation: sk-gambar .45s ease-out .55s forwards; }
+.sukses-lapis.jalan h3, .sukses-lapis.jalan .sukses-sub, .sukses-lapis.jalan .sukses-nomor, .sukses-lapis.jalan .sukses-aksi { animation: sk-naik .4s ease-out .75s both; }
+@keyframes sk-lapis { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sk-kartu { from { opacity: 0; transform: translateY(18px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes sk-ikon { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes sk-gambar { to { stroke-dashoffset: 0; } }
+@keyframes sk-denyut { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,.55); } 100% { box-shadow: 0 0 0 26px rgba(22,163,74,0); } }
+@keyframes sk-naik { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sukses-lapis.jalan *, .sukses-lapis.jalan { animation-duration: .01s !important; animation-delay: 0s !important; } }
