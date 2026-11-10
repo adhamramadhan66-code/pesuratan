@@ -89,7 +89,7 @@
                 <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
                 <button type="button" class="btn sm" id="tbReset">Reset filter</button>
             </div>
-            <div class="dk-list dk-dash" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
+            <div class="dk-list" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </div>
         <!-- GRAFIK (di bawah Surat terbaru) -->
         <div class="charts-grid tunggal" data-dash>
@@ -126,7 +126,7 @@
             document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) mulai(); });
         })();
     </script>
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
     <script src="login-modal.js?v=3"></script>
     <script src="profil.js?v=2"></script>
     <script>
@@ -248,8 +248,9 @@
                     $('galeri').innerHTML = d.surat.length ? d.surat.map(App.kartuSurat).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
             }
-            // Klik kartu -> menu Buka / Ganti / Hapus; setelah berubah, jenis surat, grafik, dan daftar dimuat ulang
+            // Dashboard hanya untuk melihat: klik kartu -> surat dibuka (tidak bisa diganti/dihapus); setelah berubah, jenis surat, grafik, dan daftar dimuat ulang
             App.pasangKartuSurat($('galeri'), {
+                hanyaBuka: true,
                 cari: (id) => baris.find((x) => String(x.id) === id),
                 selesai: () => { terakhir = ''; if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); },
             });

@@ -245,7 +245,7 @@
         const desk = r.judul && r.perihal && r.perihal !== r.judul ? '<p class="dk-desk">' + esc(r.perihal) + '</p>' : '';
         const ada = !!+r.ada_file;
         const internal = r.kode_tujuan === 'A';
-        return '<article class="dk-card" tabindex="0" role="button" data-id="' + esc(r.id) + '" title="Klik untuk membuka, mengganti, atau menghapus surat" aria-label="' + esc('Pilih tindakan untuk surat ' + judul) + '">' +
+        return '<article class="dk-card" tabindex="0" role="button" data-id="' + esc(r.id) + '" title="Klik untuk melihat pilihan surat" aria-label="' + esc('Pilih tindakan untuk surat ' + judul) + '">' +
             '<div class="dk-info">' +
                 '<div class="dk-top"><span class="dk-nomor mono">' + esc(r.nomor_surat) + '</span>' +
                     '<span class="badge ' + (internal ? 'ok' : '') + '">' + (internal ? 'Internal' : 'Eksternal') + '</span></div>' +
@@ -263,7 +263,12 @@
 
     // Pasang pendengar klik pada daftar kartu. opsi: { cari(id) -> baris data, selesai() -> muat ulang daftar }
     function pasangKartuSurat(wadah, opsi) {
-        const buka = (k) => { const r = opsi.cari(k.dataset.id); if (r) menuSurat(r, opsi.selesai); };
+        const buka = (k) => {
+            const r = opsi.cari(k.dataset.id); if (!r) return;
+            if (!opsi.hanyaBuka) return menuSurat(r, opsi.selesai);
+            const url = urlSurat(r);                                 // dashboard: hanya bisa dibuka
+            if (url) window.open(url, '_blank', 'noopener'); else toast('Surat ini belum punya link Drive', true);
+        };
         wadah.addEventListener('click', (e) => { const k = e.target.closest('.dk-card'); if (k) buka(k); });
         wadah.addEventListener('keydown', (e) => {
             if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('dk-card')) { e.preventDefault(); buka(e.target); }
