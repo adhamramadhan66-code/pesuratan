@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=25">
+    <link rel="stylesheet" href="surat.css?v=26">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -40,16 +40,16 @@
         </div>    </aside>
 
     <main class="main-content ada-video" id="halUtama">
-        <form class="cari-atas" id="cariAtas" role="search" autocomplete="off">
-            <i data-lucide="search" class="icon-search"></i>
-            <input type="search" id="cariUtama" placeholder="Cari surat: judul, nomor, perihal…" aria-label="Cari surat">
-            <button type="button" class="cari-x" id="cariHapus" aria-label="Hapus pencarian" hidden>&times;</button>
-        </form>
         <header class="header">
             <div>
                 <p class="page-sub">Persuratan</p>
                 <h2>Dashboard</h2>
             </div>
+            <form class="cari-atas" id="cariAtas" role="search" autocomplete="off">
+                <i data-lucide="search" class="icon-search"></i>
+                <input type="search" id="cariUtama" placeholder="Cari surat: judul, nomor, perihal…" aria-label="Cari surat">
+                <button type="button" class="cari-x" id="cariHapus" aria-label="Hapus pencarian" hidden>&times;</button>
+            </form>
             <div class="header-right">
                 <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
                     <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -99,8 +99,11 @@
                     <div class="seg" id="segGrafik" role="group" aria-label="Periode grafik">
                         <button type="button" data-m="hari">Hari</button><button type="button" data-m="bulan" class="on">Bulan</button><button type="button" data-m="tahun">Tahun</button>
                     </div>
-                    <select id="grafikBulan" class="grafik-opsi" aria-label="Pilih bulan" hidden></select>
-                    <select id="grafikTahun" class="grafik-opsi" aria-label="Rentang tahun" hidden><option value="5">5 tahun</option><option value="10" selected>10 tahun</option></select>
+                    <div class="step-bulan" id="stepBulan" hidden>
+                        <button type="button" id="bulanPrev" aria-label="Bulan sebelumnya">&lsaquo;</button>
+                        <span id="bulanLabel"></span>
+                        <button type="button" id="bulanNext" aria-label="Bulan berikutnya">&rsaquo;</button>
+                    </div>
                     <label class="grafik-filter toolbar">Jenis: <select id="fGrafikJenis" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select></label>
                 </div>
                 <p class="chart-sub" id="chartSub"></p>
@@ -295,14 +298,15 @@
             // ---------- Grafik: Hari (tanggal 1..akhir bulan), Bulan (Jan–Des tahun ini), Tahun (5–10 tahun sampai sekarang) ----------
             const sekarang = new Date(), thIni = sekarang.getFullYear();
             let modeGrafik = 'bulan', bulanGrafik = sekarang.getMonth(), tungguGrafik = 0;
-            $('grafikBulan').innerHTML = BLN_PENUH.map((n, i) => '<option value="' + i + '"' + (i === bulanGrafik ? ' selected' : '') + '>' + n + ' ' + thIni + '</option>').join('');
+            const tampilBulan = () => { $('bulanLabel').textContent = BLN_PENUH[bulanGrafik] + ' ' + thIni; $('bulanPrev').disabled = bulanGrafik === 0; $('bulanNext').disabled = bulanGrafik === 11; };
+            tampilBulan();
             const two = (n) => String(n).padStart(2, '0');
             async function muatGrafik() {
                 const my = ++tungguGrafik, jenis = $('fGrafikJenis').value;
                 const dari = modeGrafik === 'hari' ? thIni + '-' + two(bulanGrafik + 1) + '-01' : thIni + '-01-01';
                 const sampai = modeGrafik === 'hari' ? thIni + '-' + two(bulanGrafik + 1) + '-' + two(new Date(thIni, bulanGrafik + 1, 0).getDate()) : thIni + '-12-31';
                 try {
-                    const d = await api('api/surat.php?' + new URLSearchParams({ aksi: 'statistik', dari, sampai, jenis, jumlah_tahun: $('grafikTahun').value }));
+                    const d = await api('api/surat.php?' + new URLSearchParams({ aksi: 'statistik', dari, sampai, jenis, jumlah_tahun: 10 }));
                     if (my !== tungguGrafik) return;
                     const maks = (a) => Math.max(1, ...a);
                     if (modeGrafik === 'hari') {
@@ -328,12 +332,12 @@
                 const b = e.target.closest('button[data-m]'); if (!b) return;
                 modeGrafik = b.dataset.m;
                 $('segGrafik').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
-                $('grafikBulan').hidden = modeGrafik !== 'hari'; $('grafikTahun').hidden = modeGrafik !== 'tahun';
+                $('stepBulan').hidden = modeGrafik !== 'hari';
                 $('bars').innerHTML = '';   // jumlah kolom berbeda: bangun ulang
                 muatGrafik();
             });
-            $('grafikBulan').addEventListener('change', () => { bulanGrafik = +$('grafikBulan').value; muatGrafik(); });
-            $('grafikTahun').addEventListener('change', () => { $('bars').innerHTML = ''; muatGrafik(); });
+            $('bulanPrev').addEventListener('click', () => { if (bulanGrafik > 0) { bulanGrafik--; tampilBulan(); muatGrafik(); } });
+            $('bulanNext').addEventListener('click', () => { if (bulanGrafik < 11) { bulanGrafik++; tampilBulan(); muatGrafik(); } });
             $('fGrafikJenis').addEventListener('change', muatGrafik);
             muatGrafik();
 
