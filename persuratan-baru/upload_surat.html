@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Surat | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=27">
+    <link rel="stylesheet" href="surat.css?v=28">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -124,16 +124,6 @@
                         <li><span>Bulan</span><span id="nomorBulan">-</span></li>
                         <li><span>Tahun</span><span id="nomorTahun">-</span></li>
                     </ul>
-                    <div id="hasilBox" style="display:none">
-                        <div class="nomor-box" style="margin-top:1rem">
-                            <div class="lbl">Nomor surat yang baru diunggah</div>
-                            <div class="no mono" id="hasilNomor"></div>
-                        </div>
-                        <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
-                        <a class="btn primary" href="data_surat.html" style="margin-top:.5rem"><i data-lucide="folder-open"></i> Lihat di Data Surat</a>
-                        <button type="button" class="btn merah" id="btnBatalNomor" style="margin-top:.5rem"><i data-lucide="x"></i> Batal, tidak jadi diunggah</button>
-                        <p class="nomor-note" id="catatanHasil">Surat sudah masuk ke menu Data Surat. Bila tidak jadi dipakai, klik Batal agar nomor ini dihapus.</p>
-                    </div>
                     <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat surat diunggah.</p>
                 </div>
             </aside>
@@ -156,13 +146,15 @@
             <h3 id="suksesJudul">Surat berhasil diunggah</h3>
             <p class="sukses-sub" id="suksesSub">Surat sudah tersimpan di Data Surat.</p>
             <div class="sukses-nomor mono" id="suksesNomor"></div>
+            <button type="button" class="sukses-salin" id="btnSalin">Salin nomor</button>
             <div class="sukses-aksi">
                 <a class="btn primary" href="data_surat.html" id="suksesData">Lihat di Data Surat</a>
                 <button type="button" class="btn" id="suksesTutup">Unggah surat lain</button>
+                <button type="button" class="sukses-batal" id="btnBatalNomor">Batalkan unggahan ini</button>
             </div>
         </div>
     </div>
-    <script src="upload_surat.js?v=4"></script>
+    <script src="upload_surat.js?v=5"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

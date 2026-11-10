@@ -78,7 +78,6 @@
     function keModeUbah(r) {
         editId = r.id; editNomor = r.nomor_surat;
         editAsal = { tahun: +r.tahun, bulan: +r.bulan, nomor_urut: +r.nomor_urut };
-        $('hasilBox').style.display = 'none';
         $('editBanner').classList.add('show');
         $('editBannerNo').textContent = r.nomor_surat;
         $('btnBatal').style.display = '';
@@ -114,9 +113,7 @@
             const d = await api(API, data);
             if (editId) { sukses(d.nomor_surat, true); return; }
             else {
-                $('hasilNomor').textContent = d.nomor_surat;
                 idBaru = d.id;
-                $('hasilBox').style.display = '';
                 sukses(d.nomor_surat, false);
                 keModeTambah(true);
             }
@@ -129,7 +126,7 @@
         $('suksesJudul').textContent = ubah ? 'Perubahan berhasil diunggah' : 'Surat berhasil diunggah';
         $('suksesSub').textContent = ubah ? 'Data surat sudah diperbarui di Data Surat.' : 'Surat sudah tersimpan di Data Surat.';
         $('suksesNomor').textContent = nomor;
-        $('suksesTutup').hidden = ubah;
+        $('suksesTutup').hidden = ubah; $('btnBatalNomor').hidden = ubah; $('btnSalin').hidden = ubah;
         const l = $('suksesLapis'); l.hidden = false;
         l.classList.remove('jalan'); void l.offsetWidth; l.classList.add('jalan');
         (ubah ? $('suksesData') : $('suksesTutup')).focus();
@@ -145,17 +142,17 @@
     document.querySelectorAll('input[name="tujuan"]').forEach((r) => r.addEventListener('change', pratinjau));
     let idBaru = 0;     // surat yang baru saja diberi nomor (untuk tombol Batal)
     $('btnBatalNomor').addEventListener('click', async () => {
-        if (!idBaru || !confirm('Batalkan nomor ' + $('hasilNomor').textContent + '? Surat ini dihapus dan nomornya tidak terpakai.')) return;
+        if (!idBaru || !confirm('Batalkan nomor ' + $('suksesNomor').textContent + '? Surat ini dihapus dan nomornya tidak terpakai.')) return;
         const btn = $('btnBatalNomor'); btn.disabled = true;
         try {
             await api(API, { aksi: 'hapus', id: idBaru });
-            toast('Nomor ' + $('hasilNomor').textContent + ' dibatalkan');
-            idBaru = 0; $('hasilBox').style.display = 'none'; urut = null; muatUrut();
+            toast('Nomor ' + $('suksesNomor').textContent + ' dibatalkan');
+            idBaru = 0; tutupSukses(); urut = null; muatUrut();
         } catch (e) { toast(e.message, true); }
         finally { btn.disabled = false; }
     });
     $('btnSalin').addEventListener('click', async () => {
-        const t = $('hasilNomor').textContent;
+        const t = $('suksesNomor').textContent;
         try { await navigator.clipboard.writeText(t); toast('Nomor surat disalin'); }
         catch (e) { toast('Tidak bisa menyalin otomatis. Salin manual: ' + t, true); }
     });
