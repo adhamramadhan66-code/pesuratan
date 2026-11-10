@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Surat | Persuratan TSU</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=18">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload_surat.html" class="nav-item">
+                    <i data-lucide="upload" class="icon"></i>
+                    <span>Upload Surat</span>
+                </a>
+                <a href="data_surat.html" class="nav-item active">
+                    <i data-lucide="folder-open" class="icon"></i>
+                    <span>Data Surat</span>
+                </a>
+            </nav>
+        </div>    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Persuratan</p>
+                <h2>Data Surat</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Tamu</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil" class="profile-img">
+            </div>
+        </header>
+
+        <div class="table-card">
+            <div class="table-header">
+                <div><h3>Surat yang sudah diupload</h3><span class="muted" id="infoJumlah" style="font-size:.8125rem">Memuat…</span></div>
+                <div class="table-actions"><a class="btn primary sm" href="upload_surat.html"><i data-lucide="plus"></i> Upload surat</a></div>
+            </div>
+            <div class="toolbar" id="filterData" style="margin-bottom:1rem">
+                <form class="search-box" id="dsCari" role="search">
+                    <i data-lucide="search" class="icon-search"></i>
+                    <input type="text" id="dsQ" placeholder="Cari judul / nomor / perihal…" aria-label="Cari surat">
+                </form>
+                <select id="dsJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
+                <select id="dsUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
+                <select id="dsTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
+                <select id="dsTahun" aria-label="Tahun"><option value="">Semua tahun</option></select>
+                <select id="dsUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
+                <button type="button" class="btn sm" id="dsReset">Reset filter</button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Nomor surat</th><th>Judul &amp; perihal</th><th>Tanggal</th><th>Jenis / unit</th><th>Link Drive</th><th>Aksi</th></tr></thead>
+                    <tbody id="dsBody"><tr class="empty-row"><td colspan="6">Memuat…</td></tr></tbody>
+                </table>
+            </div>
+            <div style="text-align:center;margin-top:1rem"><button type="button" class="btn" id="dsLagi" hidden>Tampilkan lebih banyak</button></div>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=9"></script>
+    <script src="login-modal.js?v=2"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="data_surat.js?v=1"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

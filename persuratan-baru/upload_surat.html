@@ -31,6 +31,10 @@
                     <i data-lucide="upload" class="icon"></i>
                     <span>Upload Surat</span>
                 </a>
+                <a href="data_surat.html" class="nav-item">
+                    <i data-lucide="folder-open" class="icon"></i>
+                    <span>Data Surat</span>
+                </a>
             </nav>
         </div>    </aside>
 
@@ -63,6 +67,10 @@
                     <form id="suratForm" novalidate>
                         <fieldset class="form-fields" id="formFields">
                         <div class="form-grid">
+                            <div class="field full">
+                                <label for="f_judul">Judul surat</label>
+                                <input type="text" id="f_judul" maxlength="255" placeholder="Contoh: Undangan Forum PMB dan Pengelolaan Magang" required>
+                            </div>
                             <div class="field">
                                 <label for="f_tanggal">Tanggal surat</label>
                                 <input type="date" id="f_tanggal" required>
@@ -77,14 +85,6 @@
                                 <span class="help">Internal = lingkungan Universitas Tiga Serangkai.</span>
                             </div>
                             <div class="field">
-                                <span class="lbl">Dikirim ke</span>
-                                <div class="seg" role="radiogroup" aria-label="Dikirim ke">
-                                    <label><input type="radio" name="jalur" value="disposisi" checked><span>Surat Masuk</span></label>
-                                    <label><input type="radio" name="jalur" value="keluar"><span>Surat Keluar</span></label>
-                                </div>
-                                <span class="help">Pilih jalur surat ini. Nomor surat tetap dibuat otomatis.</span>
-                            </div>
-                            <div class="field">
                                 <label for="f_jenis">Jenis surat</label>
                                 <select id="f_jenis" required></select>
                             </div>
@@ -95,6 +95,11 @@
                             <div class="field full">
                                 <label for="f_perihal">Perihal</label>
                                 <textarea id="f_perihal" maxlength="255" placeholder="Contoh: Surat Undangan forum PMB dan Pengelolaan Magang" required></textarea>
+                            </div>
+                            <div class="field full">
+                                <label for="f_link">Link Google Drive <span class="opt">(opsional)</span></label>
+                                <input type="text" id="f_link" inputmode="url" maxlength="500" placeholder="https://drive.google.com/file/d/..." autocomplete="off">
+                                <span class="help">Unggah surat ke Google Drive, klik kanan &rarr; Bagikan &rarr; ubah akses menjadi &quot;Siapa saja yang memiliki link&quot;, lalu tempel link-nya di sini.</span>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -128,8 +133,9 @@
                             <div class="no mono" id="hasilNomor"></div>
                         </div>
                         <button type="button" class="btn" id="btnSalin"><i data-lucide="copy"></i> Salin nomor</button>
+                        <a class="btn primary" href="data_surat.html" style="margin-top:.5rem"><i data-lucide="folder-open"></i> Lihat di Data Surat</a>
                         <button type="button" class="btn merah" id="btnBatalNomor" style="margin-top:.5rem"><i data-lucide="x"></i> Batal, tidak jadi diunggah</button>
-                        <p class="nomor-note" id="catatanHasil">Nomor sudah tersimpan. Bila tidak jadi dipakai, klik Batal agar nomor ini dihapus.</p>
+                        <p class="nomor-note" id="catatanHasil">Surat sudah masuk ke menu Data Surat. Bila tidak jadi dipakai, klik Batal agar nomor ini dihapus.</p>
                     </div>
                     <p class="nomor-note">Format: <span class="mono">NNN.K/JENIS/UNIT/BULAN/TAHUN</span>. Nomor urut mulai 001 di setiap awal bulan. Nomor final diberikan server saat disimpan.</p>
                 </div>
@@ -142,10 +148,10 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=8"></script>
-    <script src="login-modal.js?v=1"></script>
+    <script src="app.js?v=9"></script>
+    <script src="login-modal.js?v=2"></script>
     <script src="profil.js?v=1"></script>
-    <script src="upload_surat.js?v=1"></script>
+    <script src="upload_surat.js?v=2"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

@@ -71,6 +71,7 @@ function buat_tabel(PDO $pdo): void
         jenis_kode       VARCHAR(10)  NOT NULL,
         unit_kode        VARCHAR(20)  NOT NULL,
         nomor_surat      VARCHAR(60)  NOT NULL,
+        judul            VARCHAR(255) NOT NULL DEFAULT \'\',
         tanggal_surat    DATE         NOT NULL,
         perihal          VARCHAR(255) NOT NULL,
         untuk            VARCHAR(255) NOT NULL DEFAULT \'\',
@@ -205,6 +206,10 @@ SQL);
         if (!$pdo->query("SHOW COLUMNS FROM $t LIKE 'link_drive'")->fetch()) {
             $pdo->exec("ALTER TABLE $t ADD COLUMN link_drive VARCHAR(500) NOT NULL DEFAULT '' AFTER file_nama");
         }
+    }
+    // Judul surat (diisi di halaman Upload Surat). Surat lama dibiarkan kosong; tampilan memakai perihal sebagai cadangan.
+    if (!$pdo->query("SHOW COLUMNS FROM surat LIKE 'judul'")->fetch()) {
+        $pdo->exec("ALTER TABLE surat ADD COLUMN judul VARCHAR(255) NOT NULL DEFAULT '' AFTER nomor_surat");
     }
     if (!$pdo->query("SHOW COLUMNS FROM disposisi LIKE 'surat_masuk_id'")->fetch()) {
         $pdo->exec('ALTER TABLE disposisi ADD COLUMN surat_masuk_id INT NULL AFTER surat_id');

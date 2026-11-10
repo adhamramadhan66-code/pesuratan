@@ -31,6 +31,10 @@
                     <i data-lucide="upload" class="icon"></i>
                     <span>Upload Surat</span>
                 </a>
+                <a href="data_surat.html" class="nav-item">
+                    <i data-lucide="folder-open" class="icon"></i>
+                    <span>Data Surat</span>
+                </a>
             </nav>
         </div>    </aside>
 
@@ -68,12 +72,11 @@
             <div class="toolbar terbaru-filter" id="filterTerbaru">
                 <form class="search-box" id="tbCari" role="search">
                     <i data-lucide="search" class="icon-search"></i>
-                    <input type="text" id="tbQ" placeholder="Cari nomor / perihal surat…" aria-label="Cari surat">
+                    <input type="text" id="tbQ" placeholder="Cari judul / nomor / perihal…" aria-label="Cari surat">
                 </form>
                 <select id="tbJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
                 <select id="tbUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
                 <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
-                <select id="tbJalur" aria-label="Surat masuk atau keluar"><option value="">Surat Masuk &amp; Keluar</option><option value="disposisi">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
                 <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
                 <button type="button" class="btn sm" id="tbReset">Reset filter</button>
             </div>
@@ -97,8 +100,8 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=8"></script>
-    <script src="login-modal.js?v=1"></script>
+    <script src="app.js?v=9"></script>
+    <script src="login-modal.js?v=2"></script>
     <script src="profil.js?v=1"></script>
     <script>
         // Statistik dashboard: dimuat ulang setiap rentang tanggal berubah (event "rentang" di bawah halaman).
@@ -203,7 +206,7 @@
             const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
 
             // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
-            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', jalur: 'tbJalur', urut: 'tbUrut' };
+            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', urut: 'tbUrut' };
             let tungguTerbaru = 0;
             async function muatTerbaru() {
                 if (!rentangIni) return;
@@ -216,12 +219,12 @@
                     const aktif = Object.values(FILTER).some((id) => $(id).value);
                     $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (aktif ? ' (difilter)' : '');
                     $('galeri').innerHTML = d.surat.length ? d.surat.map((r) => {
-                        const sdh = r.status_arsip === 'diarsipkan', keluar = r.jalur === 'keluar';
+                        const ada = !!+r.ada_file, judul = r.judul || r.perihal;
                         return App.kartuHtml({
-                            kelas: sdh ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
+                            judulTeks: judul, judul: esc(judul),
                             thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama }),
-                            sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + (keluar ? 'Surat Keluar' : 'Surat Masuk')],
-                            status: '<span class="badge ' + (sdh ? 'ok' : 'warn') + '">' + 'Diarsipkan' + '</span>',
+                            sub: [esc(r.nomor_surat), esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + esc(r.jenis_nama || r.jenis_kode)],
+                            status: '<span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Ada link Drive' : 'Belum ada link Drive') + '</span>',
                         });
                     }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }

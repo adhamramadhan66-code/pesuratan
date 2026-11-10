@@ -118,7 +118,8 @@
         if (a) {
             const h = a.getAttribute('href') || '';
             if (a.origin === location.origin && a.pathname === location.pathname && !a.search) { return; }   // tautan ke halaman ini sendiri
-            if (h && h.charAt(0) !== '#' && !/^javascript:/i.test(h)) href = a.href;
+            // Tautan ke tab baru atau situs lain (mis. Google Drive): setelah login cukup muat ulang halaman ini.
+            if (h && h.charAt(0) !== '#' && !/^javascript:/i.test(h) && a.origin === location.origin && a.target !== '_blank') href = a.href;
         }
         e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
         buka(href);
