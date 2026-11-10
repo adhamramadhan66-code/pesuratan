@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=22">
+    <link rel="stylesheet" href="surat.css?v=23">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@
                 <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
                 <button type="button" class="btn sm" id="tbReset">Reset filter</button>
             </div>
-            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
+            <div class="dk-list dk-dash" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
         </div>
         <!-- GRAFIK (di bawah Surat terbaru) -->
         <div class="charts-grid tunggal" data-dash>
@@ -126,8 +126,8 @@
             document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) mulai(); });
         })();
     </script>
-    <script src="app.js?v=9"></script>
-    <script src="login-modal.js?v=2"></script>
+    <script src="app.js?v=10"></script>
+    <script src="login-modal.js?v=3"></script>
     <script src="profil.js?v=2"></script>
     <script>
         // Statistik dashboard: dimuat ulang setiap rentang tanggal berubah (event "rentang" di bawah halaman).
@@ -233,7 +233,7 @@
 
             // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
             const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', urut: 'tbUrut' };
-            let tungguTerbaru = 0;
+            let tungguTerbaru = 0, baris = [];
             async function muatTerbaru() {
                 if (!rentangIni) return;
                 const my = ++tungguTerbaru;
@@ -244,17 +244,15 @@
                     if (my !== tungguTerbaru) return;
                     const aktif = Object.values(FILTER).some((id) => $(id).value);
                     $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (aktif ? ' (difilter)' : '');
-                    $('galeri').innerHTML = d.surat.length ? d.surat.map((r) => {
-                        const ada = !!+r.ada_file, judul = r.judul || r.perihal;
-                        return App.kartuHtml({
-                            judulTeks: judul, judul: esc(judul),
-                            thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama }),
-                            sub: [esc(r.nomor_surat), r.judul && r.perihal !== r.judul ? esc(r.perihal) : '', esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + esc(r.jenis_nama || r.jenis_kode)].filter(Boolean),
-                            status: '<span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Ada link Drive' : 'Belum ada link Drive') + '</span>',
-                        });
-                    }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
+                    baris = d.surat;
+                    $('galeri').innerHTML = d.surat.length ? d.surat.map(App.kartuSurat).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
                 } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
             }
+            // Klik kartu -> menu Buka / Ganti / Hapus; setelah berubah, jenis surat, grafik, dan daftar dimuat ulang
+            App.pasangKartuSurat($('galeri'), {
+                cari: (id) => baris.find((x) => String(x.id) === id),
+                selesai: () => { terakhir = ''; if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); },
+            });
             $('tbCari').addEventListener('submit', (ev) => { ev.preventDefault(); muatTerbaru(); });
             let tmTerbaru;
             $('tbQ').addEventListener('input', () => { clearTimeout(tmTerbaru); tmTerbaru = setTimeout(muatTerbaru, 300); });

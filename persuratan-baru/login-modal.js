@@ -130,7 +130,7 @@
     }, true);
     // Navigasi papan ketik pada kartu surat (Enter/Spasi) juga dijaga
     document.addEventListener('keydown', (e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && (e.target.classList.contains('kartu-klik') || e.target.classList.contains('detail-tutup'))) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && (e.target.classList.contains('kartu-klik') || e.target.classList.contains('dk-card') || e.target.classList.contains('detail-tutup'))) {
             e.preventDefault(); e.stopImmediatePropagation(); buka('');
         }
     }, true);

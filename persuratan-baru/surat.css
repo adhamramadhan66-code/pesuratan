@@ -339,30 +339,37 @@ dialog.detail .kartu-thumb { aspect-ratio: 16 / 9; max-height: 15rem; }
     .main-content.ada-video > .jenis-sec { margin-top: max(0px, calc(var(--hero-h) - 9rem)); }
 }
 
-/* ---------- Data Surat: kartu lebar. Keterangan di kiri (mudah dibaca), pratinjau file di kanan ---------- */
-.dk-list { display: grid; gap: 1rem; }
-.dk-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 1.5rem; align-items: stretch;
-    padding: 1.25rem 1.25rem 1.25rem 1.6rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 1rem; overflow: hidden;
+/* ---------- Kartu surat (Data Surat & Surat terbaru): keterangan di kiri, kertas A4 utuh di kanan ----------
+   Kartu dibuat ramping (dua kolom di layar lebar) dan tanpa tombol: klik kartu -> menu Buka / Ganti / Hapus. */
+.dk-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); gap: 1.1rem; align-items: start; }
+.dk-dash { padding: 0.25rem 1.5rem 1.5rem; }
+.dk-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 176px; gap: 1.2rem; align-items: start;
+    padding: 1.1rem 1.1rem 1.1rem 1.5rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 1rem; overflow: hidden; cursor: pointer;
     transition: box-shadow .15s, border-color .15s, transform .15s; }
 .dk-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--brand-grad, linear-gradient(180deg, #1e6fd0, #0e9aa7)); }
 .dk-card:hover { border-color: var(--c-blue, var(--green)); box-shadow: 0 14px 30px -18px rgba(30, 111, 208, .55); transform: translateY(-1px); }
-.dk-info { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+.dk-card:focus-visible { outline: 2px solid var(--c-blue, var(--green)); outline-offset: 3px; }
+.dk-info { display: flex; flex-direction: column; gap: 0.55rem; min-width: 0; }
 .dk-top { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
 .dk-nomor { font-size: 0.8125rem; font-weight: 700; color: var(--c-blue, var(--green)); letter-spacing: 0.01em; word-break: break-all; }
-.dk-judul { font-size: 1.25rem; line-height: 1.3; font-weight: 700; margin: 0; overflow-wrap: anywhere; }
-.dk-desk { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--text-muted); overflow-wrap: anywhere; }
-.dk-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem 1.25rem; margin: 0.15rem 0 0; padding-top: 0.85rem; border-top: 1px dashed var(--border-color); }
+.dk-judul { font-size: 1.2rem; line-height: 1.3; font-weight: 700; margin: 0; overflow-wrap: anywhere; }
+.dk-desk { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--text-muted); overflow-wrap: anywhere; }
+.dk-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0.7rem 1rem; margin: 0.1rem 0 0; padding-top: 0.8rem; border-top: 1px dashed var(--border-color); }
 .dk-meta div { min-width: 0; }
-.dk-meta dt { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.15rem; }
-.dk-meta dd { margin: 0; font-size: 0.9rem; font-weight: 500; overflow-wrap: anywhere; }
-.dk-aksi { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto; padding-top: 0.4rem; }
-.dk-thumb { display: flex; min-width: 0; }
-.dk-thumb .kartu-thumb { width: 100%; height: 100%; min-height: 160px; aspect-ratio: 16 / 10; }
-@media (max-width: 760px) {
-    .dk-card { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem 1rem 1rem 1.35rem; }
-    .dk-thumb { order: -1; }
-    .dk-thumb .kartu-thumb { min-height: 0; aspect-ratio: 16 / 9; }
-    .dk-judul { font-size: 1.1rem; }
+.dk-meta dt { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.15rem; }
+.dk-meta dd { margin: 0; font-size: 0.875rem; font-weight: 500; overflow-wrap: anywhere; }
+/* Pratinjau berbentuk kertas A4 (210 x 297): gambar ditampilkan utuh (contain), tidak terpotong */
+.dk-thumb { display: flex; align-items: center; justify-content: center; width: 176px; aspect-ratio: 210 / 297; background: #fff; color: #5a6c84;
+    border: 1px solid var(--border-color); border-radius: 0.5rem; overflow: hidden; box-shadow: 0 10px 22px -14px rgba(0, 0, 0, .55); transition: border-color .15s; }
+.dk-card:hover .dk-thumb { border-color: var(--c-blue, var(--green)); }
+.dk-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; background: #fff; }
+.dk-thumb .kartu-isi { padding: 0.5rem; text-align: center; }
+@media (max-width: 560px) {
+    .dk-list { grid-template-columns: minmax(0, 1fr); }
+    .dk-dash { padding: 0.25rem 1rem 1rem; }
+    .dk-card { grid-template-columns: minmax(0, 1fr) 118px; gap: 0.85rem; padding: 0.9rem 0.9rem 0.9rem 1.3rem; }
+    .dk-thumb { width: 118px; }
+    .dk-judul { font-size: 1.05rem; }
 }
 
 .toolbar select { max-width: 100%; }
