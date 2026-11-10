@@ -5,7 +5,7 @@
     const API = 'api/surat.php';
 
     const el = {
-        judul: $('f_judul'), tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), perihal: $('f_perihal'), link: $('f_link'),
+        judul: $('f_judul'), tanggal: $('f_tanggal'), jenis: $('f_jenis'), unit: $('f_unit'), link: $('f_link'),
     };
     const radio = (name) => (document.querySelector('input[name="' + name + '"]:checked') || {}).value || '';
     const setRadio = (name, v) => document.querySelectorAll('input[name="' + name + '"]').forEach((r) => { r.checked = r.value === v; });
@@ -66,7 +66,7 @@
         $('btnSimpanTeks').textContent = 'Simpan & ambil nomor';
         $('formTitle').textContent = 'Data surat baru';
         kunci(false);
-        el.judul.value = ''; el.perihal.value = ''; el.link.value = '';
+        el.judul.value = ''; el.link.value = '';
         if (kosongkanSemua) {
             el.tanggal.value = hariIni(); el.jenis.value = ''; el.unit.value = '';
             setRadio('tujuan', 'A');
@@ -86,7 +86,7 @@
         $('formTitle').textContent = 'Ubah data surat';
         el.tanggal.value = r.tanggal_surat; setRadio('tujuan', r.kode_tujuan);
         el.jenis.value = r.jenis_kode; el.unit.value = r.unit_kode;
-        el.judul.value = r.judul || ''; el.perihal.value = r.perihal; el.link.value = r.link_drive || '';
+        el.judul.value = r.judul || r.perihal || ''; el.link.value = r.link_drive || '';
         kunci(false); bersihkanGalat(); urut = editAsal.nomor_urut; pratinjau();
         $('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -94,7 +94,7 @@
     $('suratForm').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         bersihkanGalat();
-        const wajib = [['judul', 'judul surat'], ['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat'], ['perihal', 'perihal']];
+        const wajib = [['judul', 'judul surat'], ['tanggal', 'tanggal'], ['jenis', 'jenis surat'], ['unit', 'unit pembuat']];
         for (const [k, nama] of wajib) {
             if (!el[k].value.trim()) { el[k].classList.add('bad'); el[k].focus(); toast('Isi ' + nama + ' terlebih dahulu.', true); return; }
         }
@@ -106,7 +106,7 @@
         const data = {
             aksi: editId ? 'ubah' : 'tambah', id: editId,
             judul: el.judul.value, tanggal_surat: el.tanggal.value, kode_tujuan: radio('tujuan'), jenis_kode: el.jenis.value, unit_kode: el.unit.value,
-            perihal: el.perihal.value, link_drive: link,
+            link_drive: link,
         };
         const btn = $('btnSimpan'); btn.disabled = true;
         try {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=20">
+    <link rel="stylesheet" href="surat.css?v=22">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -249,7 +249,7 @@
                         return App.kartuHtml({
                             judulTeks: judul, judul: esc(judul),
                             thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama }),
-                            sub: [esc(r.nomor_surat), esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + esc(r.jenis_nama || r.jenis_kode)],
+                            sub: [esc(r.nomor_surat), r.judul && r.perihal !== r.judul ? esc(r.perihal) : '', esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + esc(r.jenis_nama || r.jenis_kode)].filter(Boolean),
                             status: '<span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Ada link Drive' : 'Belum ada link Drive') + '</span>',
                         });
                     }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Surat | Persuratan TSU</title>
     <link rel="stylesheet" href="style.css?v=15">
-    <link rel="stylesheet" href="surat.css?v=20">
+    <link rel="stylesheet" href="surat.css?v=22">
     <link rel="stylesheet" href="warna.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -72,12 +72,7 @@
                 <select id="dsUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
                 <button type="button" class="btn sm" id="dsReset">Reset filter</button>
             </div>
-            <div class="table-wrap">
-                <table class="data-table">
-                    <thead><tr><th>Nomor surat</th><th>Judul &amp; perihal</th><th>Tanggal</th><th>Jenis / unit</th><th>Link Drive</th><th>Aksi</th></tr></thead>
-                    <tbody id="dsBody"><tr class="empty-row"><td colspan="6">Memuat…</td></tr></tbody>
-                </table>
-            </div>
+            <div class="dk-list" id="dsList"><p class="galeri-kosong">Memuat…</p></div>
             <div style="text-align:center;margin-top:1rem"><button type="button" class="btn" id="dsLagi" hidden>Tampilkan lebih banyak</button></div>
         </div>
     </main>
@@ -90,7 +85,7 @@
     <script src="app.js?v=9"></script>
     <script src="login-modal.js?v=2"></script>
     <script src="profil.js?v=2"></script>
-    <script src="data_surat.js?v=1"></script>
+    <script src="data_surat.js?v=2"></script>
     <script src="mobile.js?v=1"></script>
 </body>
 </html>

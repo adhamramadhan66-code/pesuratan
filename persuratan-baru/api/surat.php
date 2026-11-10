@@ -50,9 +50,10 @@ function format_nomor(int $urut, string $tujuan, string $jenis, string $unit, in
 /** Validasi isian form Upload Surat; mengembalikan [data, pesan_error]. */
 function baca_form(PDO $pdo, array $in): array
 {
+    // Form Upload Surat hanya memakai Judul. Kolom perihal (wajib di database) diisi sama dengan judul;
+    // pada surat lama yang diubah, perihal yang sudah ada dibiarkan.
     $d = ['judul' => teks($in['judul'] ?? ''), 'perihal' => teks($in['perihal'] ?? '')];
     if ($d['judul'] === '') return [null, 'Judul surat wajib diisi.'];
-    if ($d['perihal'] === '') return [null, 'Perihal wajib diisi.'];
 
     // Link Google Drive boleh kosong (bisa ditambahkan nanti lewat Ubah).
     $link = link_drive_bersih($in['link_drive'] ?? '');
@@ -202,6 +203,7 @@ try {
         case 'tambah':
             [$d, $err] = baca_form($pdo, $in);
             if ($err) keluar(['error' => $err], 422);
+            if ($d['perihal'] === '') $d['perihal'] = $d['judul'];
             $tahun = (int) substr($d['tanggal_surat'], 0, 4);
             $bulan = (int) substr($d['tanggal_surat'], 5, 2);
 
@@ -226,10 +228,11 @@ try {
             $id = (int) ($in['id'] ?? 0);
             [$d, $err] = baca_form($pdo, $in);
             if ($err) keluar(['error' => $err], 422);
-            $c = $pdo->prepare('SELECT tahun, bulan, nomor_urut FROM surat WHERE id = ?');
+            $c = $pdo->prepare('SELECT tahun, bulan, nomor_urut, perihal FROM surat WHERE id = ?');
             $c->execute([$id]);
             $lama = $c->fetch();
             if (!$lama) keluar(['error' => 'Surat tidak ditemukan.'], 404);
+            if ($d['perihal'] === '') $d['perihal'] = $lama['perihal'] !== '' ? $lama['perihal'] : $d['judul'];
             $tahun = (int) substr($d['tanggal_surat'], 0, 4);
             $bulan = (int) substr($d['tanggal_surat'], 5, 2);
             // Bulan & tahun sama -> nomor urut dipertahankan. Pindah bulan -> ambil nomor urut berikutnya di bulan baru.

@@ -6,24 +6,35 @@
     const FILTER = { q: 'dsQ', jenis: 'dsJenis', unit: 'dsUnit', tujuan: 'dsTujuan', tahun: 'dsTahun', urut: 'dsUrut' };
     let baris = [], total = 0, tunggu = 0;
 
-    function barisHtml(r) {
+    function kartuSurat(r) {
         const judul = r.judul || r.perihal;
-        const link = r.link_drive
-            ? '<a class="btn sm" href="' + esc(r.link_drive) + '" target="_blank" rel="noopener">Buka</a>'
-            : '<span class="badge warn">Belum ada</span>';
-        return '<tr>' +
-            '<td class="no-surat">' + esc(r.nomor_surat) + '</td>' +
-            '<td><b>' + esc(judul) + '</b>' + (r.judul ? '<span class="sub">' + esc(r.perihal) + '</span>' : '') + '</td>' +
-            '<td>' + esc(tglIndo(r.tanggal_surat)) + '<span class="sub">' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + '</span></td>' +
-            '<td>' + esc(r.jenis_nama || r.jenis_kode) + '<span class="sub">' + esc(r.unit_nama || r.unit_kode) + '</span></td>' +
-            '<td>' + link + '</td>' +
-            '<td><div class="aksi"><a class="btn sm" href="upload_surat.html?ubah=' + r.id + '">Ubah</a>' +
-            '<button type="button" class="btn sm danger" data-hapus="' + r.id + '">Hapus</button></div></td></tr>';
+        const desk = r.judul && r.perihal && r.perihal !== r.judul ? '<p class="dk-desk">' + esc(r.perihal) + '</p>' : '';
+        const ada = !!+r.ada_file;
+        const thumb = App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama });
+        return '<article class="dk-card">' +
+            '<div class="dk-info">' +
+                '<div class="dk-top"><span class="dk-nomor mono">' + esc(r.nomor_surat) + '</span>' +
+                    '<span class="badge ' + (r.kode_tujuan === 'A' ? 'ok' : '') + '">' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + '</span></div>' +
+                '<h3 class="dk-judul">' + esc(judul) + '</h3>' + desk +
+                '<dl class="dk-meta">' +
+                    '<div><dt>Tanggal surat</dt><dd>' + esc(tglIndo(r.tanggal_surat)) + '</dd></div>' +
+                    '<div><dt>Jenis surat</dt><dd>' + esc(r.jenis_nama || r.jenis_kode) + '</dd></div>' +
+                    '<div><dt>Unit pembuat</dt><dd>' + esc(r.unit_nama || r.unit_kode) + '</dd></div>' +
+                    '<div><dt>Link Drive</dt><dd><span class="badge ' + (ada ? 'ok' : 'warn') + '">' + (ada ? 'Tersedia' : 'Belum ada') + '</span></dd></div>' +
+                '</dl>' +
+                '<div class="dk-aksi">' +
+                    (r.link_drive ? '<a class="btn sm primary" href="' + esc(r.link_drive) + '" target="_blank" rel="noopener">Buka surat</a>' : '') +
+                    '<a class="btn sm" href="upload_surat.html?ubah=' + r.id + '">Ubah</a>' +
+                    '<button type="button" class="btn sm danger" data-hapus="' + r.id + '">Hapus</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="dk-thumb">' + thumb + '</div>' +
+        '</article>';
     }
 
     function gambar() {
-        $('dsBody').innerHTML = baris.length ? baris.map(barisHtml).join('')
-            : '<tr class="empty-row"><td colspan="6">' + (Object.values(FILTER).some((id) => $(id).value) ? 'Tidak ada surat yang cocok dengan filter.' : 'Belum ada surat yang diupload.') + '</td></tr>';
+        $('dsList').innerHTML = baris.length ? baris.map(kartuSurat).join('')
+            : '<p class="galeri-kosong">' + (Object.values(FILTER).some((id) => $(id).value) ? 'Tidak ada surat yang cocok dengan filter.' : 'Belum ada surat yang diupload.') + '</p>';
         $('infoJumlah').textContent = total ? 'Menampilkan ' + baris.length + ' dari ' + total + ' surat' : 'Belum ada surat';
         $('dsLagi').hidden = baris.length >= total;
     }
@@ -41,7 +52,7 @@
         } catch (e) {
             if (my !== tunggu) return;
             toast(e.message, true);
-            $('dsBody').innerHTML = '<tr class="empty-row"><td colspan="6">' + esc(e.message) + '</td></tr>';
+            $('dsList').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>';
         }
     }
 
@@ -52,7 +63,7 @@
     $('dsReset').addEventListener('click', () => { Object.values(FILTER).forEach((id) => { $(id).value = ''; }); muat(false); });
     $('dsLagi').addEventListener('click', () => muat(true));
 
-    $('dsBody').addEventListener('click', async (ev) => {
+    $('dsList').addEventListener('click', async (ev) => {
         const b = ev.target.closest('[data-hapus]');
         if (!b) return;
         const r = baris.find((x) => String(x.id) === b.dataset.hapus);
