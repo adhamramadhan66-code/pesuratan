@@ -384,3 +384,27 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
 .sidebar .nav-item.active::before { background: #ffd166; box-shadow: 0 0 8px 1px #ffd166, 0 0 22px 4px rgba(255, 209, 102, 0.5); }
 .sidebar .nav-item.justify-between .icon-small { color: rgba(255, 255, 255, 0.7); }
 @media (max-width: 700px) { .sidebar.expanded { box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5); } }
+
+
+/* =====================================================================
+   SIDEBAR MODEL "PEMINJAMAN": tertutup secara default, dibuka lewat tombol (☰),
+   menutup bila menu dipilih atau area di luar sidebar ditekan. Tanpa animasi geser (ringan).
+   ===================================================================== */
+.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 260px; transform: none; transition: none; display: none; z-index: 100; }
+.sidebar.expanded { display: flex; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.35); }
+.sidebar:not(.expanded) .logo-img { max-width: 140px; }
+.nav-item span { margin-left: 0.75rem; width: auto; opacity: 1; }
+.nav-item.justify-between .icon-small { width: 1rem; opacity: 1; }
+.nav-item { padding: 0.85rem 0.75rem; }
+.sidebar .logo-img { max-width: 140px; }
+
+.sidebar-toggle { top: 12px; left: 12px; width: 40px; height: 40px; transition: none; z-index: 101; }
+.sidebar-toggle.expanded { left: 212px; }
+.sidebar-toggle svg { display: none; }
+.sidebar-toggle::before { content: '\2630'; font-size: 1.15rem; line-height: 1; }
+.sidebar-toggle.expanded::before { content: '\2715'; font-size: 1rem; }
+
+.sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 99; opacity: 1; transition: none; }
+.sidebar-backdrop:not(.show) { display: none; }
+.main-content { padding-top: 1rem; }
+.header { padding-left: 3.25rem; min-height: 40px; }

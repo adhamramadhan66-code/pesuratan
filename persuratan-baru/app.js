@@ -43,7 +43,7 @@
             tg.setAttribute('aria-expanded', String(open));
             tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
         };
-        set(true);
+        set(false);   // awal: tertutup
         tg.addEventListener('click', () => set(!sb.classList.contains('expanded')));
     }
 
