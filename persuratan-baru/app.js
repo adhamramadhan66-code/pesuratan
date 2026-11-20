@@ -43,7 +43,7 @@
             tg.setAttribute('aria-expanded', String(open));
             tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
         };
-        set(false);   // awal: tertutup
+        set(false);   // awal selalu mengecil (hanya ikon); dibuka manual lewat tombol
         tg.addEventListener('click', () => set(!sb.classList.contains('expanded')));
     }
 
