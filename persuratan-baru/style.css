@@ -387,24 +387,32 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
 
 
 /* =====================================================================
-   SIDEBAR MODEL "PEMINJAMAN": tertutup secara default, dibuka lewat tombol (☰),
-   menutup bila menu dipilih atau area di luar sidebar ditekan. Tanpa animasi geser (ringan).
+   SIDEBAR: tertutup secara default; dibuka lewat tombol (☰). Di layar lebar sidebar
+   duduk di sisi kiri dan MENDORONG halaman (tidak menutupinya); di HP menimpa halaman.
+   Menutup bila menu dipilih, area di luar sidebar ditekan, atau Esc. Tanpa animasi apa pun.
    ===================================================================== */
-.sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 260px; transform: none; transition: none; display: none; z-index: 100; }
-.sidebar.expanded { display: flex; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.35); }
-.sidebar:not(.expanded) .logo-img { max-width: 140px; }
+.sidebar { width: 260px; transition: none; display: none; }
+.sidebar.expanded { display: flex; }
 .nav-item span { margin-left: 0.75rem; width: auto; opacity: 1; }
 .nav-item.justify-between .icon-small { width: 1rem; opacity: 1; }
 .nav-item { padding: 0.85rem 0.75rem; }
-.sidebar .logo-img { max-width: 140px; }
+.sidebar .logo-img, .sidebar:not(.expanded) .logo-img { max-width: 140px; }
 
-.sidebar-toggle { top: 12px; left: 12px; width: 40px; height: 40px; transition: none; z-index: 101; }
+.sidebar-toggle { top: 12px; left: 12px; width: 40px; height: 40px; z-index: 101; }
 .sidebar-toggle.expanded { left: 212px; }
 .sidebar-toggle svg { display: none; }
 .sidebar-toggle::before { content: '\2630'; font-size: 1.15rem; line-height: 1; }
 .sidebar-toggle.expanded::before { content: '\2715'; font-size: 1rem; }
-
-.sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 99; opacity: 1; transition: none; }
-.sidebar-backdrop:not(.show) { display: none; }
+.sidebar-backdrop { display: none; }
 .main-content { padding-top: 1rem; }
 .header { padding-left: 3.25rem; min-height: 40px; }
+
+@media (max-width: 768px) {
+    .sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; transform: none; }
+    .sidebar.expanded { box-shadow: 8px 0 30px rgba(0, 0, 0, 0.35); }
+    .sidebar-backdrop.show { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 99; opacity: 1; }
+}
+
+/* Matikan semua animasi/transisi umum agar ringan (popup "berhasil diunggah" tetap beranimasi) */
+*, *::before, *::after { transition: none !important; }
+.nav-item.active::before { animation: none !important; }
