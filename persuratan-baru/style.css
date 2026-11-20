@@ -396,6 +396,3 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
     html.sb-buka .sidebar:not(.expanded) .nav-item.justify-between .icon-small { width: 1rem; opacity: 1; }
 }
 
-/* Tanpa animasi (geser/melar/kedip) agar ringan; halaman langsung berganti. Popup "berhasil diunggah" tetap beranimasi. */
-*, *::before, *::after { transition: none !important; }
-.nav-item.active::before { animation: none !important; }
